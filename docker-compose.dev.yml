@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: 'on-failure'
+    ports:
+      - 3000:3000
+    volumes:
+      - /app/node_modules
+      - .:/app
+    networks:
+      - serve
+    env_file:
+      - .env
+networks:
+  serve:
