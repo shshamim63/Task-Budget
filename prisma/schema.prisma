@@ -13,10 +13,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id Int @default(autoincrement()) @id
+  username String @unique
+  email String @unique
+  password String
+  tasks Task[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([email])
+}
 
 model Task {
   id Int @default(autoincrement()) @id
   title String
   description String
   status String
+  creator User? @relation(fields: [creator_id], references: [id])
+  creator_id Int? @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt @default(now())
 }

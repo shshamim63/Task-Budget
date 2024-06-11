@@ -4,17 +4,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { Task, TaskStatus } from './task.model';
+import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ERROR_CODE } from 'src/prisma/prisma-error-code';
+import { TaskResponseDto } from './dto/task.dto';
 
 @Injectable()
 export class TasksService {
   constructor(private prismaService: PrismaService) {}
 
-  async getTasks(filterDto: GetTasksFilterDto): Promise<Task[]> {
+  async getTasks(filterDto: GetTasksFilterDto): Promise<TaskResponseDto[]> {
     const where: any = {};
 
     if (Object.keys(filterDto).length) {
@@ -29,18 +30,18 @@ export class TasksService {
         ];
     }
     const tasks = await this.prismaService.task.findMany({ where });
-    return tasks;
+    return tasks.map((task) => new TaskResponseDto(task));
   }
 
-  async getTaskById(id: number): Promise<Task> {
+  async getTaskById(id: number): Promise<TaskResponseDto> {
     const task = await this.prismaService.task.findUnique({
       where: { id: id },
     });
     if (!task) throw new NotFoundException(`Task with id: ${id} not found`);
-    return task;
+    return new TaskResponseDto(task);
   }
 
-  async createTask(createTaskDTO: CreateTaskDto): Promise<Task> {
+  async createTask(createTaskDTO: CreateTaskDto): Promise<TaskResponseDto> {
     const { title, description } = createTaskDTO;
     const data = {
       title,
@@ -49,7 +50,7 @@ export class TasksService {
     };
     try {
       const task = await this.prismaService.task.create({ data });
-      return task;
+      return new TaskResponseDto(task);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -65,11 +66,14 @@ export class TasksService {
     }
   }
 
-  async updateTaskStatus(id: number, status: TaskStatus): Promise<Task> {
+  async updateTaskStatus(
+    id: number,
+    status: TaskStatus,
+  ): Promise<TaskResponseDto> {
     const task = await this.prismaService.task.update({
       where: { id: id },
       data: { status: status },
     });
-    return task;
+    return new TaskResponseDto(task);
   }
 }
