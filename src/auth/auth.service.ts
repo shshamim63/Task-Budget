@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -7,8 +8,9 @@ import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignUpDto } from './dto/auth-credentials.dto';
+
 import { UserResponseDto } from './dto/user.dto';
+import { SignInParams, SignUpParams, TokenPayload } from './interface/auth';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +19,7 @@ export class AuthService {
 
   constructor(private prismaService: PrismaService) {}
 
-  async signup(authCredentials: SignUpDto) {
+  async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
     const { email, password, username } = authCredentials;
     const userExist = await this.prismaService.user.findUnique({
       where: { email },
@@ -30,21 +32,44 @@ export class AuthService {
     const data = { email, username, password: hashPassword };
     try {
       const user = await this.prismaService.user.create({ data });
-      const token = await jwt.sign(
-        {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-        },
-        this.accessToken,
-        {
-          expiresIn: '15m',
-        },
-      );
+      const token = await this.generateToken({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      });
 
       return new UserResponseDto({ ...user, token });
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  async signin({ email, password }: SignInParams) {
+    const user = await this.prismaService.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) throw new HttpException('Invalid credentials', 400);
+
+    const hashPassword = user.password;
+    const isValidPassword = await bcrypt.compare(password, hashPassword);
+
+    if (!isValidPassword) throw new HttpException('Invalid credentials', 400);
+
+    const token = await this.generateToken({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+    });
+
+    return new UserResponseDto({ ...user, token });
+  }
+
+  private async generateToken(payload: TokenPayload): Promise<string> {
+    const token = await jwt.sign(payload, this.accessToken, {
+      expiresIn: '15m',
+    });
+
+    return token;
   }
 }

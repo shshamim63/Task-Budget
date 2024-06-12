@@ -7,8 +7,8 @@ import {
 import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { ERROR_CODE } from 'src/prisma/prisma-error-code';
+import { PrismaService } from '../prisma/prisma.service';
+import { ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
 
 @Injectable()
@@ -41,13 +41,19 @@ export class TasksService {
     return new TaskResponseDto(task);
   }
 
-  async createTask(createTaskDTO: CreateTaskDto): Promise<TaskResponseDto> {
+  async createTask(
+    createTaskDTO: CreateTaskDto,
+    userId: number,
+  ): Promise<TaskResponseDto> {
     const { title, description } = createTaskDTO;
+
     const data = {
       title,
       description,
       status: TaskStatus.OPEN,
+      creator_id: userId,
     };
+
     try {
       const task = await this.prismaService.task.create({ data });
       return new TaskResponseDto(task);

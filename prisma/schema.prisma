@@ -30,7 +30,7 @@ model Task {
   title String
   description String
   status String
-  creator User? @relation(fields: [creator_id], references: [id])
+  creator User? @relation(fields: [creator_id], references: [id], onDelete: Cascade)
   creator_id Int? @default(0)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt @default(now())
