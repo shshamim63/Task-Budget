@@ -11,9 +11,25 @@ services:
     volumes:
       - /app/node_modules
       - .:/app
+    depends_on:
+      - postgres
     networks:
-      - serve
+      - lookup
     env_file:
       - .env
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+    networks:
+      - lookup
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
 networks:
-  serve:
+  lookup:
+volumes:
+  postgres:
+    driver: local
