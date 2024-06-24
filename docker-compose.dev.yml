@@ -28,6 +28,20 @@ services:
       - 5432:5432
     volumes:
       - postgres:/var/lib/postgresql/data
+  prisma-studio:
+    image: node:latest
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - 5555:5555
+    networks:
+      - lookup
+    depends_on:
+      - postgres
+    command: ["npx", "prisma", "studio"]
+    env_file:
+      - .env
 networks:
   lookup:
 volumes:

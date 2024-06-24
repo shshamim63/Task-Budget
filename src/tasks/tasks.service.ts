@@ -51,7 +51,7 @@ export class TasksService {
       title,
       description,
       status: TaskStatus.OPEN,
-      creator_id: userId,
+      creatorId: userId,
     };
 
     try {

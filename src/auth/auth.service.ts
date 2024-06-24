@@ -29,7 +29,7 @@ export class AuthService {
 
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
-    const data = { email, username, password: hashPassword };
+    const data = { email, username, password_hash: hashPassword };
     try {
       const user = await this.prismaService.user.create({ data });
       const token = await this.generateToken({
@@ -51,7 +51,7 @@ export class AuthService {
 
     if (!user) throw new HttpException('Invalid credentials', 400);
 
-    const hashPassword = user.password;
+    const hashPassword = user.password_hash;
     const isValidPassword = await bcrypt.compare(password, hashPassword);
 
     if (!isValidPassword) throw new HttpException('Invalid credentials', 400);

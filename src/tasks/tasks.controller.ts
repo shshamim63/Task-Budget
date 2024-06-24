@@ -20,7 +20,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipes';
 import { TaskResponseDto } from './dto/task.dto';
-import { User } from 'src/auth/decorators/user.decorators';
+import { User } from 'src/auth/decorators/user.decorator';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('tasks')
