@@ -10,7 +10,7 @@ services:
       - 3000:3000
     volumes:
       - .:/app
-      - node_modules:/app/node_modules
+      - /app/node_modules
     depends_on:
       - postgres
     networks:
@@ -31,11 +31,10 @@ services:
       - postgres:/var/lib/postgresql/data
 
   prisma-studio:
-    image: node:14
+    image: node:latest
     working_dir: /app
     volumes:
       - .:/app
-      - node_modules:/app/node_modules
     ports:
       - 5555:5555
     networks:
@@ -50,6 +49,5 @@ networks:
   lookup:
 
 volumes:
-  node_modules:
   postgres:
     driver: local

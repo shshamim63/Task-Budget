@@ -6,7 +6,7 @@ export class UserResponseDto {
   email: string;
   token: string;
   @Exclude()
-  password: string;
+  password_hash: string;
   @Exclude()
   created_at: Date;
   @Exclude()

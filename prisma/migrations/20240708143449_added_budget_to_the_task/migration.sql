@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Task" ADD COLUMN     "budget" DECIMAL(65,30) NOT NULL DEFAULT 0.0;

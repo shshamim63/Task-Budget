@@ -24,7 +24,20 @@ export class MatchConstraint implements ValidatorConstraintInterface {
     value: any,
     validationArguments?: ValidationArguments,
   ): boolean | Promise<boolean> {
-    console.log(value, validationArguments);
-    return true;
+    const {
+      constraints: [property],
+    } = validationArguments;
+
+    const propertyValue = validationArguments.object[property];
+
+    return value === propertyValue;
+  }
+
+  defaultMessage(validationArguments?: ValidationArguments): string {
+    const {
+      constraints: [property],
+    } = validationArguments;
+
+    return `${validationArguments.property} must match ${property}`;
   }
 }

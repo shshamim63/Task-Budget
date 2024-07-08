@@ -21,11 +21,20 @@ export class AuthService {
 
   async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
     const { email, password, username } = authCredentials;
-    const userExist = await this.prismaService.user.findUnique({
-      where: { email },
+
+    const userExist = await this.prismaService.user.findFirst({
+      where: {
+        OR: [{ email: email }, { username: username }],
+      },
     });
 
-    if (userExist) throw new ConflictException(`Account with email ${email}`);
+    if (userExist) {
+      const errorMessage =
+        userExist.email === email
+          ? `Account with email ${email}`
+          : `Account with username ${username}`;
+      throw new ConflictException(errorMessage + ' ' + 'already exist');
+    }
 
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 

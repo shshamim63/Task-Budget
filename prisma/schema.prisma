@@ -42,4 +42,5 @@ model Task {
   creator User @relation(fields: [creatorId], references: [id])
   creatorId Int
   status TaskStatus @default(OPEN)
+  budget Decimal @default(0.0)
 }
