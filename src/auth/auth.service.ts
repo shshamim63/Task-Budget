@@ -7,10 +7,14 @@ import {
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 import { UserResponseDto } from './dto/user.dto';
-import { SignInParams, SignUpParams, TokenPayload } from './interface/auth';
+import {
+  SignInParams,
+  SignUpParams,
+  TokenPayload,
+} from '../interface/auth.interface';
 
 @Injectable()
 export class AuthService {

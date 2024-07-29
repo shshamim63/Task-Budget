@@ -1,4 +1,4 @@
-import { TaskResponseDto } from 'src/tasks/dto/task.dto';
+import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 export interface User {
   id: number;

@@ -20,8 +20,10 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipes';
 import { TaskResponseDto } from './dto/task.dto';
-import { User } from 'src/auth/decorators/user.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { User } from '../decorators/user.decorator';
+import { AuthGuard } from '../guards/auth.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { UserType } from '@prisma/client';
 
 @Controller('tasks')
 @UseGuards(AuthGuard)
@@ -29,11 +31,10 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
+  @Roles(UserType.USER)
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
-    @User() user,
   ): Promise<TaskResponseDto[]> {
-    console.log(user);
     return this.tasksService.getTasks(filterDto);
   }
 
@@ -43,6 +44,7 @@ export class TasksController {
   }
 
   @Post()
+  @Roles(UserType.ADMIN)
   createTask(
     @Body() createTaskDTO: CreateTaskDto,
     @User() user,
