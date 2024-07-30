@@ -23,10 +23,12 @@ model User {
   email String @unique
   username String @unique
   password_hash String
-  user_type UserType @default(USER)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  userType UserType @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   tasks Task[]
+  expenses Expense[]
+  contributingTask UserTasks[]
 }
 
 enum TaskStatus {
@@ -38,9 +40,30 @@ enum TaskStatus {
 model Task {
   id Int @default(autoincrement()) @id
   title String
-  description String @default("Its better to have a description")
+  description String?
   creator User @relation(fields: [creatorId], references: [id])
   creatorId Int
   status TaskStatus @default(OPEN)
   budget Decimal @default(0.0)
+  expenses Expense[]
+  members UserTasks[]
+}
+
+model UserTasks {
+  member User @relation(fields: [memberId], references: [id])
+  memberId Int
+  task Task @relation(fields: [taskId], references: [id])
+  taskId Int
+
+  @@id([memberId, taskId])
+}
+
+model Expense {
+  id Int @default(autoincrement()) @id
+  description String
+  amount Decimal
+  task Task @relation(fields: [taskId], references: [id])
+  taskId Int
+  contributor User @relation(fields: [contributorId], references: [id])
+  contributorId Int
 }
