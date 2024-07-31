@@ -1,21 +1,21 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Prisma } from '@prisma/client';
 
 export class TaskResponseDto {
   id: number;
   title: string;
   description: string;
-
-  @Exclude()
-  creator_id: number;
-
+  creatorId: number;
   status: string;
+  budget: number;
 
-  @Expose({ name: 'creatorId' })
-  transformCreatorId() {
-    return this.creator_id;
-  }
-
-  constructor(partial: Partial<TaskResponseDto>) {
-    Object.assign(this, partial);
+  constructor(
+    partial: Partial<
+      Omit<TaskResponseDto, 'budget'> & { budget?: Prisma.Decimal }
+    >,
+  ) {
+    Object.assign(this, {
+      ...partial,
+      budget: partial.budget ? partial.budget.toNumber() : 0, // Convert Decimal to number
+    });
   }
 }

@@ -10,6 +10,7 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -45,13 +46,14 @@ export class TasksService {
     createTaskDTO: CreateTaskDto,
     userId: number,
   ): Promise<TaskResponseDto> {
-    const { title, description } = createTaskDTO;
+    const { title, description, budget } = createTaskDTO;
 
     const data = {
       title,
       description,
       status: TaskStatus.OPEN,
       creatorId: userId,
+      budget: budget ? new Prisma.Decimal(budget) : undefined,
     };
 
     try {

@@ -31,7 +31,6 @@ export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  @Roles(UserType.USER)
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
   ): Promise<TaskResponseDto[]> {
@@ -44,7 +43,7 @@ export class TasksController {
   }
 
   @Post()
-  @Roles(UserType.ADMIN)
+  @Roles(UserType.ADMIN, UserType.SUPER)
   createTask(
     @Body() createTaskDTO: CreateTaskDto,
     @User() user,

@@ -37,13 +37,16 @@ export class AuthGuard implements CanActivate {
           where: { id: payload.id },
         });
 
-        if (requiredRoles?.length)
-          return requiredRoles.some((role) => user.userType?.includes(role));
+        console.log(user);
 
         if (user) return true;
 
+        if (requiredRoles?.length)
+          return requiredRoles.some((role) => user.userType?.includes(role));
+
         return false;
       } catch (error) {
+        console.log();
         return false;
       }
     }

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsDecimal, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateTaskDto {
   @IsString()
@@ -8,4 +8,8 @@ export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @IsDecimal()
+  @IsOptional()
+  budget: number;
 }
