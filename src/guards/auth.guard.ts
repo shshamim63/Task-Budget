@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import * as jwt from 'jsonwebtoken';
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,7 +11,12 @@ import { JWTPayload } from '../interface/auth.interface';
 import { Request } from 'express';
 import { UserType } from '@prisma/client';
 import { Reflector } from '@nestjs/core';
-import { AUTHORIZATION_TYPE, ROLES_KEY } from '../constants';
+import {
+  AUTHORIZATION_TYPE,
+  ERROR_NAME,
+  RESPONSE_MESSAGE,
+  ROLES_KEY,
+} from '../constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -37,16 +47,19 @@ export class AuthGuard implements CanActivate {
           where: { id: payload.id },
         });
 
-        console.log(user);
+        if (user && requiredRoles?.length)
+          return requiredRoles.some((role) => user.userType?.includes(role));
 
         if (user) return true;
 
-        if (requiredRoles?.length)
-          return requiredRoles.some((role) => user.userType?.includes(role));
-
         return false;
       } catch (error) {
-        console.log();
+        if (error.name === ERROR_NAME.TOKEN_EXPIRED) {
+          throw new UnauthorizedException(
+            RESPONSE_MESSAGE.TOKEN_EXPIRED,
+            ERROR_NAME.TOKEN_EXPIRED,
+          );
+        }
         return false;
       }
     }
