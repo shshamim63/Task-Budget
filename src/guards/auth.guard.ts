@@ -54,13 +54,18 @@ export class AuthGuard implements CanActivate {
 
         return false;
       } catch (error) {
+        let errorResponse: string;
+        let errorName: string;
         if (error.name === ERROR_NAME.TOKEN_EXPIRED) {
-          throw new UnauthorizedException(
-            RESPONSE_MESSAGE.TOKEN_EXPIRED,
-            ERROR_NAME.TOKEN_EXPIRED,
-          );
+          errorResponse = RESPONSE_MESSAGE.TOKEN_EXPIRED;
+          errorName = ERROR_NAME.TOKEN_EXPIRED;
+        } else if (error.name === ERROR_NAME.INVALID_TOKEN) {
+          errorResponse = RESPONSE_MESSAGE.INVALID_TOKEN;
+          errorName = ERROR_NAME.INVALID_TOKEN;
+        } else {
+          return false;
         }
-        return false;
+        throw new UnauthorizedException(errorResponse, errorName);
       }
     }
 
