@@ -5,23 +5,22 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 
 import { PrismaService } from '../prisma/prisma.service';
 
 import { UserResponseDto } from './dto/user.dto';
-import {
-  SignInParams,
-  SignUpParams,
-  TokenPayload,
-} from '../interface/auth.interface';
+import { SignInParams, SignUpParams } from '../interface/auth.interface';
+import { TokenSerive } from '../token/token.service';
 
 @Injectable()
 export class AuthService {
   private readonly saltRound = process.env.SALTROUND;
   private readonly accessToken = process.env.ACCESS_TOKEN;
 
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private tokenService: TokenSerive,
+  ) {}
 
   async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
     const { email, password, username } = authCredentials;
@@ -45,7 +44,7 @@ export class AuthService {
     const data = { email, username, password_hash: hashPassword };
     try {
       const user = await this.prismaService.user.create({ data });
-      const token = await this.generateToken({
+      const token = await this.tokenService.generateToken({
         id: user.id,
         email: user.email,
         username: user.username,
@@ -69,20 +68,12 @@ export class AuthService {
 
     if (!isValidPassword) throw new HttpException('Invalid credentials', 400);
 
-    const token = await this.generateToken({
+    const token = await this.tokenService.generateToken({
       id: user.id,
       email: user.email,
       username: user.username,
     });
 
     return new UserResponseDto({ ...user, token });
-  }
-
-  private async generateToken(payload: TokenPayload): Promise<string> {
-    const token = await jwt.sign(payload, this.accessToken, {
-      expiresIn: '15m',
-    });
-
-    return token;
   }
 }

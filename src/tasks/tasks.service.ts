@@ -60,6 +60,7 @@ export class TasksService {
       const task = await this.prismaService.task.create({ data });
       return new TaskResponseDto(task);
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }

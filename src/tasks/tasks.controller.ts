@@ -22,8 +22,8 @@ import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipes';
 import { TaskResponseDto } from './dto/task.dto';
 import { User } from '../decorators/user.decorator';
 import { AuthGuard } from '../guards/auth.guard';
-import { Roles } from '../decorators/roles.decorator';
 import { UserType } from '@prisma/client';
+import { Roles } from '../roles/roles.decorator';
 
 @Controller('tasks')
 @UseGuards(AuthGuard)
