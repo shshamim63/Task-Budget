@@ -2,15 +2,21 @@ export const ROLES_KEY = 'roles';
 export const AUTHORIZATION_TYPE = 'Bearer';
 
 export const STATUS_CODE = {
-  UNAUTHORIZED: 401,
+  UNKNOWN: 520,
 };
 
 export const RESPONSE_MESSAGE = {
-  TOKEN_EXPIRED: 'jwt expired',
   INVALID_TOKEN: 'Malformed token',
+  PERMISSION_DENIED: 'User does not have permission for the action',
+  TOKEN_EXPIRED: 'jwt expired',
+  UNKNOWN: 'Feel free to inform us about the error',
+  USER_MISSING: 'User does not exist',
 };
 
 export const ERROR_NAME = {
-  TOKEN_EXPIRED: 'TokenExpiredError',
   INVALID_TOKEN: 'JsonWebTokenError',
+  PERMISSION_DENIED: 'PermissionDenied',
+  TOKEN_EXPIRED: 'TokenExpiredError',
+  UNKNOWN: 'Unknown',
+  USER_MISSING: 'UserMissing',
 };
