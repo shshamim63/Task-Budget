@@ -1,3 +1,5 @@
+import { UserType } from '@prisma/client';
+
 export interface SignInParams {
   email: string;
   password: string;
@@ -8,15 +10,13 @@ export interface SignUpParams extends SignInParams {
 }
 
 export interface TokenPayload {
-  id: number;
   email: string;
+  id: number;
   username: string;
+  userType: UserType;
 }
 
-export interface JWTPayload {
-  username: string;
-  id: number;
-  email: string;
-  iat: number;
+export interface JWTPayload extends TokenPayload {
   exp: number;
+  iat: number;
 }

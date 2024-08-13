@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -10,7 +11,8 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, Task, UserType } from '@prisma/client';
+import { JWTPayload } from '../interface/auth.interface';
 
 @Injectable()
 export class TasksService {
@@ -60,16 +62,20 @@ export class TasksService {
       const task = await this.prismaService.task.create({ data });
       return new TaskResponseDto(task);
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async deleteTask(id: number): Promise<string> {
+  async deleteTask(id: number, user: JWTPayload): Promise<string> {
     try {
+      const task = await this.prismaService.task.findUniqueOrThrow({
+        where: { id: id },
+      });
+      this.hasOperationPermission(task, user);
       await this.prismaService.task.delete({ where: { id: id } });
       return 'Deteted task';
     } catch (error) {
+      console.log(error);
       if (error.code === ERROR_CODE.doesNotExist)
         throw new NotFoundException(`Record with id: ${id} does not exist`);
     }
@@ -78,11 +84,29 @@ export class TasksService {
   async updateTaskStatus(
     id: number,
     status: TaskStatus,
+    user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const task = await this.prismaService.task.update({
-      where: { id: id },
-      data: { status: status },
-    });
-    return new TaskResponseDto(task);
+    try {
+      const task = await this.prismaService.task.findUniqueOrThrow({
+        where: { id: id },
+      });
+      this.hasOperationPermission(task, user);
+      const updatedTask = await this.prismaService.task.update({
+        where: { id: id },
+        data: { status: status },
+      });
+      return new TaskResponseDto(updatedTask);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  private hasOperationPermission(
+    task: Task,
+    user: JWTPayload,
+  ): boolean | never {
+    if (user.userType !== UserType.SUPER || task.creatorId !== user.id)
+      throw new ForbiddenException();
+    return true;
   }
 }

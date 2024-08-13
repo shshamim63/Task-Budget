@@ -4,16 +4,17 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
 import { Request } from 'express';
 
 import { User, UserType } from '@prisma/client';
 
-import { PrismaService } from '../prisma/prisma.service';
-import { TokenSerive } from '../token/token.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { TokenSerive } from '../../token/token.service';
+import { RolesService } from '../../roles/roles.service';
 
-import { ERROR_NAME, RESPONSE_MESSAGE, ROLES_KEY } from '../constants';
-import { RolesService } from '../roles/roles.service';
-import { Reflector } from '@nestjs/core';
+import { ERROR_NAME, RESPONSE_MESSAGE, ROLES_KEY } from '../../constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -34,6 +35,7 @@ export class AuthGuard implements CanActivate {
 
     const payload = this.tokenService.verifyToken(token);
     let user: User;
+
     try {
       user = await this.prismaService.user.findUnique({
         where: { id: payload.id },

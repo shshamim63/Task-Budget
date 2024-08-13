@@ -12,18 +12,22 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 
+import { UserType } from '@prisma/client';
+
 import { TasksService } from './tasks.service';
 
 import { TaskStatus } from './task.model';
 
+import { TaskResponseDto } from './dto/task.dto';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipes';
-import { TaskResponseDto } from './dto/task.dto';
+
 import { User } from '../decorators/user.decorator';
-import { AuthGuard } from '../guards/auth.guard';
-import { UserType } from '@prisma/client';
 import { Roles } from '../roles/roles.decorator';
+
+import { AuthGuard } from '../auth/guards/auth.guard';
 
 @Controller('tasks')
 @UseGuards(AuthGuard)
@@ -52,15 +56,21 @@ export class TasksController {
   }
 
   @Delete('/:id')
-  deleteTask(@Param('id', ParseIntPipe) id: number): Promise<string> {
-    return this.tasksService.deleteTask(id);
+  @Roles(UserType.SUPER, UserType.ADMIN)
+  deleteTask(
+    @Param('id', ParseIntPipe) id: number,
+    @User() user,
+  ): Promise<string> {
+    return this.tasksService.deleteTask(id, user);
   }
 
   @Patch('/:id/status')
+  @Roles(UserType.SUPER, UserType.ADMIN)
   updateTaskStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status', TaskStatusValidationPipe) status: TaskStatus,
+    @User() user,
   ): Promise<TaskResponseDto> {
-    return this.tasksService.updateTaskStatus(id, status);
+    return this.tasksService.updateTaskStatus(id, status, user);
   }
 }
