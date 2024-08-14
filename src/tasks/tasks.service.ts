@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -9,10 +10,13 @@ import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { ERROR_CODE } from '../prisma/prisma-error-code';
+import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
 import { Prisma, Task, UserType } from '@prisma/client';
 import { JWTPayload } from '../interface/auth.interface';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../constants';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { CustomError } from '../common/exceptions/custom-error.exception';
 
 @Injectable()
 export class TasksService {
@@ -66,7 +70,7 @@ export class TasksService {
     }
   }
 
-  async deleteTask(id: number, user: JWTPayload): Promise<string> {
+  async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
     try {
       const task = await this.prismaService.task.findUniqueOrThrow({
         where: { id: id },
@@ -75,9 +79,7 @@ export class TasksService {
       await this.prismaService.task.delete({ where: { id: id } });
       return 'Deteted task';
     } catch (error) {
-      console.log(error);
-      if (error.code === ERROR_CODE.doesNotExist)
-        throw new NotFoundException(`Record with id: ${id} does not exist`);
+      this.handleError(error);
     }
   }
 
@@ -97,7 +99,7 @@ export class TasksService {
       });
       return new TaskResponseDto(updatedTask);
     } catch (error) {
-      console.log(error);
+      this.handleError(error);
     }
   }
 
@@ -106,7 +108,21 @@ export class TasksService {
     user: JWTPayload,
   ): boolean | never {
     if (user.userType !== UserType.SUPER || task.creatorId !== user.id)
-      throw new ForbiddenException();
+      throw new ForbiddenException(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+        ERROR_NAME.PERMISSION_DENIED,
+      );
     return true;
+  }
+
+  private handleError(error: CustomError): never {
+    if (error instanceof PrismaClientKnownRequestError) {
+      const { response, status } = PRISMA_ERROR_CODE[error.code];
+      throw new HttpException(response, status);
+    } else if (error instanceof HttpException) {
+      throw error;
+    } else {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }
