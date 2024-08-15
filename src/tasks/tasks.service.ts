@@ -77,7 +77,27 @@ export class TasksService {
       });
       this.hasOperationPermission(task, user);
       await this.prismaService.task.delete({ where: { id: id } });
-      return 'Deteted task';
+      return 'Detete task success';
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  async updateTask(
+    id: number,
+    updateTaskDto: CreateTaskDto,
+    user: JWTPayload,
+  ): Promise<TaskResponseDto> {
+    try {
+      const task = await this.prismaService.task.findUniqueOrThrow({
+        where: { id: id },
+      });
+      this.hasOperationPermission(task, user);
+      const currentTask = await this.prismaService.task.update({
+        where: { id: id },
+        data: updateTaskDto,
+      });
+      return new TaskResponseDto(currentTask);
     } catch (error) {
       this.handleError(error);
     }
@@ -107,12 +127,15 @@ export class TasksService {
     task: Task,
     user: JWTPayload,
   ): boolean | never {
-    if (user.userType !== UserType.SUPER || task.creatorId !== user.id)
-      throw new ForbiddenException(
-        RESPONSE_MESSAGE.PERMISSION_DENIED,
-        ERROR_NAME.PERMISSION_DENIED,
-      );
-    return true;
+    console.log(task.creatorId, user.id, user.userType !== UserType.SUPER);
+    if (user.userType === UserType.SUPER) return true;
+
+    if (task.creatorId === user.id) return true;
+
+    throw new ForbiddenException(
+      RESPONSE_MESSAGE.PERMISSION_DENIED,
+      ERROR_NAME.PERMISSION_DENIED,
+    );
   }
 
   private handleError(error: CustomError): never {

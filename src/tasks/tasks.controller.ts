@@ -64,6 +64,16 @@ export class TasksController {
     return this.tasksService.deleteTask(id, user);
   }
 
+  @Patch('/:id')
+  @Roles(UserType.SUPER, UserType.ADMIN)
+  updateTask(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTaskDto: CreateTaskDto,
+    @User() user,
+  ): Promise<TaskResponseDto> {
+    return this.tasksService.updateTask(id, updateTaskDto, user);
+  }
+
   @Patch('/:id/status')
   @Roles(UserType.SUPER, UserType.ADMIN)
   updateTaskStatus(
