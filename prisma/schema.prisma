@@ -55,7 +55,7 @@ model Task {
 model UserTasks {
   member User @relation(fields: [memberId], references: [id])
   memberId Int
-  task Task @relation(fields: [taskId], references: [id])
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -67,7 +67,7 @@ model Expense {
   id Int @default(autoincrement()) @id
   description String
   amount Decimal @db.Decimal(10,2)
-  task Task @relation(fields: [taskId], references: [id])
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId Int
   contributor User @relation(fields: [contributorId], references: [id])
   contributorId Int
