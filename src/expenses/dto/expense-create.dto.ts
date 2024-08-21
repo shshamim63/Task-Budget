@@ -1,10 +1,10 @@
-import { IsDecimal, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateExpenseDto {
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @IsDecimal()
+  @IsNumber()
   amount: number;
 }

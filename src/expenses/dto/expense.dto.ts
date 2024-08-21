@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export class ExpenseResponseDto {
   id: number;
   description: string;
@@ -7,7 +9,11 @@ export class ExpenseResponseDto {
   createdAt: Date;
   updatedAt: Date;
 
-  constructor(partial: Partial<ExpenseResponseDto>) {
+  constructor(
+    partial: Partial<
+      Omit<ExpenseResponseDto, 'amount'> & { amount: Prisma.Decimal }
+    >,
+  ) {
     Object.assign(this, partial);
   }
 }
