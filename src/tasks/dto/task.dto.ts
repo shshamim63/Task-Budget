@@ -15,7 +15,7 @@ export class TaskResponseDto {
   ) {
     Object.assign(this, {
       ...partial,
-      budget: partial.budget ? partial.budget.toNumber() : 0, // Convert Decimal to number
+      budget: partial.budget ? partial.budget.toNumber() : 0,
     });
   }
 }
