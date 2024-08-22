@@ -12,6 +12,7 @@ import { ExpenseResponseDto } from './dto/expense.dto';
 import { CreateExpenseDto } from './dto/expense-create.dto';
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
 import { Task } from '../tasks/decorators/task.decorator';
+import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 @Controller('tasks/:taskId/expenses')
 @UseGuards(AuthGuard)
@@ -23,7 +24,7 @@ export class ExpensesController {
   createExpense(
     @Body() createExpenseDto: CreateExpenseDto,
     @User() user,
-    @Task() task,
+    @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
     return this.expensesService.createExpense(user, task, createExpenseDto);
   }

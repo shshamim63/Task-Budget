@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { JWTPayload } from '../interface/auth.interface';
-import { Task } from '@prisma/client';
+
 import { CreateExpenseDto } from './dto/expense-create.dto';
 import { ExpenseResponseDto } from './dto/expense.dto';
+import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -11,7 +13,7 @@ export class ExpensesService {
 
   async createExpense(
     user: JWTPayload,
-    task: Task,
+    task: TaskResponseDto,
     createExpenseDto: CreateExpenseDto,
   ) {
     const data = {

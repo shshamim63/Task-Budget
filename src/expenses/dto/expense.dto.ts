@@ -14,6 +14,9 @@ export class ExpenseResponseDto {
       Omit<ExpenseResponseDto, 'amount'> & { amount: Prisma.Decimal }
     >,
   ) {
-    Object.assign(this, partial);
+    Object.assign(this, {
+      ...partial,
+      amount: partial.amount ? partial.amount.toNumber() : 0,
+    });
   }
 }
