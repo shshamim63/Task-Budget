@@ -57,8 +57,8 @@ model UserTasks {
   memberId Int
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   taskId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 
   @@id([memberId, taskId])
 }
