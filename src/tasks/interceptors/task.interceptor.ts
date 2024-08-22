@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Observable } from 'rxjs';
+import { TaskResponseDto } from '../dto/task.dto';
 
 @Injectable()
 export class TaskInterceptor implements NestInterceptor {
@@ -24,7 +25,7 @@ export class TaskInterceptor implements NestInterceptor {
         where: { id: Number(taskId) },
       });
 
-      request.task = task;
+      request.task = new TaskResponseDto(task);
     } catch (error) {
       console.error(error);
       throw new NotFoundException(`Task with ID ${taskId} not found`);
