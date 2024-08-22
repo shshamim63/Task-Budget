@@ -11,9 +11,16 @@ import { AuthModule } from './auth/auth.module';
 import { ExpensesModule } from './expenses/expenses.module';
 
 import { UserInterceptor } from './auth/interceptors/user.interceptor';
+import { ContributorsModule } from './contributors/contributors.module';
 
 @Module({
-  imports: [TasksModule, ConfigModule.forRoot(), AuthModule, ExpensesModule],
+  imports: [
+    ConfigModule.forRoot(),
+    TasksModule,
+    AuthModule,
+    ExpensesModule,
+    ContributorsModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,
