@@ -8,7 +8,7 @@ import {
 
 import { JWTPayload } from '../interface/auth.interface';
 
-import { CreateCollaborators } from './dto/create-contributors.dto';
+import { CreateCollaborators } from './dto/create-collaborators.dto';
 import { User } from '../decorators/user.decorator';
 import { Task } from '../tasks/decorators/task.decorator';
 

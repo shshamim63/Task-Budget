@@ -2,7 +2,7 @@ import { UserType } from '@prisma/client';
 import { JWTPayload } from '../interface/auth.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { CreateCollaborators } from './dto/create-contributors.dto';
+import { CreateCollaborators } from './dto/create-collaborators.dto';
 import {
   Injectable,
   InternalServerErrorException,
