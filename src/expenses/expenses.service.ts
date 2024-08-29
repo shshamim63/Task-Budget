@@ -43,6 +43,31 @@ export class ExpensesService {
     }
   }
 
+  async getExpense(
+    user: JWTPayload,
+    task: TaskResponseDto,
+    expenseId: number,
+  ): Promise<ExpenseResponseDto> {
+    try {
+      const hasPermission =
+        user.userType === UserType.SUPER ||
+        task.creatorId === user.id ||
+        this.isACollaborator(user.id, task.id);
+      if (!hasPermission)
+        throw new UnauthorizedException(
+          'User does not have permission to access the info',
+        );
+
+      const expense = await this.prismaService.expense.findUnique({
+        where: { id: expenseId },
+      });
+
+      return new ExpenseResponseDto(expense);
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getExpenses(
     user: JWTPayload,
     task: TaskResponseDto,

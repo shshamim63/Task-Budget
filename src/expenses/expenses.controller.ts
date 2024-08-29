@@ -39,6 +39,15 @@ export class ExpensesController {
     return this.expensesService.createExpense(user, task, createExpenseDto);
   }
 
+  @Get('/:expenseId')
+  getExpense(
+    @Param('expenseId', ParseIntPipe) expenseId: number,
+    @User() user: JWTPayload,
+    @Task() task: TaskResponseDto,
+  ): Promise<ExpenseResponseDto> {
+    return this.expensesService.getExpense(user, task, expenseId);
+  }
+
   @Get()
   getExpenses(
     @User() user: JWTPayload,

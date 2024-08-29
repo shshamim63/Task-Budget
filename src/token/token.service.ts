@@ -49,7 +49,12 @@ export class TokenSerive {
   }
 
   getTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request?.headers?.authorization?.split(' ');
-    return type === AUTHORIZATION_TYPE ? token : undefined;
+    const authorizationToken = request?.headers?.authorization;
+    if (authorizationToken) {
+      const [type, token] = authorizationToken.split(' ');
+      return type === AUTHORIZATION_TYPE ? token : undefined;
+    }
+
+    return undefined;
   }
 }
