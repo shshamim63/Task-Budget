@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
@@ -21,6 +22,7 @@ import { CreateExpenseDto } from './dto/expense-create.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
+import { JWTPayload } from '../interface/auth.interface';
 
 @Controller('tasks/:taskId/expenses')
 @UseGuards(AuthGuard)
@@ -35,6 +37,14 @@ export class ExpensesController {
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
     return this.expensesService.createExpense(user, task, createExpenseDto);
+  }
+
+  @Get()
+  getExpenses(
+    @User() user: JWTPayload,
+    @Task() task: TaskResponseDto,
+  ): Promise<ExpenseResponseDto[]> {
+    return this.expensesService.getExpenses(user, task);
   }
 
   @Patch('/:expenseId')

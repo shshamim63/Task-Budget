@@ -5,7 +5,6 @@ import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { CreateCollaborators } from './dto/create-collaborators.dto';
 import {
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -63,7 +62,7 @@ export class CollaboratorsService {
 
       return `Assigned members to the task with id: ${task.id}`;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw error;
     }
   }
 
