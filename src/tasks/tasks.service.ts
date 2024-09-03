@@ -13,7 +13,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
 import { Prisma, Task, UserType } from '@prisma/client';
-import { JWTPayload } from '../interface/auth.interface';
+import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../constants';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CustomError } from '../common/exceptions/custom-error.exception';

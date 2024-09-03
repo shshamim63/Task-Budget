@@ -22,7 +22,7 @@ import { CreateExpenseDto } from './dto/expense-create.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
-import { JWTPayload } from '../interface/auth.interface';
+import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 @Controller('tasks/:taskId/expenses')
 @UseGuards(AuthGuard)

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { JWTPayload } from '../interface/auth.interface';
+import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { CreateExpenseDto } from './dto/expense-create.dto';
 import { ExpenseResponseDto } from './dto/expense.dto';

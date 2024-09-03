@@ -1,7 +1,7 @@
 import * as jwt from 'jsonwebtoken';
 import { Request } from 'express';
 
-import { JWTPayload, TokenPayload } from '../interface/auth.interface';
+import { JWTPayload, TokenPayload } from '../auth/interfaces/auth.interface';
 import {
   AUTHORIZATION_TYPE,
   ERROR_NAME,

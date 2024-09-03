@@ -1,5 +1,5 @@
 import { UserType } from '@prisma/client';
-import { JWTPayload } from '../interface/auth.interface';
+import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { CreateCollaborators } from './dto/create-collaborators.dto';
@@ -17,11 +17,11 @@ export class CollaboratorsService {
     createContributors: CreateCollaborators,
     user: JWTPayload,
     task: TaskResponseDto,
-  ) {
+  ): Promise<string> {
     try {
-      const currentPermission = this.hasPermission(user, task);
+      const isAuthorized = this.hasPermission(user, task);
 
-      if (!currentPermission)
+      if (!isAuthorized)
         throw new UnauthorizedException(
           'User cannot assign members to the task',
         );
@@ -61,6 +61,34 @@ export class CollaboratorsService {
       await this.prismaService.userTasks.createMany({ data });
 
       return `Assigned members to the task with id: ${task.id}`;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async removeCollaborator(
+    user: JWTPayload,
+    task: TaskResponseDto,
+    contributorId: number,
+  ): Promise<string> {
+    try {
+      const isAuthorized = this.hasPermission(user, task);
+
+      if (!isAuthorized)
+        throw new UnauthorizedException(
+          'User cannot assign members to the task',
+        );
+
+      await this.prismaService.userTasks.delete({
+        where: {
+          memberId_taskId: {
+            memberId: contributorId,
+            taskId: task.id,
+          },
+        },
+      });
+
+      return `Removed member with id: ${contributorId} from task with id: ${task.id}`;
     } catch (error) {
       throw error;
     }

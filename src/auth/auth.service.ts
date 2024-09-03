@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 
 import { UserResponseDto } from './dto/user.dto';
-import { SignInParams, SignUpParams } from '../interface/auth.interface';
+import { SignInParams, SignUpParams } from './interfaces/auth.interface';
 import { TokenSerive } from '../token/token.service';
 
 @Injectable()
