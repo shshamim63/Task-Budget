@@ -18,7 +18,8 @@ import { User } from '../decorators/user.decorator';
 import { Task } from '../tasks/decorators/task.decorator';
 
 import { ExpenseResponseDto } from './dto/expense.dto';
-import { CreateExpenseDto } from './dto/expense-create.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
@@ -59,7 +60,7 @@ export class ExpensesController {
   @Patch('/:expenseId')
   updateExpense(
     @Param('expenseId', ParseIntPipe) expenseId: number,
-    @Body() updateExpenseDto: CreateExpenseDto,
+    @Body() updateExpenseDto: UpdateExpenseDto,
     @User() user,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {

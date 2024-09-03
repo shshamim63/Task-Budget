@@ -4,13 +4,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import { UserType } from '@prisma/client';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
-import { CreateExpenseDto } from './dto/expense-create.dto';
+import { CreateExpenseDto } from './dto/create-expense.dto';
 import { ExpenseResponseDto } from './dto/expense.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { UserType } from '@prisma/client';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 @Injectable()
 export class ExpensesService {
@@ -22,9 +24,10 @@ export class ExpensesService {
     createExpenseDto: CreateExpenseDto,
   ): Promise<ExpenseResponseDto> {
     try {
+      const isSuperUser = user.userType === UserType.SUPER;
+
       const hasPermission =
-        user.userType === UserType.SUPER ||
-        (await this.isACollaborator(user.id, task.id));
+        isSuperUser || (await this.isACollaborator(user.id, task.id));
 
       if (!hasPermission)
         throw new UnauthorizedException('User cannot initiate expense');
@@ -73,10 +76,11 @@ export class ExpensesService {
     task: TaskResponseDto,
   ): Promise<ExpenseResponseDto[]> {
     try {
+      const isSuperUser = user.userType === UserType.SUPER;
+      const isTaskCreator = task.creatorId === user.id;
+
       const hasPermission =
-        user.userType === UserType.SUPER ||
-        task.creatorId === user.id ||
-        this.isACollaborator(user.id, task.id);
+        isSuperUser || isTaskCreator || this.isACollaborator(user.id, task.id);
 
       if (!hasPermission)
         throw new UnauthorizedException(
@@ -96,7 +100,7 @@ export class ExpensesService {
   async updateExpense(
     user: JWTPayload,
     task: TaskResponseDto,
-    updateExpenseDto: CreateExpenseDto,
+    updateExpenseDto: UpdateExpenseDto,
     expenseId: number,
   ): Promise<ExpenseResponseDto> {
     try {
@@ -108,14 +112,18 @@ export class ExpensesService {
         throw new NotFoundException(
           `Expense with id: ${expenseId} does not exist`,
         );
-      expenseId;
-      const hasPermission =
-        user.userType === UserType.SUPER ||
-        task.creatorId === user.id ||
-        currentExpense.contributorId === user.id;
+
+      const isSuperUser = user.userType === UserType.SUPER;
+      const isTaskCreator = task.creatorId === user.id;
+      const isContributor = currentExpense.contributorId === user.id;
+
+      if (updateExpenseDto.contributorId && (!isSuperUser || !isTaskCreator))
+        throw new UnauthorizedException('User cannot update expense');
+
+      const hasPermission = isSuperUser || isTaskCreator || isContributor;
 
       if (!hasPermission)
-        throw new UnauthorizedException('User cannot initiate expense');
+        throw new UnauthorizedException('User cannot update expense');
 
       const updatedExpense = await this.prismaService.expense.update({
         where: {
