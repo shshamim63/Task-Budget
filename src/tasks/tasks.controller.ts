@@ -25,7 +25,7 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskStatusValidationPipe } from './pipes/task-status-validation.pipes';
 
 import { User } from '../decorators/user.decorator';
-import { Roles } from '../roles/roles.decorator';
+import { Roles } from '../decorators/roles.decorator';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
 

@@ -95,10 +95,11 @@ export class CollaboratorsService {
   }
 
   private hasPermission(user: JWTPayload, task: TaskResponseDto): boolean {
-    if (user.userType === UserType.SUPER) return true;
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isAdminUser = user.userType === UserType.ADMIN;
+    const isTaskCreator = user.id === task.creatorId;
 
-    if (user.userType === UserType.ADMIN && user.id === task.creatorId)
-      return true;
+    if (isSuperUser || (isAdminUser && isTaskCreator)) return true;
 
     return false;
   }

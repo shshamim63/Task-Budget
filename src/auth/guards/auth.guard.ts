@@ -5,14 +5,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
 import { Request } from 'express';
-
-import { User, UserType } from '@prisma/client';
+import { UserType } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { TokenSerive } from '../../token/token.service';
-import { RolesService } from '../../roles/roles.service';
 
 import { ERROR_NAME, RESPONSE_MESSAGE, ROLES_KEY } from '../../constants';
 
@@ -23,7 +20,6 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenSerive,
-    private readonly rolesService: RolesService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -38,10 +34,9 @@ export class AuthGuard implements CanActivate {
       );
 
     const payload = this.tokenService.verifyToken(token);
-    let user: User;
 
     try {
-      user = await this.prismaService.user.findUnique({
+      const user = await this.prismaService.user.findUnique({
         where: { id: payload.id },
       });
 
@@ -53,9 +48,9 @@ export class AuthGuard implements CanActivate {
 
       const requiredRoles = this.getRoles(context);
 
-      if (!requiredRoles) return true;
-
-      return this.rolesService.roleValidation(requiredRoles, user.userType);
+      return requiredRoles
+        ? this.validateRoles(requiredRoles, user.userType)
+        : true;
     } catch (error) {
       throw error;
     }
@@ -66,5 +61,17 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+  }
+
+  private validateRoles(permittedRoles, currentRole) {
+    const hasPermission = permittedRoles.some((role) => role === currentRole);
+
+    if (!hasPermission)
+      throw new UnauthorizedException(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+        ERROR_NAME.PERMISSION_DENIED,
+      );
+
+    return hasPermission;
   }
 }

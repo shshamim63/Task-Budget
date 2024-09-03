@@ -3,10 +3,9 @@ import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
-import { RolesModule } from '../roles/roles.module';
 
 @Module({
-  imports: [PrismaModule, TokenModule, RolesModule],
+  imports: [PrismaModule, TokenModule],
   controllers: [TasksController],
   providers: [TasksService],
 })

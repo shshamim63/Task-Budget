@@ -18,7 +18,7 @@ import { Task } from '../tasks/decorators/task.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
-import { Roles } from '../roles/roles.decorator';
+import { Roles } from '../decorators/roles.decorator';
 import { UserType } from '@prisma/client';
 import { CollaboratorsService } from './collaborators.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
