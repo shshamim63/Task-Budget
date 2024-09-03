@@ -44,7 +44,7 @@ export class AuthService {
     const data = { email, username, password_hash: hashPassword };
     const user = await this.prismaService.user.create({ data });
     const payload = this.generateTokenPayload(user);
-    const token = await this.tokenService.generateToken(payload);
+    const token = this.tokenService.generateToken(payload);
     return new UserResponseDto({ ...user, token });
   }
 
@@ -61,7 +61,7 @@ export class AuthService {
     if (!isValidPassword) throw new HttpException('Invalid credentials', 400);
     const payload = this.generateTokenPayload(user);
 
-    const token = await this.tokenService.generateToken(payload);
+    const token = this.tokenService.generateToken(payload);
 
     return new UserResponseDto({ ...user, token });
   }
