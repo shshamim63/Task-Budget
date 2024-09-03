@@ -2,5 +2,5 @@ projectKey=checking-nest
 serverUrl=http://localhost:9000
 serverVersion=10.6.0.92116
 dashboardUrl=http://localhost:9000/dashboard?id=checking-nest
-ceTaskId=270b68de-2187-41a6-9b06-d581e0433f32
-ceTaskUrl=http://localhost:9000/api/ce/task?id=270b68de-2187-41a6-9b06-d581e0433f32
+ceTaskId=b74eca8b-f5f9-434b-b321-f4535d2fcb1e
+ceTaskUrl=http://localhost:9000/api/ce/task?id=b74eca8b-f5f9-434b-b321-f4535d2fcb1e

@@ -23,27 +23,23 @@ export class ExpensesService {
     task: TaskResponseDto,
     createExpenseDto: CreateExpenseDto,
   ): Promise<ExpenseResponseDto> {
-    try {
-      const isSuperUser = user.userType === UserType.SUPER;
+    const isSuperUser = user.userType === UserType.SUPER;
 
-      const hasPermission =
-        isSuperUser || (await this.isACollaborator(user.id, task.id));
+    const hasPermission =
+      isSuperUser || (await this.isACollaborator(user.id, task.id));
 
-      if (!hasPermission)
-        throw new UnauthorizedException('User cannot initiate expense');
+    if (!hasPermission)
+      throw new UnauthorizedException('User cannot initiate expense');
 
-      const data = {
-        ...createExpenseDto,
-        taskId: task.id,
-        contributorId: user.id,
-      };
+    const data = {
+      ...createExpenseDto,
+      taskId: task.id,
+      contributorId: user.id,
+    };
 
-      const expense = await this.prismaService.expense.create({ data });
+    const expense = await this.prismaService.expense.create({ data });
 
-      return new ExpenseResponseDto(expense);
-    } catch (error) {
-      throw error;
-    }
+    return new ExpenseResponseDto(expense);
   }
 
   async getExpense(
@@ -51,24 +47,21 @@ export class ExpensesService {
     task: TaskResponseDto,
     expenseId: number,
   ): Promise<ExpenseResponseDto> {
-    try {
-      const hasPermission =
-        user.userType === UserType.SUPER ||
-        task.creatorId === user.id ||
-        this.isACollaborator(user.id, task.id);
-      if (!hasPermission)
-        throw new UnauthorizedException(
-          'User does not have permission to access the info',
-        );
+    const hasPermission =
+      user.userType === UserType.SUPER ||
+      task.creatorId === user.id ||
+      this.isACollaborator(user.id, task.id);
 
-      const expense = await this.prismaService.expense.findUnique({
-        where: { id: expenseId },
-      });
+    if (!hasPermission)
+      throw new UnauthorizedException(
+        'User does not have permission to access the info',
+      );
 
-      return new ExpenseResponseDto(expense);
-    } catch (error) {
-      throw error;
-    }
+    const expense = await this.prismaService.expense.findUnique({
+      where: { id: expenseId },
+    });
+
+    return new ExpenseResponseDto(expense);
   }
 
   async getExpenses(
