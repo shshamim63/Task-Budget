@@ -25,53 +25,45 @@ export class AuthService {
   ) {}
 
   async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
-    try {
-      const { email, password, username } = authCredentials;
-      const userExist = await this.prismaService.user.findFirst({
-        where: {
-          OR: [{ email: email }, { username: username }],
-        },
-      });
+    const { email, password, username } = authCredentials;
+    const userExist = await this.prismaService.user.findFirst({
+      where: {
+        OR: [{ email: email }, { username: username }],
+      },
+    });
 
-      if (userExist) {
-        const errorMessage =
-          userExist.email === email
-            ? `Account with email ${email}`
-            : `Account with username ${username}`;
-        throw new ConflictException(errorMessage + ' ' + 'already exist');
-      }
-      const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
-
-      const data = { email, username, password_hash: hashPassword };
-      const user = await this.prismaService.user.create({ data });
-      const payload = this.generateTokenPayload(user);
-      const token = await this.tokenService.generateToken(payload);
-      return new UserResponseDto({ ...user, token });
-    } catch (error) {
-      throw error;
+    if (userExist) {
+      const errorMessage =
+        userExist.email === email
+          ? `Account with email ${email}`
+          : `Account with username ${username}`;
+      throw new ConflictException(errorMessage + ' ' + 'already exist');
     }
+    const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
+
+    const data = { email, username, password_hash: hashPassword };
+    const user = await this.prismaService.user.create({ data });
+    const payload = this.generateTokenPayload(user);
+    const token = await this.tokenService.generateToken(payload);
+    return new UserResponseDto({ ...user, token });
   }
 
   async signin({ email, password }: SignInParams) {
-    try {
-      const user = await this.prismaService.user.findUnique({
-        where: { email },
-      });
+    const user = await this.prismaService.user.findUnique({
+      where: { email },
+    });
 
-      if (!user) throw new HttpException('Invalid credentials', 400);
+    if (!user) throw new HttpException('Invalid credentials', 400);
 
-      const hashPassword = user.password_hash;
-      const isValidPassword = await bcrypt.compare(password, hashPassword);
+    const hashPassword = user.password_hash;
+    const isValidPassword = await bcrypt.compare(password, hashPassword);
 
-      if (!isValidPassword) throw new HttpException('Invalid credentials', 400);
-      const payload = this.generateTokenPayload(user);
+    if (!isValidPassword) throw new HttpException('Invalid credentials', 400);
+    const payload = this.generateTokenPayload(user);
 
-      const token = await this.tokenService.generateToken(payload);
+    const token = await this.tokenService.generateToken(payload);
 
-      return new UserResponseDto({ ...user, token });
-    } catch (error) {
-      throw error;
-    }
+    return new UserResponseDto({ ...user, token });
   }
 
   private generateTokenPayload(user: User): TokenPayload {

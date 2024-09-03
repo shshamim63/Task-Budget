@@ -18,8 +18,8 @@ import {
 export class TokenSerive {
   private readonly accessToken = process.env.ACCESS_TOKEN;
 
-  async generateToken(payload: TokenPayload): Promise<string> {
-    const token = await jwt.sign(payload, this.accessToken, {
+  generateToken(payload: TokenPayload): string {
+    const token = jwt.sign(payload, this.accessToken, {
       expiresIn: '15m',
     });
 

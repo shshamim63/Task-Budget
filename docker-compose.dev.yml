@@ -45,6 +45,20 @@ services:
     env_file:
       - .env
 
+  sonarqube:
+    image: sonarqube:latest
+    restart: always
+    ports:
+      - 9000:9000
+    environment:
+      SONARQUBE_JDBC_URL: jdbc:postgresql://postgres:5432/postgres
+      SONARQUBE_JDBC_USERNAME: postgres
+      SONARQUBE_JDBC_PASSWORD: example
+    networks:
+      - lookup
+    depends_on:
+      - postgres
+
 networks:
   lookup:
 

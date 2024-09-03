@@ -35,25 +35,21 @@ export class AuthGuard implements CanActivate {
 
     const payload = this.tokenService.verifyToken(token);
 
-    try {
-      const user = await this.prismaService.user.findUnique({
-        where: { id: payload.id },
-      });
+    const user = await this.prismaService.user.findUnique({
+      where: { id: payload.id },
+    });
 
-      if (!user)
-        throw new UnauthorizedException(
-          RESPONSE_MESSAGE.USER_MISSING,
-          ERROR_NAME.USER_MISSING,
-        );
+    if (!user)
+      throw new UnauthorizedException(
+        RESPONSE_MESSAGE.USER_MISSING,
+        ERROR_NAME.USER_MISSING,
+      );
 
-      const requiredRoles = this.getRoles(context);
+    const requiredRoles = this.getRoles(context);
 
-      return requiredRoles
-        ? this.validateRoles(requiredRoles, user.userType)
-        : true;
-    } catch (error) {
-      throw error;
-    }
+    return requiredRoles
+      ? this.validateRoles(requiredRoles, user.userType)
+      : true;
   }
 
   private getRoles(context: ExecutionContext): UserType[] | undefined {

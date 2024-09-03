@@ -18,52 +18,46 @@ export class CollaboratorsService {
     user: JWTPayload,
     task: TaskResponseDto,
   ): Promise<string> {
-    try {
-      const isAuthorized = this.hasPermission(user, task);
+    const isAuthorized = this.hasPermission(user, task);
 
-      if (!isAuthorized)
-        throw new UnauthorizedException(
-          'User cannot assign members to the task',
-        );
+    if (!isAuthorized)
+      throw new UnauthorizedException('User cannot assign members to the task');
 
-      const { collaborators } = createContributors;
+    const { collaborators } = createContributors;
 
-      const existingCollaborators = await this.prismaService.user.findMany({
-        where: { id: { in: collaborators } },
-        select: { id: true },
-      });
+    const existingCollaborators = await this.prismaService.user.findMany({
+      where: { id: { in: collaborators } },
+      select: { id: true },
+    });
 
-      const existingCollaboratorsIds = existingCollaborators.map(
-        (contributor) => contributor.id,
+    const existingCollaboratorsIds = existingCollaborators.map(
+      (contributor) => contributor.id,
+    );
+
+    const missingContributors = collaborators.filter(
+      (id) => !existingCollaboratorsIds.includes(id),
+    );
+
+    if (missingContributors.length > 0) {
+      throw new NotFoundException(
+        `Contributor(s) with ID(s) ${missingContributors.join(', ')} not found`,
       );
-
-      const missingContributors = collaborators.filter(
-        (id) => !existingCollaboratorsIds.includes(id),
-      );
-
-      if (missingContributors.length > 0) {
-        throw new NotFoundException(
-          `Contributor(s) with ID(s) ${missingContributors.join(', ')} not found`,
-        );
-      }
-
-      const currentTime = new Date();
-
-      const data = collaborators.map((candidate) => {
-        return {
-          taskId: task.id,
-          memberId: candidate,
-          createdAt: currentTime,
-          updatedAt: currentTime,
-        };
-      });
-
-      await this.prismaService.userTasks.createMany({ data });
-
-      return `Assigned members to the task with id: ${task.id}`;
-    } catch (error) {
-      throw error;
     }
+
+    const currentTime = new Date();
+
+    const data = collaborators.map((candidate) => {
+      return {
+        taskId: task.id,
+        memberId: candidate,
+        createdAt: currentTime,
+        updatedAt: currentTime,
+      };
+    });
+
+    await this.prismaService.userTasks.createMany({ data });
+
+    return `Assigned members to the task with id: ${task.id}`;
   }
 
   async removeCollaborator(
@@ -71,27 +65,21 @@ export class CollaboratorsService {
     task: TaskResponseDto,
     contributorId: number,
   ): Promise<string> {
-    try {
-      const isAuthorized = this.hasPermission(user, task);
+    const isAuthorized = this.hasPermission(user, task);
 
-      if (!isAuthorized)
-        throw new UnauthorizedException(
-          'User cannot assign members to the task',
-        );
+    if (!isAuthorized)
+      throw new UnauthorizedException('User cannot assign members to the task');
 
-      await this.prismaService.userTasks.delete({
-        where: {
-          memberId_taskId: {
-            memberId: contributorId,
-            taskId: task.id,
-          },
+    await this.prismaService.userTasks.delete({
+      where: {
+        memberId_taskId: {
+          memberId: contributorId,
+          taskId: task.id,
         },
-      });
+      },
+    });
 
-      return `Removed member with id: ${contributorId} from task with id: ${task.id}`;
-    } catch (error) {
-      throw error;
-    }
+    return `Removed member with id: ${contributorId} from task with id: ${task.id}`;
   }
 
   private hasPermission(user: JWTPayload, task: TaskResponseDto): boolean {

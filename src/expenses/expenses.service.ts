@@ -75,26 +75,22 @@ export class ExpensesService {
     user: JWTPayload,
     task: TaskResponseDto,
   ): Promise<ExpenseResponseDto[]> {
-    try {
-      const isSuperUser = user.userType === UserType.SUPER;
-      const isTaskCreator = task.creatorId === user.id;
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isTaskCreator = task.creatorId === user.id;
 
-      const hasPermission =
-        isSuperUser || isTaskCreator || this.isACollaborator(user.id, task.id);
+    const hasPermission =
+      isSuperUser || isTaskCreator || this.isACollaborator(user.id, task.id);
 
-      if (!hasPermission)
-        throw new UnauthorizedException(
-          'User does not have permission to access the info',
-        );
+    if (!hasPermission)
+      throw new UnauthorizedException(
+        'User does not have permission to access the info',
+      );
 
-      const expenses = await this.prismaService.expense.findMany({
-        where: { taskId: task.id },
-      });
+    const expenses = await this.prismaService.expense.findMany({
+      where: { taskId: task.id },
+    });
 
-      return expenses.map((expense) => new ExpenseResponseDto(expense));
-    } catch (error) {
-      throw error;
-    }
+    return expenses.map((expense) => new ExpenseResponseDto(expense));
   }
 
   async updateExpense(
@@ -103,39 +99,35 @@ export class ExpensesService {
     updateExpenseDto: UpdateExpenseDto,
     expenseId: number,
   ): Promise<ExpenseResponseDto> {
-    try {
-      const currentExpense = await this.prismaService.expense.findFirst({
-        where: { id: expenseId },
-      });
+    const currentExpense = await this.prismaService.expense.findFirst({
+      where: { id: expenseId },
+    });
 
-      if (!currentExpense)
-        throw new NotFoundException(
-          `Expense with id: ${expenseId} does not exist`,
-        );
+    if (!currentExpense)
+      throw new NotFoundException(
+        `Expense with id: ${expenseId} does not exist`,
+      );
 
-      const isSuperUser = user.userType === UserType.SUPER;
-      const isTaskCreator = task.creatorId === user.id;
-      const isContributor = currentExpense.contributorId === user.id;
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isTaskCreator = task.creatorId === user.id;
+    const isContributor = currentExpense.contributorId === user.id;
 
-      if (updateExpenseDto.contributorId && (!isSuperUser || !isTaskCreator))
-        throw new UnauthorizedException('User cannot update expense');
+    if (updateExpenseDto.contributorId && (!isSuperUser || !isTaskCreator))
+      throw new UnauthorizedException('User cannot update expense');
 
-      const hasPermission = isSuperUser || isTaskCreator || isContributor;
+    const hasPermission = isSuperUser || isTaskCreator || isContributor;
 
-      if (!hasPermission)
-        throw new UnauthorizedException('User cannot update expense');
+    if (!hasPermission)
+      throw new UnauthorizedException('User cannot update expense');
 
-      const updatedExpense = await this.prismaService.expense.update({
-        where: {
-          id: expenseId,
-        },
-        data: updateExpenseDto,
-      });
+    const updatedExpense = await this.prismaService.expense.update({
+      where: {
+        id: expenseId,
+      },
+      data: updateExpenseDto,
+    });
 
-      return new ExpenseResponseDto(updatedExpense);
-    } catch (error) {
-      throw error;
-    }
+    return new ExpenseResponseDto(updatedExpense);
   }
 
   private async isACollaborator(
@@ -151,6 +143,6 @@ export class ExpensesService {
       },
     });
 
-    return collaboration ? true : false;
+    return !!collaboration;
   }
 }
