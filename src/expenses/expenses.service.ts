@@ -37,7 +37,22 @@ export class ExpensesService {
       contributorId: user.id,
     };
 
-    const expense = await this.prismaService.expense.create({ data });
+    const expense = await this.prismaService.expense.create({
+      data,
+      select: {
+        id: true,
+        description: true,
+        amount: true,
+        createdAt: true,
+        updatedAt: true,
+        contributor: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
 
     return new ExpenseResponseDto(expense);
   }
@@ -59,6 +74,19 @@ export class ExpensesService {
 
     const expense = await this.prismaService.expense.findUnique({
       where: { id: expenseId },
+      select: {
+        id: true,
+        description: true,
+        amount: true,
+        createdAt: true,
+        updatedAt: true,
+        contributor: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+      },
     });
 
     return new ExpenseResponseDto(expense);
@@ -81,6 +109,19 @@ export class ExpensesService {
 
     const expenses = await this.prismaService.expense.findMany({
       where: { taskId: task.id },
+      select: {
+        id: true,
+        description: true,
+        amount: true,
+        createdAt: true,
+        updatedAt: true,
+        contributor: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+      },
     });
 
     return expenses.map((expense) => new ExpenseResponseDto(expense));

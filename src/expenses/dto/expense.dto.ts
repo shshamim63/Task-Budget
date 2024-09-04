@@ -5,7 +5,10 @@ export class ExpenseResponseDto {
   description: string;
   amount: number;
   taskId: number;
-  contributorId: number;
+  contributor: {
+    username: string;
+    email: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 
