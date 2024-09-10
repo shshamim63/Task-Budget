@@ -22,3 +22,5 @@ export const ERROR_NAME = {
   UNKNOWN: 'Unknown',
   USER_MISSING: 'UserMissing',
 };
+
+export const origins = ['http://localhost:3000'];
