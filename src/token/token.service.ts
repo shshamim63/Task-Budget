@@ -7,7 +7,7 @@ import {
   ERROR_NAME,
   RESPONSE_MESSAGE,
   STATUS_CODE,
-} from '../constants';
+} from '../utils/constants';
 import {
   HttpException,
   Injectable,

@@ -11,7 +11,7 @@ import { UserType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TokenSerive } from '../../token/token.service';
 
-import { ERROR_NAME, RESPONSE_MESSAGE, ROLES_KEY } from '../../constants';
+import { ERROR_NAME, RESPONSE_MESSAGE, ROLES_KEY } from '../../utils/constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
