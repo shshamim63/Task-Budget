@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Post,
@@ -28,6 +29,12 @@ import { TaskResponseDto } from '../tasks/dto/task.dto';
 @UseInterceptors(TaskInterceptor)
 export class CollaboratorsController {
   constructor(private readonly collaboratorsService: CollaboratorsService) {}
+
+  @Get()
+  @Roles(UserType.SUPER, UserType.ADMIN)
+  getCollaborators(@User() user: JWTPayload, @Task() task: TaskResponseDto) {
+    return this.collaboratorsService.getCollaborators(user, task);
+  }
 
   @Post()
   @Roles(UserType.SUPER, UserType.ADMIN)

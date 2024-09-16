@@ -13,6 +13,34 @@ import {
 export class CollaboratorsService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  async getCollaborators(user: JWTPayload, task: TaskResponseDto) {
+    const isAuthorized = this.hasPermission(user, task);
+
+    if (!isAuthorized)
+      throw new UnauthorizedException(
+        'User does not have information access permission',
+      );
+
+    const collaborators = await this.prismaService.userTasks.findMany({
+      where: {
+        taskId: task.id,
+      },
+      select: {
+        taskId: true,
+        member: {
+          select: {
+            email: true,
+            username: true,
+            id: true,
+            userType: true,
+          },
+        },
+      },
+    });
+    console.log(collaborators);
+    return collaborators;
+  }
+
   async assignMember(
     createContributors: CreateCollaborators,
     user: JWTPayload,
