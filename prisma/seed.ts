@@ -1,41 +1,103 @@
-import { PrismaClient, UserType } from '@prisma/client';
+import { PrismaClient, TaskStatus, UserType } from '@prisma/client';
+
 import { faker } from '@faker-js/faker';
-import bcrypt from 'bcrypt';
-import { create } from 'domain';
+
+import * as bcrypt from 'bcrypt';
+
+const SALTROUND = Number(process.env.SALTROUND);
 
 const prisma = new PrismaClient();
 
-const SALTROUND = process.env.SALTROUND;
+async function main() {
+  // Create users
+  const adminUser = await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      username: 'adminUser',
+      password_hash: await bcrypt.hash('admin', SALTROUND),
+      userType: UserType.ADMIN,
+    },
+  });
 
-const fakeUser = async ({
-  role = UserType.USER,
-  password = 'demopass',
-}: {
-  role?: UserType;
-  password?: string;
-}) => {
-  return {
-    email: faker.internet.email(),
-    username: faker.internet.userName(),
-    password_hash: await bcrypt.hash(password, SALTROUND),
-    userType: role,
-  };
-};
+  //Create regular users
+  const regularUser1 = await prisma.user.create({
+    data: {
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      password_hash: await bcrypt.hash('demouser', SALTROUND),
+      userType: UserType.USER,
+    },
+  });
+  const regularUser2 = await prisma.user.create({
+    data: {
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      password_hash: await bcrypt.hash('demouser', SALTROUND),
+      userType: UserType.USER,
+    },
+  });
 
-const createUser = async (data) => {
-  return await prisma.user.create({ data });
-};
+  const regularUser3 = await prisma.user.create({
+    data: {
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      password_hash: await bcrypt.hash('demouser', SALTROUND),
+      userType: UserType.USER,
+    },
+  });
 
-const adminUser = createUser(
-  fakeUser({ role: UserType.ADMIN, password: 'admin' }),
-);
-const superUser = createUser(
-  fakeUser({ role: UserType.SUPER, password: 'super' }),
-);
+  const task1 = await prisma.task.create({
+    data: {
+      title: faker.lorem.sentence(),
+      description: faker.lorem.paragraph(),
+      creatorId: adminUser.id,
+      status: TaskStatus.OPEN,
+      budget: 100.0,
+      members: {
+        create: [{ memberId: regularUser1.id }, { memberId: regularUser2.id }],
+      },
+    },
+  });
 
-let users = [];
+  const task2 = await prisma.task.create({
+    data: {
+      title: 'Task 2',
+      description: 'Description of Task 2',
+      creatorId: adminUser.id,
+      status: TaskStatus.IN_PROGRESS,
+      budget: 50.0,
+      members: {
+        create: [{ memberId: regularUser2.id }, { memberId: regularUser3.id }],
+      },
+    },
+  });
 
-for (let i = 0; i < 5; i++) {
-  const user = createUser(fakeUser({}));
-  users.push(user);
+  // Create expenses
+  await prisma.expense.create({
+    data: {
+      description: faker.lorem.words(),
+      amount: 30.0,
+      taskId: task1.id,
+      contributorId: regularUser1.id,
+    },
+  });
+
+  await prisma.expense.create({
+    data: {
+      description: faker.lorem.words(),
+      amount: 70.0,
+      taskId: task2.id,
+      contributorId: regularUser2.id,
+    },
+  });
 }
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
