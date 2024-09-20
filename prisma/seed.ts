@@ -61,8 +61,8 @@ async function main() {
 
   const task2 = await prisma.task.create({
     data: {
-      title: 'Task 2',
-      description: 'Description of Task 2',
+      title: faker.lorem.sentence(),
+      description: faker.lorem.paragraph(),
       creatorId: adminUser.id,
       status: TaskStatus.IN_PROGRESS,
       budget: 50.0,
