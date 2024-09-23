@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -13,6 +14,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 import { ExpenseResponseDto } from './dto/expense.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class ExpensesService {
@@ -23,18 +25,40 @@ export class ExpensesService {
     task: TaskResponseDto,
     createExpenseDto: CreateExpenseDto,
   ): Promise<ExpenseResponseDto> {
-    const isSuperUser = user.userType === UserType.SUPER;
+    const { userType, id: userId } = user;
+    const { id: taskId, creatorId: taskCreatorId, budget: taskBudget } = task;
+
+    const isSuperUser = userType === UserType.SUPER;
+    const isTaskCreator = userId === taskCreatorId;
 
     const hasPermission =
-      isSuperUser || (await this.isACollaborator(user.id, task.id));
+      isSuperUser ||
+      isTaskCreator ||
+      (await this.isACollaborator(userId, taskId));
 
     if (!hasPermission)
       throw new UnauthorizedException('User cannot initiate expense');
 
+    const {
+      _sum: { amount: totalExpense },
+    } = await this.prismaService.expense.aggregate({
+      where: { taskId: taskId },
+      _sum: { amount: true },
+    });
+
+    const { amount: currentExpenseAmount } = createExpenseDto;
+
+    const isExceedingBudget = new Decimal(currentExpenseAmount)
+      .plus(totalExpense)
+      .greaterThan(new Decimal(taskBudget));
+
+    if (isExceedingBudget)
+      throw new BadRequestException('Expenses exceeds task budget');
+
     const data = {
       ...createExpenseDto,
-      taskId: task.id,
-      contributorId: user.id,
+      taskId: taskId,
+      contributorId: userId,
     };
 
     const expense = await this.prismaService.expense.create({

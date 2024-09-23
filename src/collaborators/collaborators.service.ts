@@ -8,6 +8,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { TaskCollaborators } from './dto/task-collaborators.dto';
 
 @Injectable()
 export class CollaboratorsService {
@@ -21,24 +22,44 @@ export class CollaboratorsService {
         'User does not have information access permission',
       );
 
-    const collaborators = await this.prismaService.userTasks.findMany({
-      where: {
-        taskId: task.id,
-      },
+    const taskWithMembers = await this.prismaService.task.findUnique({
+      where: { id: task.id },
       select: {
-        taskId: true,
-        member: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        budget: true,
+        createdAt: true,
+        updatedAt: true,
+        creator: {
           select: {
+            id: true,
             email: true,
             username: true,
-            id: true,
             userType: true,
+          },
+        },
+        members: {
+          select: {
+            member: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+              },
+            },
           },
         },
       },
     });
-    console.log(collaborators);
-    return collaborators;
+
+    const taskWithCollaborators = {
+      ...taskWithMembers,
+      members: taskWithMembers.members.map((data) => data.member),
+    };
+
+    return new TaskCollaborators(taskWithCollaborators);
   }
 
   async assignMember(
