@@ -4,7 +4,9 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - staging
 jobs:
   sonarcloud:
     name: SonarCloud
