@@ -127,10 +127,11 @@ export class TasksService {
     task: Task,
     user: JWTPayload,
   ): boolean | never {
-    console.log(task.creatorId, user.id, user.userType !== UserType.SUPER);
-    if (user.userType === UserType.SUPER) return true;
+    const isSuperUser = user.userType === UserType.SUPER;
+    if (isSuperUser) return true;
 
-    if (task.creatorId === user.id) return true;
+    const isTaskCreator = task.creatorId === user.id;
+    if (isTaskCreator) return true;
 
     throw new ForbiddenException(
       RESPONSE_MESSAGE.PERMISSION_DENIED,
