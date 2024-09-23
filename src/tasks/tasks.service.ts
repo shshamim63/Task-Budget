@@ -23,21 +23,21 @@ export class TasksService {
   constructor(private prismaService: PrismaService) {}
 
   async getTasks(filterDto: GetTasksFilterDto): Promise<TaskResponseDto[]> {
-    const where: any = {};
+    const { status, search } = filterDto;
 
-    if (Object.keys(filterDto).length) {
-      const { status, search } = filterDto;
-      if (status) where.status = status;
-      if (search)
-        where.OR = [
-          {
-            title: { contains: search },
-          },
+    const where: any = {
+      ...(status && { status: status }),
+      ...(search && {
+        OR: [
+          { title: { contains: search } },
           { description: { contains: search } },
-        ];
-    }
+        ],
+      }),
+    };
+
     const tasks = await this.prismaService.task.findMany({ where });
-    return tasks.map((task) => new TaskResponseDto(task));
+
+    return !!tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
 
   async getTaskById(id: number): Promise<TaskResponseDto> {
