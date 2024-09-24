@@ -23,21 +23,21 @@ export class TasksService {
   constructor(private prismaService: PrismaService) {}
 
   async getTasks(filterDto: GetTasksFilterDto): Promise<TaskResponseDto[]> {
-    const where: any = {};
+    const { status, search } = filterDto;
 
-    if (Object.keys(filterDto).length) {
-      const { status, search } = filterDto;
-      if (status) where.status = status;
-      if (search)
-        where.OR = [
-          {
-            title: { contains: search },
-          },
+    const where: any = {
+      ...(status && { status: status }),
+      ...(search && {
+        OR: [
+          { title: { contains: search } },
           { description: { contains: search } },
-        ];
-    }
+        ],
+      }),
+    };
+
     const tasks = await this.prismaService.task.findMany({ where });
-    return tasks.map((task) => new TaskResponseDto(task));
+
+    return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
 
   async getTaskById(id: number): Promise<TaskResponseDto> {
@@ -127,10 +127,11 @@ export class TasksService {
     task: Task,
     user: JWTPayload,
   ): boolean | never {
-    console.log(task.creatorId, user.id, user.userType !== UserType.SUPER);
-    if (user.userType === UserType.SUPER) return true;
+    const isSuperUser = user.userType === UserType.SUPER;
+    if (isSuperUser) return true;
 
-    if (task.creatorId === user.id) return true;
+    const isTaskCreator = task.creatorId === user.id;
+    if (isTaskCreator) return true;
 
     throw new ForbiddenException(
       RESPONSE_MESSAGE.PERMISSION_DENIED,
