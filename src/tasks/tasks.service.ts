@@ -37,7 +37,7 @@ export class TasksService {
 
     const tasks = await this.prismaService.task.findMany({ where });
 
-    return !!tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
+    return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
 
   async getTaskById(id: number): Promise<TaskResponseDto> {
