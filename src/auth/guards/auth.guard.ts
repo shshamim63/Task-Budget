@@ -6,12 +6,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { UserType } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { TokenSerive } from '../../token/token.service';
 
-import { ERROR_NAME, RESPONSE_MESSAGE, ROLES_KEY } from '../../utils/constants';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -39,35 +38,14 @@ export class AuthGuard implements CanActivate {
       where: { id: payload.id },
     });
 
+    request.user = payload;
+
     if (!user)
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.USER_MISSING,
         ERROR_NAME.USER_MISSING,
       );
 
-    const requiredRoles = this.getRoles(context);
-
-    return requiredRoles
-      ? this.validateRoles(requiredRoles, user.userType)
-      : true;
-  }
-
-  private getRoles(context: ExecutionContext): UserType[] | undefined {
-    return this.reflector.getAllAndOverride<UserType[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-  }
-
-  private validateRoles(permittedRoles, currentRole) {
-    const hasPermission = permittedRoles.some((role) => role === currentRole);
-
-    if (!hasPermission)
-      throw new UnauthorizedException(
-        RESPONSE_MESSAGE.PERMISSION_DENIED,
-        ERROR_NAME.PERMISSION_DENIED,
-      );
-
-    return hasPermission;
+    return true;
   }
 }

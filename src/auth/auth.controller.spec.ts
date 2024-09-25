@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { faker } from '@faker-js/faker';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+
 import { SignInDto, SignUpDto } from './dto/auth-credentials.dto';
 import { UserResponseDto } from './dto/user.dto';
-import { faker } from '@faker-js/faker/.';
 
 describe('AuthController', () => {
   let authController: AuthController;

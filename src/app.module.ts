@@ -10,7 +10,6 @@ import { TasksModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
 import { ExpensesModule } from './expenses/expenses.module';
 
-import { UserInterceptor } from './auth/interceptors/user.interceptor';
 import { CollaboratorsModule } from './collaborators/collaborators.module';
 
 @Module({
@@ -27,10 +26,6 @@ import { CollaboratorsModule } from './collaborators/collaborators.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: UserInterceptor,
     },
   ],
 })

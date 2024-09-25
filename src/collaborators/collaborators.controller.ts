@@ -12,7 +12,7 @@ import {
 
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
-import { CreateCollaborators } from './dto/create-collaborators.dto';
+import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
 import { User } from '../decorators/user.decorator';
 import { Task } from '../tasks/decorators/task.decorator';
 
@@ -39,12 +39,12 @@ export class CollaboratorsController {
   @Post()
   @Roles(UserType.SUPER, UserType.ADMIN)
   assignMember(
-    @Body() createCollaborators: CreateCollaborators,
+    @Body() createCollaboratorsDto: CreateCollaboratorsDto,
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<string> {
     return this.collaboratorsService.assignMember(
-      createCollaborators,
+      createCollaboratorsDto,
       user,
       task,
     );

@@ -2,7 +2,7 @@ import { UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { CreateCollaborators } from './dto/create-collaborators.dto';
+import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
 import {
   Injectable,
   NotFoundException,
@@ -63,7 +63,7 @@ export class CollaboratorsService {
   }
 
   async assignMember(
-    createContributors: CreateCollaborators,
+    createContributors: CreateCollaboratorsDto,
     user: JWTPayload,
     task: TaskResponseDto,
   ): Promise<string> {
