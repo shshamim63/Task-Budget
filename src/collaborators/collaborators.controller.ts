@@ -23,9 +23,10 @@ import { Roles } from '../decorators/roles.decorator';
 import { UserType } from '@prisma/client';
 import { CollaboratorsService } from './collaborators.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('tasks/:taskId/collaborators')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @UseInterceptors(TaskInterceptor)
 export class CollaboratorsController {
   constructor(private readonly collaboratorsService: CollaboratorsService) {}
