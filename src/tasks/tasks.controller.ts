@@ -38,13 +38,17 @@ export class TasksController {
   @Get()
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
+    @User() user,
   ): Promise<TaskResponseDto[]> {
-    return this.tasksService.getTasks(filterDto);
+    return this.tasksService.getTasks(filterDto, user);
   }
 
   @Get('/:id')
-  getTaskById(@Param('id', ParseIntPipe) id: number): Promise<TaskResponseDto> {
-    return this.tasksService.getTaskById(id);
+  getTaskById(
+    @Param('id', ParseIntPipe) id: number,
+    @User() user,
+  ): Promise<TaskResponseDto> {
+    return this.tasksService.getTaskById(id, user);
   }
 
   @Post()
