@@ -119,7 +119,7 @@ describe('CollaboratorsController', () => {
       }),
     };
 
-    it('should deny access when user is not a admin or super', async () => {
+    it('should deny access when user is neither admin nor super', async () => {
       jest
         .spyOn(RolesGuard.prototype, 'canActivate')
         .mockImplementationOnce(() => false);
@@ -148,4 +148,8 @@ describe('CollaboratorsController', () => {
       );
     });
   });
+
+  // describe('removeCollaborator', () => {
+  //   it('should deny access when ')
+  // })
 });
