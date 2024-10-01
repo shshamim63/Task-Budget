@@ -20,8 +20,8 @@ export class AuthService {
   private readonly accessToken = process.env.ACCESS_TOKEN;
 
   constructor(
-    private prismaService: PrismaService,
-    private tokenService: TokenSerive,
+    private readonly prismaService: PrismaService,
+    private readonly tokenService: TokenSerive,
   ) {}
 
   async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {

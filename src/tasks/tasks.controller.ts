@@ -33,7 +33,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 @Controller('tasks')
 @UseGuards(AuthGuard, RolesGuard)
 export class TasksController {
-  constructor(private tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   @Get()
   getTasks(
