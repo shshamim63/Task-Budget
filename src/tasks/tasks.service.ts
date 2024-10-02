@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -12,20 +11,25 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
-import { Prisma, Task, UserType } from '@prisma/client';
+import { Prisma, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CustomError } from '../common/exceptions/custom-error.exception';
+import { TaskPermissionService } from '../helpers/task-permission-helper.service';
 
 @Injectable()
 export class TasksService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly taskPermissionService: TaskPermissionService,
+  ) {}
 
-  async getTasks(filterDto: GetTasksFilterDto): Promise<TaskResponseDto[]> {
+  async getTasks(
+    filterDto: GetTasksFilterDto,
+    user: JWTPayload,
+  ): Promise<TaskResponseDto[]> {
     const { status, search } = filterDto;
-
-    const where: any = {
+    const baseCondition = {
       ...(status && { status: status }),
       ...(search && {
         OR: [
@@ -35,16 +39,72 @@ export class TasksService {
       }),
     };
 
-    const tasks = await this.prismaService.task.findMany({ where });
+    let searchCiteria = {};
+
+    if (user.userType === UserType.SUPER) {
+      searchCiteria = {
+        where: {
+          ...baseCondition,
+        },
+      };
+    } else if (user.userType === UserType.ADMIN) {
+      searchCiteria = {
+        where: {
+          OR: [
+            { creatorId: user.id },
+            {
+              members: {
+                some: {
+                  memberId: user.id,
+                },
+              },
+            },
+          ],
+          ...baseCondition,
+        },
+      };
+    } else {
+      searchCiteria = {
+        where: {
+          members: {
+            some: {
+              memberId: user.id,
+            },
+          },
+          ...baseCondition,
+        },
+      };
+    }
+
+    const tasks = await this.prismaService.task.findMany(searchCiteria);
 
     return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
 
-  async getTaskById(id: number): Promise<TaskResponseDto> {
-    const task = await this.prismaService.task.findUnique({
-      where: { id: id },
+  async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
+    let baseCondition: any = { id: id };
+    if (user.userType !== UserType.SUPER) {
+      baseCondition = {
+        ...baseCondition,
+        OR: [
+          { creatorId: user.id },
+          {
+            members: {
+              some: {
+                memberId: user.id,
+              },
+            },
+          },
+        ],
+      };
+    }
+
+    const task = await this.prismaService.task.findFirst({
+      where: baseCondition,
     });
+
     if (!task) throw new NotFoundException(`Task with id: ${id} not found`);
+
     return new TaskResponseDto(task);
   }
 
@@ -75,7 +135,10 @@ export class TasksService {
       const task = await this.prismaService.task.findUniqueOrThrow({
         where: { id: id },
       });
-      this.hasOperationPermission(task, user);
+      this.taskPermissionService.hasOperationPermission(
+        user,
+        new TaskResponseDto(task),
+      );
       await this.prismaService.task.delete({ where: { id: id } });
       return 'Detete task success';
     } catch (error) {
@@ -92,7 +155,10 @@ export class TasksService {
       const task = await this.prismaService.task.findUniqueOrThrow({
         where: { id: id },
       });
-      this.hasOperationPermission(task, user);
+      this.taskPermissionService.hasOperationPermission(
+        user,
+        new TaskResponseDto(task),
+      );
       const currentTask = await this.prismaService.task.update({
         where: { id: id },
         data: updateTaskDto,
@@ -112,7 +178,12 @@ export class TasksService {
       const task = await this.prismaService.task.findUniqueOrThrow({
         where: { id: id },
       });
-      this.hasOperationPermission(task, user);
+
+      this.taskPermissionService.hasOperationPermission(
+        user,
+        new TaskResponseDto(task),
+      );
+
       const updatedTask = await this.prismaService.task.update({
         where: { id: id },
         data: { status: status },
@@ -121,22 +192,6 @@ export class TasksService {
     } catch (error) {
       this.handleError(error);
     }
-  }
-
-  private hasOperationPermission(
-    task: Task,
-    user: JWTPayload,
-  ): boolean | never {
-    const isSuperUser = user.userType === UserType.SUPER;
-    if (isSuperUser) return true;
-
-    const isTaskCreator = task.creatorId === user.id;
-    if (isTaskCreator) return true;
-
-    throw new ForbiddenException(
-      RESPONSE_MESSAGE.PERMISSION_DENIED,
-      ERROR_NAME.PERMISSION_DENIED,
-    );
   }
 
   private handleError(error: CustomError): never {

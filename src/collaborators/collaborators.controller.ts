@@ -12,7 +12,7 @@ import {
 
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
-import { CreateCollaborators } from './dto/create-collaborators.dto';
+import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
 import { User } from '../decorators/user.decorator';
 import { Task } from '../tasks/decorators/task.decorator';
 
@@ -23,9 +23,10 @@ import { Roles } from '../decorators/roles.decorator';
 import { UserType } from '@prisma/client';
 import { CollaboratorsService } from './collaborators.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('tasks/:taskId/collaborators')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @UseInterceptors(TaskInterceptor)
 export class CollaboratorsController {
   constructor(private readonly collaboratorsService: CollaboratorsService) {}
@@ -39,12 +40,12 @@ export class CollaboratorsController {
   @Post()
   @Roles(UserType.SUPER, UserType.ADMIN)
   assignMember(
-    @Body() createCollaborators: CreateCollaborators,
+    @Body() createCollaboratorsDto: CreateCollaboratorsDto,
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<string> {
     return this.collaboratorsService.assignMember(
-      createCollaborators,
+      createCollaboratorsDto,
       user,
       task,
     );

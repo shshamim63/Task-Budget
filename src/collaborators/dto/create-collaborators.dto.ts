@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsInt, Min } from 'class-validator';
 
-export class CreateCollaborators {
+export class CreateCollaboratorsDto {
   @IsArray()
   @ArrayMinSize(1)
   @IsInt({ each: true })

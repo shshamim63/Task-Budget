@@ -1,26 +1,20 @@
-import { UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { CreateCollaborators } from './dto/create-collaborators.dto';
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskCollaborators } from './dto/task-collaborators.dto';
+import { TaskPermissionService } from '../helpers/task-permission-helper.service';
 
 @Injectable()
 export class CollaboratorsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly taskPermissionService: TaskPermissionService,
+  ) {}
 
   async getCollaborators(user: JWTPayload, task: TaskResponseDto) {
-    const isAuthorized = this.hasPermission(user, task);
-
-    if (!isAuthorized)
-      throw new UnauthorizedException(
-        'User does not have information access permission',
-      );
+    this.taskPermissionService.hasOperationPermission(user, task);
 
     const taskWithMembers = await this.prismaService.task.findUnique({
       where: { id: task.id },
@@ -63,14 +57,11 @@ export class CollaboratorsService {
   }
 
   async assignMember(
-    createContributors: CreateCollaborators,
+    createContributors: CreateCollaboratorsDto,
     user: JWTPayload,
     task: TaskResponseDto,
   ): Promise<string> {
-    const isAuthorized = this.hasPermission(user, task);
-
-    if (!isAuthorized)
-      throw new UnauthorizedException('User cannot assign members to the task');
+    this.taskPermissionService.hasOperationPermission(user, task);
 
     const { collaborators } = createContributors;
 
@@ -114,10 +105,7 @@ export class CollaboratorsService {
     task: TaskResponseDto,
     contributorId: number,
   ): Promise<string> {
-    const isAuthorized = this.hasPermission(user, task);
-
-    if (!isAuthorized)
-      throw new UnauthorizedException('User cannot assign members to the task');
+    this.taskPermissionService.hasOperationPermission(user, task);
 
     await this.prismaService.userTasks.delete({
       where: {
@@ -129,15 +117,5 @@ export class CollaboratorsService {
     });
 
     return `Removed member with id: ${contributorId} from task with id: ${task.id}`;
-  }
-
-  private hasPermission(user: JWTPayload, task: TaskResponseDto): boolean {
-    const isSuperUser = user.userType === UserType.SUPER;
-    const isAdminUser = user.userType === UserType.ADMIN;
-    const isTaskCreator = user.id === task.creatorId;
-
-    if (isSuperUser || (isAdminUser && isTaskCreator)) return true;
-
-    return false;
   }
 }

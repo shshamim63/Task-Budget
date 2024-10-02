@@ -20,8 +20,8 @@ export class AuthService {
   private readonly accessToken = process.env.ACCESS_TOKEN;
 
   constructor(
-    private prismaService: PrismaService,
-    private tokenService: TokenSerive,
+    private readonly prismaService: PrismaService,
+    private readonly tokenService: TokenSerive,
   ) {}
 
   async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
@@ -48,7 +48,7 @@ export class AuthService {
     return new UserResponseDto({ ...user, token });
   }
 
-  async signin({ email, password }: SignInParams) {
+  async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
     const user = await this.prismaService.user.findUnique({
       where: { email },
     });

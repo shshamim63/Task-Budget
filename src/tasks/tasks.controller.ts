@@ -28,22 +28,27 @@ import { User } from '../decorators/user.decorator';
 import { Roles } from '../decorators/roles.decorator';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('tasks')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class TasksController {
-  constructor(private tasksService: TasksService) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   @Get()
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
+    @User() user,
   ): Promise<TaskResponseDto[]> {
-    return this.tasksService.getTasks(filterDto);
+    return this.tasksService.getTasks(filterDto, user);
   }
 
   @Get('/:id')
-  getTaskById(@Param('id', ParseIntPipe) id: number): Promise<TaskResponseDto> {
-    return this.tasksService.getTaskById(id);
+  getTaskById(
+    @Param('id', ParseIntPipe) id: number,
+    @User() user,
+  ): Promise<TaskResponseDto> {
+    return this.tasksService.getTaskById(id, user);
   }
 
   @Post()
