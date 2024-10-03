@@ -7,6 +7,7 @@ on:
     branches:
       - main
       - staging
+
 jobs:
   sonarcloud:
     name: SonarCloud
@@ -24,7 +25,10 @@ jobs:
         run: npm install
 
       - name: Run tests and generate coverage
-        run: npm test --coverage --coverageDirectory=../coverage --coverageReporters=lcov
+        run: npm run test -- --coverage --coverageDirectory=../coverage --coverageReporters=lcov
+
+      - name: List coverage files
+        run: ls -l ../coverage/
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
