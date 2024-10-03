@@ -28,7 +28,7 @@ jobs:
         run: npm run test -- --coverage --coverageReporters=lcov
 
       - name: List coverage files
-        run: ls -l ./coverage/
+        run: ls -l ./src/coverage/
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
