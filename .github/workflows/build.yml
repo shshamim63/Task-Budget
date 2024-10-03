@@ -25,10 +25,10 @@ jobs:
         run: npm install
 
       - name: Run tests and generate coverage
-        run: npm run test -- --coverage --coverageDirectory=../coverage --coverageReporters=lcov
+        run: npm run test -- --coverage --coverageReporters=lcov
 
       - name: List coverage files
-        run: ls -l ../coverage/
+        run: ls -l ./coverage/
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
