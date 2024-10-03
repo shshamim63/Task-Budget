@@ -3,6 +3,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { RolesGuard } from './roles.guard';
 import { Reflector } from '@nestjs/core';
 import { UserType } from '@prisma/client';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 
 function createMockExecutionContext(
   roles?: UserType[],
@@ -45,6 +46,41 @@ describe('RolesGuard', () => {
   it('should allow access when no roles are defined', async () => {
     const context = createMockExecutionContext(undefined);
     reflector.getAllAndOverride = jest.fn().mockReturnValue(undefined);
+
+    const result = await rolesGuard.canActivate(context);
+    expect(result).toBe(true);
+  });
+
+  it('should deny access when role is defined and the user does not have the required role', async () => {
+    const context = createMockExecutionContext(
+      [UserType.ADMIN, UserType.SUPER],
+      UserType.USER,
+    );
+
+    reflector.getAllAndOverride = jest
+      .fn()
+      .mockReturnValue([UserType.ADMIN, UserType.SUPER]);
+
+    try {
+      await rolesGuard.canActivate(context);
+    } catch (error) {
+      expect(error.status).toEqual(403);
+      expect(error.response.message).toEqual(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+      );
+      expect(error.response.error).toEqual(ERROR_NAME.PERMISSION_DENIED);
+    }
+  });
+
+  it('should permit access when user has the required role', async () => {
+    const context = createMockExecutionContext(
+      [UserType.ADMIN, UserType.SUPER],
+      UserType.SUPER,
+    );
+
+    reflector.getAllAndOverride = jest
+      .fn()
+      .mockReturnValue([UserType.ADMIN, UserType.SUPER]);
 
     const result = await rolesGuard.canActivate(context);
     expect(result).toBe(true);
