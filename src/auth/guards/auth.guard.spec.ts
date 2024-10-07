@@ -1,16 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthGuard } from './auth.guard';
-import { PrismaService } from '../../prisma/prisma.service';
-import { TokenSerive } from '../../token/token.service';
 import { UnauthorizedException } from '@nestjs/common';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
-import { faker } from '@faker-js/faker/.';
 import { UserType } from '@prisma/client';
 
+import { faker } from '@faker-js/faker/.';
+import * as bcrypt from 'bcrypt';
+
+import { AuthGuard } from './auth.guard';
+
+import { PrismaService } from '../../prisma/prisma.service';
+import { TokenSerive } from '../../token/token.service';
+
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
   let prismaService: PrismaService;
   let tokenService: TokenSerive;
+
+  const saltRound = Number(process.env.SALTROUND);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -88,5 +94,44 @@ describe('AuthGuard', () => {
     expect(prismaService.user.findUnique).toHaveBeenCalledWith({
       where: { id: mockPayload.id },
     });
+  });
+
+  it('should return true when user is authenticated', async () => {
+    const mockToken = faker.string.alphanumeric({ length: 64 });
+
+    const mockPayload = {
+      id: faker.number.int(),
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      userType: UserType.USER,
+      exp: faker.number.int(),
+      iat: faker.number.int(),
+    };
+
+    const mockUser = {
+      id: mockPayload.id,
+      email: mockPayload.email,
+      username: mockPayload.username,
+      password_hash: await bcrypt.hash(faker.internet.password(), saltRound),
+      userType: UserType.USER,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const context = mockExecutionContext(mockToken);
+
+    jest.spyOn(tokenService, 'getTokenFromHeader').mockReturnValue(mockToken);
+    jest.spyOn(tokenService, 'verifyToken').mockReturnValue(mockPayload);
+    jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(mockUser);
+
+    const result = await authGuard.canActivate(context);
+
+    expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
+    expect(tokenService.verifyToken).toHaveBeenCalledWith(mockToken);
+    expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+      where: { id: mockPayload.id },
+    });
+
+    expect(result).toBe(true);
   });
 });
