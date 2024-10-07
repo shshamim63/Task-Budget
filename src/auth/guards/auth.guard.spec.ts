@@ -4,6 +4,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { TokenSerive } from '../../token/token.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+import { faker } from '@faker-js/faker/.';
+import { UserType } from '@prisma/client';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
@@ -54,5 +56,37 @@ describe('AuthGuard', () => {
         ERROR_NAME.MISSING_AUTH,
       ),
     );
+  });
+
+  it('should thorow UnauthorizedException when user is not found', async () => {
+    const mockToken = faker.string.alphanumeric({ length: 64 });
+
+    const mockPayload = {
+      id: faker.number.int(),
+      email: faker.internet.email(),
+      username: faker.internet.userName(),
+      userType: UserType.USER,
+      exp: faker.number.int(),
+      iat: faker.number.int(),
+    };
+
+    const context = mockExecutionContext(mockToken);
+
+    jest.spyOn(tokenService, 'getTokenFromHeader').mockReturnValue(mockToken);
+    jest.spyOn(tokenService, 'verifyToken').mockReturnValue(mockPayload);
+    jest.spyOn(prismaService.user, 'findUnique').mockReturnValue(null);
+
+    await expect(authGuard.canActivate(context)).rejects.toThrow(
+      new UnauthorizedException(
+        RESPONSE_MESSAGE.USER_MISSING,
+        ERROR_NAME.USER_MISSING,
+      ),
+    );
+
+    expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
+    expect(tokenService.verifyToken).toHaveBeenCalledWith(mockToken);
+    expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+      where: { id: mockPayload.id },
+    });
   });
 });

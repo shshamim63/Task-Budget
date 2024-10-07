@@ -36,14 +36,13 @@ export class AuthGuard implements CanActivate {
       where: { id: payload.id },
     });
 
-    request.user = payload;
-
     if (!user)
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.USER_MISSING,
         ERROR_NAME.USER_MISSING,
       );
 
+    request.user = payload;
     return true;
   }
 }
