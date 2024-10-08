@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 
 import { PrismaService } from '../../prisma/prisma.service';
@@ -19,7 +18,6 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenSerive,
-    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -38,14 +36,13 @@ export class AuthGuard implements CanActivate {
       where: { id: payload.id },
     });
 
-    request.user = payload;
-
     if (!user)
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.USER_MISSING,
         ERROR_NAME.USER_MISSING,
       );
 
+    request.user = payload;
     return true;
   }
 }
