@@ -85,12 +85,29 @@ describe('ExpensesController', () => {
         mockUser,
         mockTask,
       );
-      console.log(result);
       expect(result).toEqual(mockExpense);
       expect(expensesService.createExpense).toHaveBeenCalledWith(
         mockUser,
         mockTask,
         createExpenseDto,
+      );
+    });
+  });
+
+  describe('getExpense', () => {
+    it('should call expensesService.getExpense with correctt parameters', async () => {
+      mockExpensesService.getExpense.mockResolvedValue(mockExpense);
+      const result = await expensesController.getExpense(
+        mockExpense.id,
+        mockUser,
+        mockTask,
+      );
+
+      expect(result).toEqual(mockExpense);
+      expect(expensesService.getExpense).toHaveBeenCalledWith(
+        mockUser,
+        mockTask,
+        mockExpense.id,
       );
     });
   });
