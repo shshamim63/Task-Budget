@@ -111,4 +111,17 @@ describe('ExpensesController', () => {
       );
     });
   });
+
+  describe('getExpenses', () => {
+    it('should call expensesService.getExpense with correctt parameters', async () => {
+      mockExpensesService.getExpenses.mockResolvedValue([mockExpense]);
+      const result = await expensesController.getExpenses(mockUser, mockTask);
+
+      expect(result).toEqual(expect.arrayContaining([mockExpense]));
+      expect(expensesService.getExpenses).toHaveBeenCalledWith(
+        mockUser,
+        mockTask,
+      );
+    });
+  });
 });
