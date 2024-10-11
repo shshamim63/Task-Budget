@@ -10,6 +10,7 @@ import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
 import { faker } from '@faker-js/faker/.';
 import { TaskStatus, UserType } from '@prisma/client';
 import { ExpenseResponseDto } from './dto/expense.dto';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 describe('ExpensesController', () => {
   let expensesController: ExpensesController;
@@ -95,7 +96,7 @@ describe('ExpensesController', () => {
   });
 
   describe('getExpense', () => {
-    it('should call expensesService.getExpense with correctt parameters', async () => {
+    it('should call expensesService.getExpense with correct parameters', async () => {
       mockExpensesService.getExpense.mockResolvedValue(mockExpense);
       const result = await expensesController.getExpense(
         mockExpense.id,
@@ -113,7 +114,7 @@ describe('ExpensesController', () => {
   });
 
   describe('getExpenses', () => {
-    it('should call expensesService.getExpense with correctt parameters', async () => {
+    it('should call expensesService.getExpense with correct parameters', async () => {
       mockExpensesService.getExpenses.mockResolvedValue([mockExpense]);
       const result = await expensesController.getExpenses(mockUser, mockTask);
 
@@ -122,6 +123,31 @@ describe('ExpensesController', () => {
         mockUser,
         mockTask,
       );
+    });
+  });
+  describe('updateExpense', () => {
+    it('should call expensesService.updateExpense with correct parameters', async () => {
+      const updateExpenseDto: UpdateExpenseDto = {
+        description: faker.lorem.words(),
+        amount: faker.number.float(),
+        contributorId: faker.number.int(),
+      };
+      mockExpensesService.updateExpense.mockResolvedValue({
+        ...mockExpense,
+        ...updateExpenseDto,
+      });
+
+      const result = await expensesController.updateExpense(
+        mockExpense.id,
+        updateExpenseDto,
+        mockUser,
+        mockTask,
+      );
+      expect(result).toEqual({
+        ...mockExpense,
+        ...updateExpenseDto,
+      });
+      expect(expensesService.updateExpense).toHaveBeenCalled();
     });
   });
 });
