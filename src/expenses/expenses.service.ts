@@ -1,11 +1,11 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 
-import { UserType } from '@prisma/client';
+import { Expense, UserType } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
@@ -25,32 +25,19 @@ export class ExpensesService {
     task: TaskResponseDto,
     createExpenseDto: CreateExpenseDto,
   ): Promise<ExpenseResponseDto> {
-    const { userType, id: userId } = user;
-    const { id: taskId, creatorId: taskCreatorId, budget: taskBudget } = task;
+    const { id: userId } = user;
+    const { id: taskId, budget: taskBudget } = task;
 
-    const isSuperUser = userType === UserType.SUPER;
-    const isTaskCreator = userId === taskCreatorId;
+    const isAuthorized = await this.hasPermission({ user, task });
 
-    const hasPermission =
-      isSuperUser ||
-      isTaskCreator ||
-      (await this.isACollaborator(userId, taskId));
+    if (!isAuthorized)
+      throw new ForbiddenException('User cannot initiate expense');
 
-    if (!hasPermission)
-      throw new UnauthorizedException('User cannot initiate expense');
-
-    const {
-      _sum: { amount: totalExpense },
-    } = await this.prismaService.expense.aggregate({
-      where: { taskId: taskId },
-      _sum: { amount: true },
-    });
-
-    const { amount: currentExpenseAmount } = createExpenseDto;
-
-    const isExceedingBudget = new Decimal(currentExpenseAmount)
-      .plus(totalExpense)
-      .greaterThan(new Decimal(taskBudget));
+    const isExceedingBudget = await this.isExceddingTaskBudget(
+      taskId,
+      createExpenseDto,
+      taskBudget,
+    );
 
     if (isExceedingBudget)
       throw new BadRequestException('Expenses exceeds task budget');
@@ -86,13 +73,10 @@ export class ExpensesService {
     task: TaskResponseDto,
     expenseId: number,
   ): Promise<ExpenseResponseDto> {
-    const hasPermission =
-      user.userType === UserType.SUPER ||
-      task.creatorId === user.id ||
-      this.isACollaborator(user.id, task.id);
+    const isAuthorized = await this.hasPermission({ user, task });
 
-    if (!hasPermission)
-      throw new UnauthorizedException(
+    if (!isAuthorized)
+      throw new ForbiddenException(
         'User does not have permission to access the info',
       );
 
@@ -120,14 +104,10 @@ export class ExpensesService {
     user: JWTPayload,
     task: TaskResponseDto,
   ): Promise<ExpenseResponseDto[]> {
-    const isSuperUser = user.userType === UserType.SUPER;
-    const isTaskCreator = task.creatorId === user.id;
+    const isAuthorized = await this.hasPermission({ user, task });
 
-    const hasPermission =
-      isSuperUser || isTaskCreator || this.isACollaborator(user.id, task.id);
-
-    if (!hasPermission)
-      throw new UnauthorizedException(
+    if (!isAuthorized)
+      throw new ForbiddenException(
         'User does not have permission to access the info',
       );
 
@@ -166,17 +146,15 @@ export class ExpensesService {
         `Expense with id: ${expenseId} does not exist`,
       );
 
-    const isSuperUser = user.userType === UserType.SUPER;
-    const isTaskCreator = task.creatorId === user.id;
-    const isContributor = currentExpense.contributorId === user.id;
+    const isAuthorized = this.canUpdateExpense({
+      user,
+      task,
+      currentExpense,
+      updateExpenseDto,
+    });
 
-    if (updateExpenseDto.contributorId && (!isSuperUser || !isTaskCreator))
-      throw new UnauthorizedException('User cannot update expense');
-
-    const hasPermission = isSuperUser || isTaskCreator || isContributor;
-
-    if (!hasPermission)
-      throw new UnauthorizedException('User cannot update expense');
+    if (!isAuthorized)
+      throw new ForbiddenException('User cannot update the expense');
 
     const updatedExpense = await this.prismaService.expense.update({
       where: {
@@ -186,6 +164,70 @@ export class ExpensesService {
     });
 
     return new ExpenseResponseDto(updatedExpense);
+  }
+
+  private async hasPermission({
+    user: { userType, id: userId },
+    task: { id: taskId, creatorId: taskCreatorId },
+  }: {
+    user: JWTPayload;
+    task: TaskResponseDto;
+  }): Promise<boolean> {
+    const isSuperUser = userType === UserType.SUPER;
+    const isTaskCreator = userId === taskCreatorId;
+
+    const hasPermission =
+      isSuperUser ||
+      isTaskCreator ||
+      (await this.isACollaborator(userId, taskId));
+
+    return hasPermission;
+  }
+
+  private async isExceddingTaskBudget(
+    taskId: number,
+    createExpenseDto,
+    taskBudget,
+  ): Promise<boolean> {
+    const {
+      _sum: { amount: totalExpense },
+    } = await this.prismaService.expense.aggregate({
+      where: { taskId: taskId },
+      _sum: { amount: true },
+    });
+
+    const { amount: currentExpenseAmount } = createExpenseDto;
+
+    const isExceedingBudget = new Decimal(currentExpenseAmount)
+      .plus(totalExpense)
+      .greaterThan(new Decimal(taskBudget));
+
+    return isExceedingBudget;
+  }
+
+  private canUpdateExpense({
+    user,
+    task,
+    currentExpense,
+    updateExpenseDto,
+  }: {
+    user: JWTPayload;
+    task: TaskResponseDto;
+    currentExpense: Expense;
+    updateExpenseDto: UpdateExpenseDto;
+  }): boolean {
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isTaskCreator = task.creatorId === user.id;
+    const isContributor = currentExpense.contributorId === user.id;
+
+    if (updateExpenseDto.contributorId && (!isSuperUser || !isTaskCreator))
+      return false;
+
+    const hasPermission = isSuperUser || isTaskCreator || isContributor;
+
+    if (!hasPermission) return false;
+
+    return true;
   }
 
   private async isACollaborator(
