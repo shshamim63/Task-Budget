@@ -25,8 +25,8 @@ export class TasksService {
   ) {}
 
   async getTasks(
-    filterDto: GetTasksFilterDto,
     user: JWTPayload,
+    filterDto?: GetTasksFilterDto,
   ): Promise<TaskResponseDto[]> {
     const { status, search } = filterDto;
     const baseCondition = {
