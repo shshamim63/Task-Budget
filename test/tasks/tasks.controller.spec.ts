@@ -106,4 +106,24 @@ describe('TasksController', () => {
       expect(result).toEqual(TASK_RESPONSE_MESSAGE.DELETE_TASK);
     });
   });
+
+  describe('updateTask', () => {
+    it('should return updated task when operation is successfull', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      const { title, description, budget } = mockTask;
+      const body: CreateTaskDto = {
+        title,
+        description,
+        budget,
+      };
+      mockTasksService.updateTask.mockResolvedValue(mockTask);
+      const result = await tasksController.updateTask(
+        mockTask.id,
+        body,
+        mockUser,
+      );
+      expect(result).toEqual(mockTask);
+    });
+  });
 });
