@@ -25,3 +25,9 @@ export const generateMockCollaboratorsResponse = () => {
     },
   ];
 };
+
+export const generateCollaboratorId = () => {
+  return {
+    collaboratorId: faker.number.int({ min: 1 }),
+  };
+};

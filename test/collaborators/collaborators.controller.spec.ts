@@ -21,7 +21,10 @@ import { TaskInterceptor } from '../../src/tasks/interceptors/task.interceptor';
 
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 import { CreateCollaboratorsDto } from '../../src/collaborators/dto/create-collaborators.dto';
-import { generateMockCollaboratorsResponse } from '../helpers/collaborators.helper';
+import {
+  generateCollaboratorId,
+  generateMockCollaboratorsResponse,
+} from '../helpers/collaborators.helper';
 
 describe('CollaboratorsController', () => {
   let collaboratorsController: CollaboratorsController;
@@ -121,6 +124,23 @@ describe('CollaboratorsController', () => {
       expect(result).toEqual(
         `Assigned members to the task with id: ${mockTask.id}`,
       );
+    });
+  });
+
+  describe('removeCollaborator', () => {
+    it('should remove a user from the task collaborator', async () => {
+      const { collaboratorId } = generateCollaboratorId();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      const mockTask = generateTask();
+      mockService.removeCollaborator.mockResolvedValue(
+        `Removed member with id: ${collaboratorId} from task with id: ${mockTask.id}`,
+      );
+      const result = await collaboratorsController.removeCollaborator(
+        collaboratorId,
+        mockUser,
+        { ...mockTask, creatorId: mockUser.id },
+      );
+      expect(typeof result).toEqual('string');
     });
   });
 });
