@@ -9,6 +9,7 @@ import { UserType } from '@prisma/client';
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 import { GetTasksFilterDto } from '../../src/tasks/dto/get-tasks-filter.dto';
 import { TaskStatus } from '../../src/tasks/task.model';
+import { CreateTaskDto } from '../../src/tasks/dto/create-task.dto';
 
 const mockTasksService = {
   getTasks: jest.fn(), // Ensure it's a mock function
@@ -73,6 +74,22 @@ describe('TasksController', () => {
       const mockUser = generateUserJWTPayload(UserType.USER);
       mockTasksService.getTaskById.mockResolvedValue(mockTask);
       const result = await tasksController.getTaskById(mockTask.id, mockUser);
+      expect(result).toEqual(mockTask);
+    });
+  });
+
+  describe('createTask', () => {
+    it('should return the created task as a response', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      const { title, description, budget } = mockTask;
+      const body: CreateTaskDto = {
+        title,
+        description,
+        budget,
+      };
+      mockTasksService.createTask.mockResolvedValue(mockTask);
+      const result = await tasksController.createTask(body, mockUser);
       expect(result).toEqual(mockTask);
     });
   });
