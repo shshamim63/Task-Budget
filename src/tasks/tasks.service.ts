@@ -16,6 +16,7 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CustomError } from '../common/exceptions/custom-error.exception';
 import { TaskPermissionService } from '../helpers/task-permission-helper.service';
+import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 
 @Injectable()
 export class TasksService {
@@ -140,7 +141,7 @@ export class TasksService {
         new TaskResponseDto(task),
       );
       await this.prismaService.task.delete({ where: { id: id } });
-      return 'Detete task success';
+      return TASK_RESPONSE_MESSAGE.DELETE_TASK;
     } catch (error) {
       this.handleError(error);
     }

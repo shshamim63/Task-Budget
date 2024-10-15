@@ -10,6 +10,7 @@ import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 import { GetTasksFilterDto } from '../../src/tasks/dto/get-tasks-filter.dto';
 import { TaskStatus } from '../../src/tasks/task.model';
 import { CreateTaskDto } from '../../src/tasks/dto/create-task.dto';
+import { TASK_RESPONSE_MESSAGE } from '../../src/utils/constants';
 
 const mockTasksService = {
   getTasks: jest.fn(), // Ensure it's a mock function
@@ -91,6 +92,18 @@ describe('TasksController', () => {
       mockTasksService.createTask.mockResolvedValue(mockTask);
       const result = await tasksController.createTask(body, mockUser);
       expect(result).toEqual(mockTask);
+    });
+  });
+
+  describe('deleteTask', () => {
+    it('should delete a task that matches the taskId', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      mockTasksService.deleteTask.mockResolvedValue(
+        TASK_RESPONSE_MESSAGE.DELETE_TASK,
+      );
+      const result = await tasksController.deleteTask(mockTask.id, mockUser);
+      expect(result).toEqual(TASK_RESPONSE_MESSAGE.DELETE_TASK);
     });
   });
 });
