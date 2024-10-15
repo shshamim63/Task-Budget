@@ -126,4 +126,18 @@ describe('TasksController', () => {
       expect(result).toEqual(mockTask);
     });
   });
+
+  describe('updateTaskStatus', () => {
+    it('should return the updated task response', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      mockTasksService.updateTaskStatus.mockResolvedValue(mockTask);
+      const result = await tasksController.updateTaskStatus(
+        mockTask.id,
+        TaskStatus.DONE,
+        mockUser,
+      );
+      expect(result).toEqual(mockTask);
+    });
+  });
 });
