@@ -1,32 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
 import { faker } from '@faker-js/faker';
 
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController } from '../../src/auth/auth.controller';
+import { AuthService } from '../../src/auth/auth.service';
 
-import { SignInDto, SignUpDto } from './dto/auth-credentials.dto';
-import { UserResponseDto } from './dto/user.dto';
+import { SignInDto, SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
+import { UserResponseDto } from '../../src/auth/dto/user.dto';
+import { generateAuthenticatedUser } from '../helpers/auth.helpers';
 
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  const similarValue = {
-    id: faker.number.int(),
-    token: faker.string.alphanumeric({ length: 64 }),
-    createdAt: faker.date.anytime(),
-    updatedAt: faker.date.anytime(),
-  };
+  const mockAuthenticatedUser = generateAuthenticatedUser();
   const mockAuthService = {
     signup: jest.fn((dto: SignUpDto) => {
       return new UserResponseDto({
-        ...similarValue,
+        ...mockAuthenticatedUser,
         email: dto.email,
         username: dto.username,
       });
     }),
     signin: jest.fn((dto: SignInDto) => {
       return new UserResponseDto({
-        ...similarValue,
+        ...mockAuthenticatedUser,
         email: dto.email,
         username: faker.internet.userName(),
       });

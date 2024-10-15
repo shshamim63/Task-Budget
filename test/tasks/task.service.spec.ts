@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TasksService } from './tasks.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { TaskPermissionService } from '../helpers/task-permission-helper.service';
+import { TasksService } from '../../src/tasks/tasks.service';
+import { PrismaService } from '../../src/prisma/prisma.service';
+import { TaskPermissionService } from '../../src/helpers/task-permission-helper.service';
 
 describe('TaskService', () => {
   let service: TasksService;

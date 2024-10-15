@@ -1,17 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { ForbiddenException } from '@nestjs/common';
+
 import { faker } from '@faker-js/faker';
 
-import { CollaboratorsController } from './collaborators.controller';
-import { CollaboratorsService } from './collaborators.service';
-import { TaskStatus, UserType } from '@prisma/client';
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
-import { JWTPayload } from '../auth/interfaces/auth.interface';
-import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { ForbiddenException } from '@nestjs/common';
-import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
+import { UserType } from '@prisma/client';
+
+import { generateUserJWTPayload } from '../helpers/auth.helpers';
+import { generateTask } from '../helpers/task.helpers';
+
+import { CollaboratorsController } from '../../src/collaborators/collaborators.controller';
+import { CollaboratorsService } from '../../src/collaborators/collaborators.service';
+
+import { JWTPayload } from '../../src/auth/interfaces/auth.interface';
+
+import { AuthGuard } from '../../src/auth/guards/auth.guard';
+import { RolesGuard } from '../../src/auth/guards/roles.guard';
+
+import { TaskInterceptor } from '../../src/tasks/interceptors/task.interceptor';
+
+import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
+import { CreateCollaboratorsDto } from '../../src/collaborators/dto/create-collaborators.dto';
+import {
+  generateCollaboratorId,
+  generateMockCollaboratorsResponse,
+} from '../helpers/collaborators.helper';
 
 describe('CollaboratorsController', () => {
   let collaboratorsController: CollaboratorsController;
@@ -23,23 +36,9 @@ describe('CollaboratorsController', () => {
     removeCollaborator: jest.fn(),
   };
 
-  const mockUser: JWTPayload = {
-    email: faker.internet.email(),
-    id: faker.number.int(),
-    username: faker.internet.userName(),
-    userType: UserType.USER,
-    exp: faker.number.int(),
-    iat: faker.number.int(),
-  };
+  const mockUser: JWTPayload = generateUserJWTPayload(UserType.USER);
 
-  const mockTask: TaskResponseDto = {
-    id: faker.number.int(),
-    title: faker.lorem.sentence(),
-    description: faker.lorem.sentence(),
-    creatorId: faker.number.int(),
-    status: TaskStatus.OPEN,
-    budget: faker.number.float(),
-  };
+  const mockTask: TaskResponseDto = generateTask();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -67,28 +66,7 @@ describe('CollaboratorsController', () => {
 
   describe('getCollaborators', () => {
     it('should return the list of collaborators', async () => {
-      const collaborators = [
-        {
-          id: faker.number.int(),
-          title: faker.lorem.sentence(),
-          description: faker.lorem.paragraph(),
-          status: TaskStatus.OPEN,
-          budget: faker.number.int(),
-          creator: {
-            id: faker.number.int(),
-            username: faker.internet.userName(),
-            email: faker.internet.email(),
-            userType: UserType.ADMIN,
-          },
-          members: [
-            {
-              id: faker.number.int(),
-              username: faker.internet.userName(),
-              email: faker.internet.email(),
-            },
-          ],
-        },
-      ];
+      const collaborators = generateMockCollaboratorsResponse();
 
       mockService.getCollaborators.mockResolvedValue(collaborators);
       const result = await collaboratorsController.getCollaborators(
@@ -149,7 +127,20 @@ describe('CollaboratorsController', () => {
     });
   });
 
-  // describe('removeCollaborator', () => {
-  //   it('should deny access when ')
-  // })
+  describe('removeCollaborator', () => {
+    it('should remove a user from the task collaborator', async () => {
+      const { collaboratorId } = generateCollaboratorId();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      const mockTask = generateTask();
+      mockService.removeCollaborator.mockResolvedValue(
+        `Removed member with id: ${collaboratorId} from task with id: ${mockTask.id}`,
+      );
+      const result = await collaboratorsController.removeCollaborator(
+        collaboratorId,
+        mockUser,
+        { ...mockTask, creatorId: mockUser.id },
+      );
+      expect(typeof result).toEqual('string');
+    });
+  });
 });

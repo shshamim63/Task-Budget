@@ -1,22 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { UserType } from '@prisma/client';
 
 import { faker } from '@faker-js/faker/.';
-import * as bcrypt from 'bcrypt';
 
-import { AuthGuard } from './auth.guard';
+import { UserType } from '@prisma/client';
 
-import { PrismaService } from '../../prisma/prisma.service';
-import { TokenSerive } from '../../token/token.service';
+import { AuthGuard } from '../../../src/auth/guards/auth.guard';
 
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+import { PrismaService } from '../../../src/prisma/prisma.service';
+import { TokenSerive } from '../../../src/token/token.service';
+
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../../src/utils/constants';
+import {
+  generateMockUser,
+  generateUserJWTPayload,
+} from '../../helpers/auth.helpers';
+
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
   let prismaService: PrismaService;
   let tokenService: TokenSerive;
-
-  const saltRound = Number(process.env.SALTROUND);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -67,14 +70,7 @@ describe('AuthGuard', () => {
   it('should thorow UnauthorizedException when user is not found', async () => {
     const mockToken = faker.string.alphanumeric({ length: 64 });
 
-    const mockPayload = {
-      id: faker.number.int(),
-      email: faker.internet.email(),
-      username: faker.internet.userName(),
-      userType: UserType.USER,
-      exp: faker.number.int(),
-      iat: faker.number.int(),
-    };
+    const mockPayload = generateUserJWTPayload(UserType.USER);
 
     const context = mockExecutionContext(mockToken);
 
@@ -99,24 +95,9 @@ describe('AuthGuard', () => {
   it('should return true when user is authenticated', async () => {
     const mockToken = faker.string.alphanumeric({ length: 64 });
 
-    const mockPayload = {
-      id: faker.number.int(),
-      email: faker.internet.email(),
-      username: faker.internet.userName(),
-      userType: UserType.USER,
-      exp: faker.number.int(),
-      iat: faker.number.int(),
-    };
+    const mockPayload = generateUserJWTPayload(UserType.USER);
 
-    const mockUser = {
-      id: mockPayload.id,
-      email: mockPayload.email,
-      username: mockPayload.username,
-      password_hash: await bcrypt.hash(faker.internet.password(), saltRound),
-      userType: UserType.USER,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const mockUser = await generateMockUser(mockPayload);
 
     const context = mockExecutionContext(mockToken);
 

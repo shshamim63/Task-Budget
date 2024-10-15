@@ -23,4 +23,8 @@ export const ERROR_NAME = {
   USER_MISSING: 'UserMissing',
 };
 
+export const TASK_RESPONSE_MESSAGE = {
+  DELETE_TASK: 'Detete task success',
+};
+
 export const origins = ['http://localhost:3000'];

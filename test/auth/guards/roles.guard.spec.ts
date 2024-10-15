@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
-import { RolesGuard } from './roles.guard';
 import { Reflector } from '@nestjs/core';
+
 import { UserType } from '@prisma/client';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+
+import { RolesGuard } from '../../../src/auth/guards/roles.guard';
+
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../../src/utils/constants';
 
 function createMockExecutionContext(
   roles?: UserType[],

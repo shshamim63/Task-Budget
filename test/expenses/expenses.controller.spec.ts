@@ -1,16 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ExpensesController } from './expenses.controller';
-import { ExpensesService } from './expenses.service';
-import { JWTPayload } from '../auth/interfaces/auth.interface';
-import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { CreateExpenseDto } from './dto/create-expense.dto';
-import { AuthGuard } from '../auth/guards/auth.guard';
+import { ExpensesController } from '../../src/expenses/expenses.controller';
+import { ExpensesService } from '../../src/expenses/expenses.service';
+import { JWTPayload } from '../../src/auth/interfaces/auth.interface';
+import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
+import { CreateExpenseDto } from '../../src/expenses/dto/create-expense.dto';
+import { AuthGuard } from '../../src/auth/guards/auth.guard';
 import { ExecutionContext } from '@nestjs/common';
-import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
+import { TaskInterceptor } from '../../src/tasks/interceptors/task.interceptor';
 import { faker } from '@faker-js/faker/.';
-import { TaskStatus, UserType } from '@prisma/client';
-import { ExpenseResponseDto } from './dto/expense.dto';
-import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { UserType } from '@prisma/client';
+import { ExpenseResponseDto } from '../../src/expenses/dto/expense.dto';
+import { UpdateExpenseDto } from '../../src/expenses/dto/update-expense.dto';
+import { generateTask } from '../helpers/task.helpers';
+import { generateUserJWTPayload } from '../helpers/auth.helpers';
 
 describe('ExpensesController', () => {
   let expensesController: ExpensesController;
@@ -23,23 +25,9 @@ describe('ExpensesController', () => {
     updateExpense: jest.fn(),
   };
 
-  const mockUser: JWTPayload = {
-    id: faker.number.int(),
-    email: faker.internet.email(),
-    username: faker.internet.userName(),
-    userType: UserType.USER,
-    exp: faker.number.int(),
-    iat: faker.number.int(),
-  };
+  const mockUser: JWTPayload = generateUserJWTPayload(UserType.USER);
 
-  const mockTask: TaskResponseDto = {
-    id: faker.number.int(),
-    title: faker.lorem.words(),
-    description: faker.lorem.words(),
-    creatorId: mockUser.id,
-    status: TaskStatus.OPEN,
-    budget: faker.number.float(),
-  };
+  const mockTask: TaskResponseDto = generateTask();
 
   const createExpenseDto: CreateExpenseDto = {
     description: faker.lorem.words(),
@@ -66,7 +54,7 @@ describe('ExpensesController', () => {
     })
       .overrideGuard(AuthGuard)
       .useValue({
-        canActive: (context: ExecutionContext) => true,
+        canActive: jest.fn(() => true),
       })
       .overrideInterceptor(TaskInterceptor)
       .useValue({
