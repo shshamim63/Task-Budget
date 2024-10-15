@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TasksController } from '../../src/tasks/tasks.controller';
 import { TasksService } from '../../src/tasks/tasks.service';
-import { generateTasks } from '../helpers/task.helpers';
+import { generateTask, generateTasks } from '../helpers/task.helpers';
 import { AuthGuard } from '../../src/auth/guards/auth.guard';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { generateUserJWTPayload } from '../helpers/auth.helpers';
@@ -64,6 +64,16 @@ describe('TasksController', () => {
         mockFilterDTO,
       );
       expect(result).toEqual(result);
+    });
+  });
+
+  describe('getTaskById', () => {
+    it('should return task based on the given ID', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.USER);
+      mockTasksService.getTaskById.mockResolvedValue(mockTask);
+      const result = await tasksController.getTaskById(mockTask.id, mockUser);
+      expect(result).toEqual(mockTask);
     });
   });
 });
