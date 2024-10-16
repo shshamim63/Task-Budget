@@ -67,11 +67,12 @@ export class AuthService {
   }
 
   private generateTokenPayload(user: User): TokenPayload {
+    const { id, email, username, userType } = user;
     return {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      userType: user.userType,
+      id,
+      email,
+      username,
+      userType,
     };
   }
 }
