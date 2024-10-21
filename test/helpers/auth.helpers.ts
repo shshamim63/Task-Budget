@@ -43,3 +43,13 @@ export const generateAuthenticatedUser = () => {
     username: faker.internet.userName(),
   };
 };
+
+export const generateSignUpDto = () => {
+  const mockPassword = faker.internet.password();
+  return {
+    email: faker.internet.email(),
+    username: faker.internet.userName(),
+    password: mockPassword,
+    confirmPassword: mockPassword,
+  };
+};

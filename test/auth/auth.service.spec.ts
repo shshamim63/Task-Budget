@@ -8,8 +8,9 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { TokenSerive } from '../../src/token/token.service';
 
 import { SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
-import { generateToken } from '../helpers/auth.helpers';
+import { generateSignUpDto, generateToken } from '../helpers/auth.helpers';
 import { UserResponseDto } from '../../src/auth/dto/user.dto';
+import { ConflictException } from '@nestjs/common';
 
 const mockPrismaService = {
   user: {
@@ -54,15 +55,8 @@ describe('AuthService', () => {
 
   describe('signup', () => {
     it('should successfully signup a new user', async () => {
-      const mockPassword = faker.internet.password();
-      const signUpDto: SignUpDto = {
-        email: faker.internet.email(),
-        username: faker.internet.userName(),
-        password: mockPassword,
-        confirmPassword: mockPassword,
-      };
-
-      const hashPassword = await bcrypt.hash(mockPassword, saltRound);
+      const signUpDto: SignUpDto = generateSignUpDto();
+      const hashPassword = await bcrypt.hash(signUpDto.password, saltRound);
 
       const mockSignUpResponse = {
         id: faker.number.int({ min: 1 }),
@@ -70,6 +64,7 @@ describe('AuthService', () => {
         username: signUpDto.username,
         password_hash: hashPassword,
       };
+
       const mockToken = generateToken();
       mockPrismaService.user.findFirst.mockResolvedValue(null);
       mockPrismaService.user.create.mockResolvedValue(mockSignUpResponse);
@@ -87,6 +82,14 @@ describe('AuthService', () => {
         },
       });
       expect(result).toEqual({ ...mockSignUpResponse, token: mockToken });
+    });
+
+    it('should throw a ConflictException if the email already exists', async () => {
+      mockPrismaService.user.findFirst.mockResolvedValue(true);
+      const signUpDto = generateSignUpDto();
+      await expect(authService.signup(signUpDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 });
