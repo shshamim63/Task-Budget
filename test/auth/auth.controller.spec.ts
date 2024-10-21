@@ -40,6 +40,10 @@ describe('AuthController', () => {
     authService = module.get<AuthService>(AuthService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('signup', () => {
     it('should successfully sign up a user and serialize the response', async () => {
       const password = faker.internet.password();

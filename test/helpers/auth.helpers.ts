@@ -31,10 +31,12 @@ export const generateMockUser = async (payload: JWTPayload) => {
   };
 };
 
+export const generateToken = () => faker.string.alphanumeric({ length: 64 });
+
 export const generateAuthenticatedUser = () => {
   return {
     id: faker.number.int(),
-    token: faker.string.alphanumeric({ length: 64 }),
+    token: generateToken(),
     createdAt: faker.date.anytime(),
     updatedAt: faker.date.anytime(),
     email: faker.internet.email(),
