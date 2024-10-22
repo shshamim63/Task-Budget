@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
@@ -63,7 +64,9 @@ export class AuthService {
     const hashPassword = user.password_hash;
     const isValidPassword = await bcrypt.compare(password, hashPassword);
 
-    if (!isValidPassword) throw new BadRequestException('Invalid credentials');
+    if (!isValidPassword)
+      throw new UnauthorizedException('Invalid credentials');
+
     const payload = this.generateTokenPayload(user);
 
     const token = this.tokenService.generateToken(payload);

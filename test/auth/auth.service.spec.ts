@@ -15,7 +15,11 @@ import {
   generateUserJWTPayload,
 } from '../helpers/auth.helpers';
 
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SignInParams } from '../../src/auth/interfaces/auth.interface';
 import { UserType } from '@prisma/client';
 
@@ -112,9 +116,7 @@ describe('AuthService', () => {
       const mockUser = await generateMockUser(mockUserJWTPayload);
 
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
-      jest
-        .spyOn(bcrypt, 'compare')
-        .mockResolvedValue(signInParams.password as never);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
 
       const result = await authService.signin(signInParams);
 
@@ -143,6 +145,23 @@ describe('AuthService', () => {
 
       await expect(authService.signin(signInParams)).rejects.toThrow(
         BadRequestException,
+      );
+    });
+
+    it('should raise an UnauthorizedException when password is invalid', async () => {
+      const signInParams: SignInParams = {
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+      };
+
+      const mockUserJWTPayload = generateUserJWTPayload(UserType.USER);
+      const mockUser = await generateMockUser(mockUserJWTPayload);
+
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+
+      await expect(authService.signin(signInParams)).rejects.toThrow(
+        UnauthorizedException,
       );
     });
   });
