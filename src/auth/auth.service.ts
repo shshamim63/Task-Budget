@@ -1,4 +1,9 @@
-import { ConflictException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
+
 import * as bcrypt from 'bcrypt';
 
 import { User } from '@prisma/client';
@@ -53,12 +58,12 @@ export class AuthService {
       where: { email },
     });
 
-    if (!user) throw new HttpException('Invalid credentials', 400);
+    if (!user) throw new BadRequestException('Invalid credentials');
 
     const hashPassword = user.password_hash;
     const isValidPassword = await bcrypt.compare(password, hashPassword);
 
-    if (!isValidPassword) throw new HttpException('Invalid credentials', 400);
+    if (!isValidPassword) throw new BadRequestException('Invalid credentials');
     const payload = this.generateTokenPayload(user);
 
     const token = this.tokenService.generateToken(payload);

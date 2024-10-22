@@ -8,9 +8,16 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { TokenSerive } from '../../src/token/token.service';
 
 import { SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
-import { generateSignUpDto, generateToken } from '../helpers/auth.helpers';
-import { UserResponseDto } from '../../src/auth/dto/user.dto';
-import { ConflictException } from '@nestjs/common';
+import {
+  generateMockUser,
+  generateSignUpDto,
+  generateToken,
+  generateUserJWTPayload,
+} from '../helpers/auth.helpers';
+
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import { SignInParams } from '../../src/auth/interfaces/auth.interface';
+import { UserType } from '@prisma/client';
 
 const mockPrismaService = {
   user: {
@@ -81,6 +88,7 @@ describe('AuthService', () => {
           password_hash: hashPassword,
         },
       });
+      expect(tokenService.generateToken).toHaveBeenCalled();
       expect(result).toEqual({ ...mockSignUpResponse, token: mockToken });
     });
 
@@ -89,6 +97,52 @@ describe('AuthService', () => {
       const signUpDto = generateSignUpDto();
       await expect(authService.signup(signUpDto)).rejects.toThrow(
         ConflictException,
+      );
+    });
+  });
+
+  describe('signin', () => {
+    it('should successfully login a user with right credentials', async () => {
+      const signInParams: SignInParams = {
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+      };
+
+      const mockUserJWTPayload = generateUserJWTPayload(UserType.USER);
+      const mockUser = await generateMockUser(mockUserJWTPayload);
+
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      jest
+        .spyOn(bcrypt, 'compare')
+        .mockResolvedValue(signInParams.password as never);
+
+      const result = await authService.signin(signInParams);
+
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: signInParams.email },
+      });
+      expect(result).toMatchObject({
+        id: expect.any(Number),
+        email: expect.any(String),
+        username: expect.any(String),
+        password_hash: expect.any(String),
+        userType: expect.any(String),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        token: expect.any(String),
+      });
+    });
+
+    it('should raise an BadRequestException when user is not present', async () => {
+      const signInParams: SignInParams = {
+        email: faker.internet.email(),
+        password: faker.internet.password(),
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValue(false);
+
+      await expect(authService.signin(signInParams)).rejects.toThrow(
+        BadRequestException,
       );
     });
   });
