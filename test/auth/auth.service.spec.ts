@@ -198,7 +198,6 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
 
-      // Expect an UnauthorizedException to be thrown
       await expect(authService.signin(signInParams)).rejects.toThrow(
         new UnauthorizedException('Invalid credentials'),
       );
