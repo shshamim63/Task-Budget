@@ -109,7 +109,9 @@ describe('AuthService', () => {
         username: faker.internet.userName(),
       });
       await expect(authService.signup(signUpDto)).rejects.toThrow(
-        ConflictException,
+        new ConflictException(
+          `Account with email ${signUpDto.email} already exist`,
+        ),
       );
       expect(prismaService.user.findFirst).toHaveBeenCalledWith({
         where: {
@@ -124,7 +126,9 @@ describe('AuthService', () => {
         username: signUpDto.username,
       });
       await expect(authService.signup(signUpDto)).rejects.toThrow(
-        ConflictException,
+        new ConflictException(
+          `Account with username ${signUpDto.username} already exist`,
+        ),
       );
       expect(prismaService.user.findFirst).toHaveBeenCalledWith({
         where: {
