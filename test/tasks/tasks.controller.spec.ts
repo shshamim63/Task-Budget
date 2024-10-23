@@ -13,8 +13,8 @@ import { CreateTaskDto } from '../../src/tasks/dto/create-task.dto';
 import { TASK_RESPONSE_MESSAGE } from '../../src/utils/constants';
 
 const mockTasksService = {
-  getTasks: jest.fn(), // Ensure it's a mock function
-  getTaskById: jest.fn(), // Same here
+  getTasks: jest.fn(),
+  getTaskById: jest.fn(),
   createTask: jest.fn(),
   deleteTask: jest.fn(),
   updateTask: jest.fn(),
