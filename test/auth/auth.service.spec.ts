@@ -190,13 +190,13 @@ describe('AuthService', () => {
       });
     });
 
-    it('should raise an BadRequestException when user is not present', async () => {
+    it('should raise a BadRequestException when user is not present', async () => {
       const signInParams: SignInParams = {
         email: faker.internet.email(),
         password: faker.internet.password(),
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValue(false);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(authService.signin(signInParams)).rejects.toThrow(
         BadRequestException,
@@ -218,6 +218,22 @@ describe('AuthService', () => {
       await expect(authService.signin(signInParams)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('generateTokenPayload', () => {
+    it('should return a valid token payload for a user', async () => {
+      const mockPayload = generateUserJWTPayload(UserType.USER);
+      const mockUser = await generateMockUser(mockPayload);
+
+      const payload = authService['generateTokenPayload'](mockUser);
+
+      expect(payload).toEqual({
+        id: mockUser.id,
+        email: mockUser.email,
+        username: mockUser.username,
+        userType: mockUser.userType,
+      });
     });
   });
 });
