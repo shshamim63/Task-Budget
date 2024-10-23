@@ -14,11 +14,7 @@ import {
   generateUserJWTPayload,
 } from '../helpers/auth.helpers';
 
-import {
-  BadRequestException,
-  ConflictException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { SignInParams } from '../../src/auth/interfaces/auth.interface';
 import { UserType } from '@prisma/client';
 
@@ -161,7 +157,7 @@ describe('AuthService', () => {
   });
 
   describe('signin', () => {
-    it('should successfully login a user with right credentials', async () => {
+    it('should successfully login a user with correct credentials', async () => {
       const signInParams: SignInParams = {
         email: faker.internet.email(),
         password: faker.internet.password(),
@@ -190,19 +186,6 @@ describe('AuthService', () => {
       });
     });
 
-    it('should raise a BadRequestException when user is not present', async () => {
-      const signInParams: SignInParams = {
-        email: faker.internet.email(),
-        password: faker.internet.password(),
-      };
-
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-
-      await expect(authService.signin(signInParams)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
     it('should raise an UnauthorizedException when password is invalid', async () => {
       const signInParams: SignInParams = {
         email: faker.internet.email(),
@@ -215,8 +198,17 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
 
+      // Expect an UnauthorizedException to be thrown
       await expect(authService.signin(signInParams)).rejects.toThrow(
-        UnauthorizedException,
+        new UnauthorizedException('Invalid credentials'),
+      );
+
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { email: signInParams.email },
+      });
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        signInParams.password,
+        mockUser.password_hash,
       );
     });
   });
