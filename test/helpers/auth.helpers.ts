@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { UserType } from '@prisma/client';
 
 import { JWTPayload } from '../../src/auth/interfaces/auth.interface';
+import { SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
 
 const saltRound = Number(process.env.SALTROUND);
 
@@ -44,7 +45,7 @@ export const generateAuthenticatedUser = () => {
   };
 };
 
-export const generateSignUpDto = () => {
+export const generateSignUpDto = (): SignUpDto => {
   const mockPassword = faker.internet.password();
   return {
     email: faker.internet.email(),

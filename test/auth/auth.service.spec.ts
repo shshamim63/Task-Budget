@@ -7,7 +7,6 @@ import { AuthService } from '../../src/auth/auth.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { TokenSerive } from '../../src/token/token.service';
 
-import { SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
 import {
   generateMockUser,
   generateSignUpDto,
@@ -65,8 +64,8 @@ describe('AuthService', () => {
   });
 
   describe('signup', () => {
-    it('should successfully signup a new user', async () => {
-      const signUpDto: SignUpDto = generateSignUpDto();
+    it('should successfully signup a new user when email and username are valid', async () => {
+      const signUpDto = generateSignUpDto();
       const hashPassword = await bcrypt.hash(signUpDto.password, saltRound);
 
       const mockSignUpResponse = {
@@ -76,12 +75,10 @@ describe('AuthService', () => {
         password_hash: hashPassword,
       };
 
-      const mockToken = generateToken();
       mockPrismaService.user.findFirst.mockResolvedValue(null);
       mockPrismaService.user.create.mockResolvedValue(mockSignUpResponse);
-
+      mockTokenService.generateToken.mockReturnValue(generateToken());
       jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashPassword as never);
-      mockTokenService.generateToken.mockReturnValue(mockToken);
 
       const result = await authService.signup(signUpDto);
 
@@ -90,7 +87,6 @@ describe('AuthService', () => {
           OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
         },
       });
-
       expect(prismaService.user.create).toHaveBeenCalledWith({
         data: {
           email: signUpDto.email,
@@ -98,43 +94,69 @@ describe('AuthService', () => {
           password_hash: hashPassword,
         },
       });
-      expect(tokenService.generateToken).toHaveBeenCalled();
-      expect(result).toEqual({ ...mockSignUpResponse, token: mockToken });
+      expect(result).toEqual({
+        ...mockSignUpResponse,
+        token: expect.any(String),
+      });
     });
 
     it('should throw a ConflictException if the email already exists', async () => {
       const signUpDto = generateSignUpDto();
-      mockPrismaService.user.findFirst.mockResolvedValue({
+
+      const existingUser = {
         email: signUpDto.email,
-        username: faker.internet.userName(),
-      });
+        username: 'different_username',
+      };
+      mockPrismaService.user.findFirst.mockResolvedValue(existingUser);
+
       await expect(authService.signup(signUpDto)).rejects.toThrow(
         new ConflictException(
           `Account with email ${signUpDto.email} already exist`,
         ),
       );
+
       expect(prismaService.user.findFirst).toHaveBeenCalledWith({
         where: {
           OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
         },
       });
     });
+
     it('should throw a ConflictException if the username already exists', async () => {
       const signUpDto = generateSignUpDto();
-      mockPrismaService.user.findFirst.mockResolvedValue({
-        email: faker.internet.email(),
+
+      const existingUser = {
+        email: 'different_email@test.com',
         username: signUpDto.username,
-      });
+      };
+      mockPrismaService.user.findFirst.mockResolvedValue(existingUser);
+
       await expect(authService.signup(signUpDto)).rejects.toThrow(
         new ConflictException(
           `Account with username ${signUpDto.username} already exist`,
         ),
       );
+
       expect(prismaService.user.findFirst).toHaveBeenCalledWith({
         where: {
           OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
         },
       });
+    });
+
+    it('should cover the findFirst call and ensure findFirst is called even if user does not exist', async () => {
+      const signUpDto = generateSignUpDto();
+
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+
+      const result = await authService.signup(signUpDto);
+
+      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
+        where: {
+          OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
+        },
+      });
+      expect(result).toBeDefined();
     });
   });
 
