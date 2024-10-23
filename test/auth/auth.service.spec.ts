@@ -103,11 +103,34 @@ describe('AuthService', () => {
     });
 
     it('should throw a ConflictException if the email already exists', async () => {
-      mockPrismaService.user.findFirst.mockResolvedValue(true);
       const signUpDto = generateSignUpDto();
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        email: signUpDto.email,
+        username: faker.internet.userName(),
+      });
       await expect(authService.signup(signUpDto)).rejects.toThrow(
         ConflictException,
       );
+      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
+        where: {
+          OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
+        },
+      });
+    });
+    it('should throw a ConflictException if the username already exists', async () => {
+      const signUpDto = generateSignUpDto();
+      mockPrismaService.user.findFirst.mockResolvedValue({
+        email: faker.internet.email(),
+        username: signUpDto.username,
+      });
+      await expect(authService.signup(signUpDto)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
+        where: {
+          OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
+        },
+      });
     });
   });
 
