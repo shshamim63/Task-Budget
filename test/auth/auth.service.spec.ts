@@ -85,6 +85,12 @@ describe('AuthService', () => {
 
       const result = await authService.signup(signUpDto);
 
+      expect(prismaService.user.findFirst).toHaveBeenCalledWith({
+        where: {
+          OR: [{ email: signUpDto.email }, { username: signUpDto.username }],
+        },
+      });
+
       expect(prismaService.user.create).toHaveBeenCalledWith({
         data: {
           email: signUpDto.email,
