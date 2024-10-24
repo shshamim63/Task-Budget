@@ -174,6 +174,7 @@ describe('AuthService', () => {
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: signInParams.email },
       });
+
       expect(result).toMatchObject({
         id: expect.any(Number),
         email: expect.any(String),
