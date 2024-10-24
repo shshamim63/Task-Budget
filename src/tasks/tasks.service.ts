@@ -136,6 +136,7 @@ export class TasksService {
       const task = await this.prismaService.task.findUniqueOrThrow({
         where: { id: id },
       });
+
       this.taskPermissionService.hasOperationPermission(
         user,
         new TaskResponseDto(task),
@@ -156,15 +157,15 @@ export class TasksService {
       const task = await this.prismaService.task.findUniqueOrThrow({
         where: { id: id },
       });
+
       this.taskPermissionService.hasOperationPermission(
         user,
         new TaskResponseDto(task),
       );
-      const currentTask = await this.prismaService.task.update({
-        where: { id: id },
-        data: updateTaskDto,
-      });
-      return new TaskResponseDto(currentTask);
+
+      const updatedTask = await this.updateCurrentTask(id, updateTaskDto);
+
+      return new TaskResponseDto(updatedTask);
     } catch (error) {
       this.handleError(error);
     }
@@ -185,14 +186,19 @@ export class TasksService {
         new TaskResponseDto(task),
       );
 
-      const updatedTask = await this.prismaService.task.update({
-        where: { id: id },
-        data: { status: status },
-      });
+      const updatedTask = await this.updateCurrentTask(id, { status: status });
       return new TaskResponseDto(updatedTask);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  private async updateCurrentTask(taskId, data) {
+    const task = await this.prismaService.task.update({
+      where: { id: taskId },
+      data: data,
+    });
+    return task;
   }
 
   private handleError(error: CustomError): never {
