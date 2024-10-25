@@ -11,7 +11,7 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
-import { Prisma, UserType } from '@prisma/client';
+import { Prisma, Task, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CustomError } from '../common/exceptions/custom-error.exception';
@@ -123,29 +123,20 @@ export class TasksService {
       budget: budget ? new Prisma.Decimal(budget) : undefined,
     };
 
-    try {
-      const task = await this.prismaService.task.create({ data });
-      return new TaskResponseDto(task);
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+    const task = await this.saveTask(data);
+
+    return new TaskResponseDto(task);
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
-    try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: id },
-      });
+    const currentTask = await this.getCurrentTaskById(id);
 
-      this.taskPermissionService.hasOperationPermission(
-        user,
-        new TaskResponseDto(task),
-      );
-      await this.prismaService.task.delete({ where: { id: id } });
-      return TASK_RESPONSE_MESSAGE.DELETE_TASK;
-    } catch (error) {
-      this.handleError(error);
-    }
+    this.taskPermissionService.hasOperationPermission(
+      user,
+      new TaskResponseDto(currentTask),
+    );
+    await this.removeTaskById(id);
+    return TASK_RESPONSE_MESSAGE.DELETE_TASK;
   }
 
   async updateTask(
@@ -153,22 +144,15 @@ export class TasksService {
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: id },
-      });
+    const currentTask = await this.getCurrentTaskById(id);
+    this.taskPermissionService.hasOperationPermission(
+      user,
+      new TaskResponseDto(currentTask),
+    );
 
-      this.taskPermissionService.hasOperationPermission(
-        user,
-        new TaskResponseDto(task),
-      );
+    const updatedTask = await this.updateCurrentTask(id, updateTaskDto);
 
-      const updatedTask = await this.updateCurrentTask(id, updateTaskDto);
-
-      return new TaskResponseDto(updatedTask);
-    } catch (error) {
-      this.handleError(error);
-    }
+    return new TaskResponseDto(updatedTask);
   }
 
   async updateTaskStatus(
@@ -176,29 +160,53 @@ export class TasksService {
     status: TaskStatus,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
+    const currentTask = await this.getCurrentTaskById(id);
+    this.taskPermissionService.hasOperationPermission(
+      user,
+      new TaskResponseDto(currentTask),
+    );
+    const updatedTask = await this.updateCurrentTask(id, { status: status });
+    return new TaskResponseDto(updatedTask);
+  }
+
+  private async updateCurrentTask(taskId, data) {
     try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: id },
+      const task = await this.prismaService.task.update({
+        where: { id: taskId },
+        data: data,
       });
-
-      this.taskPermissionService.hasOperationPermission(
-        user,
-        new TaskResponseDto(task),
-      );
-
-      const updatedTask = await this.updateCurrentTask(id, { status: status });
-      return new TaskResponseDto(updatedTask);
+      return task;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  private async updateCurrentTask(taskId, data) {
-    const task = await this.prismaService.task.update({
-      where: { id: taskId },
-      data: data,
-    });
-    return task;
+  private async removeTaskById(taskId: number) {
+    try {
+      await this.prismaService.task.delete({ where: { id: taskId } });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async getCurrentTaskById(taskId: number): Promise<Task> | never {
+    try {
+      const task = await this.prismaService.task.findUniqueOrThrow({
+        where: { id: taskId },
+      });
+      return task;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async saveTask(data) {
+    try {
+      const task = await this.prismaService.task.create({ data });
+      return task;
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   private handleError(error: CustomError): never {
