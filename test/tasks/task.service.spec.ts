@@ -48,7 +48,7 @@ describe('TaskService', () => {
   });
 
   describe('getTasks', () => {
-    it('should return the task when filterDto is empty', async () => {
+    it('should return the tasks when filterDto is empty', async () => {
       const mockUser = generateUserJWTPayload(UserType.USER);
       const filterDto = {} as GetTasksFilterDto;
       const mockTasks = generateTasks();
@@ -66,6 +66,18 @@ describe('TaskService', () => {
           }),
         ]),
       );
+      expect(prismaService.task.findMany).toHaveBeenCalled();
+      expect(
+        taskPermissionService.hasOperationPermission,
+      ).toHaveBeenCalledTimes(0);
+    });
+
+    it('should return empty array when tasks matching filterDto is absent', async () => {
+      const mockUser = generateUserJWTPayload(UserType.USER);
+      const filterDto = {} as GetTasksFilterDto;
+      mockPrismaService.task.findMany.mockResolvedValue([]);
+      const result = await taskService.getTasks(mockUser, filterDto);
+      expect(result).toEqual([]);
       expect(prismaService.task.findMany).toHaveBeenCalled();
       expect(
         taskPermissionService.hasOperationPermission,
