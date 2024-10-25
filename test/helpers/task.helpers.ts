@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker/.';
-import { TaskStatus } from '@prisma/client';
+import { Prisma, TaskStatus } from '@prisma/client';
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 
 export const generateTask = (): TaskResponseDto => {
@@ -9,7 +9,9 @@ export const generateTask = (): TaskResponseDto => {
     description: faker.lorem.sentence(),
     creatorId: faker.number.int(),
     status: TaskStatus.OPEN,
-    budget: faker.number.float({ min: 100, max: 10000 }),
+    budget: new Prisma.Decimal(
+      faker.number.float({ min: 100, max: 10000 }),
+    ) as unknown as number,
   };
 };
 
