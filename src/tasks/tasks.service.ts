@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -16,7 +17,11 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CustomError } from '../common/exceptions/custom-error.exception';
 import { TaskPermissionService } from '../helpers/task-permission-helper.service';
-import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
+import {
+  ERROR_NAME,
+  RESPONSE_MESSAGE,
+  TASK_RESPONSE_MESSAGE,
+} from '../utils/constants';
 
 @Injectable()
 export class TasksService {
@@ -131,11 +136,19 @@ export class TasksService {
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
     const currentTask = await this.getCurrentTaskById(id);
 
-    this.taskPermissionService.hasOperationPermission(
+    const hasPermission = this.taskPermissionService.hasOperationPermission(
       user,
       new TaskResponseDto(currentTask),
     );
+
+    if (!hasPermission)
+      throw new ForbiddenException(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+        ERROR_NAME.PERMISSION_DENIED,
+      );
+
     await this.removeTaskById(id);
+
     return TASK_RESPONSE_MESSAGE.DELETE_TASK;
   }
 
@@ -145,10 +158,17 @@ export class TasksService {
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
     const currentTask = await this.getCurrentTaskById(id);
-    this.taskPermissionService.hasOperationPermission(
+
+    const hasPermission = this.taskPermissionService.hasOperationPermission(
       user,
       new TaskResponseDto(currentTask),
     );
+
+    if (!hasPermission)
+      throw new ForbiddenException(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+        ERROR_NAME.PERMISSION_DENIED,
+      );
 
     const updatedTask = await this.updateCurrentTask(id, updateTaskDto);
 
@@ -161,10 +181,17 @@ export class TasksService {
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
     const currentTask = await this.getCurrentTaskById(id);
-    this.taskPermissionService.hasOperationPermission(
+    const hasPermission = this.taskPermissionService.hasOperationPermission(
       user,
       new TaskResponseDto(currentTask),
     );
+
+    if (!hasPermission)
+      throw new ForbiddenException(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+        ERROR_NAME.PERMISSION_DENIED,
+      );
+
     const updatedTask = await this.updateCurrentTask(id, { status: status });
     return new TaskResponseDto(updatedTask);
   }

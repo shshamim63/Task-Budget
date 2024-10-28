@@ -11,8 +11,13 @@ import {
   generateTasks,
 } from '../helpers/task.helpers';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { HttpException } from '@nestjs/common';
+import { ForbiddenException, HttpException } from '@nestjs/common';
 import { PRISMA_ERROR_CODE } from '../../src/prisma/prisma-error-code';
+import {
+  RESPONSE_MESSAGE,
+  TASK_RESPONSE_MESSAGE,
+} from '../../src/utils/constants';
+import { faker } from '@faker-js/faker/.';
 
 describe('TaskService', () => {
   let taskService: TasksService;
@@ -106,6 +111,7 @@ describe('TaskService', () => {
     it('shouls throw error when task with title already exist', async () => {
       const mockTaskData = generateTaskDto();
       const mockUser = generateUserJWTPayload(UserType.ADMIN);
+
       mockPrismaService.task.create.mockRejectedValue(
         new PrismaClientKnownRequestError(
           'Unique constraint failed on the field: task.title',
@@ -117,6 +123,7 @@ describe('TaskService', () => {
           },
         ),
       );
+
       await expect(
         taskService.createTask(mockTaskData, mockUser.id),
       ).rejects.toThrow(
@@ -127,6 +134,54 @@ describe('TaskService', () => {
       );
 
       expect(prismaService.task.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteTask', () => {
+    it('should delete task by id', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+
+      mockPrismaService.task.findUniqueOrThrow.mockResolvedValue({
+        ...mockTask,
+        creatorId: mockUser.id,
+      });
+      mockTaskPermissionService.hasOperationPermission.mockReturnValue(true);
+
+      const result = await taskService.deleteTask(mockTask.id, mockUser);
+      expect(result).toEqual(TASK_RESPONSE_MESSAGE.DELETE_TASK);
+    });
+
+    it('should raise error when user does not have permission', async () => {
+      const mockTask = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.USER);
+
+      mockPrismaService.task.findUniqueOrThrow.mockResolvedValue(mockTask);
+      mockTaskPermissionService.hasOperationPermission.mockReturnValue(false);
+      await expect(
+        taskService.deleteTask(mockTask.id, mockUser),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        taskService.deleteTask(mockTask.id, mockUser),
+      ).rejects.toMatchObject({
+        message: RESPONSE_MESSAGE.PERMISSION_DENIED,
+      });
+    });
+
+    it('should raise error when task with id does not exist', async () => {
+      const mockUser = generateUserJWTPayload(UserType.USER);
+      const invalidId = faker.number.int({ min: 1 });
+      mockPrismaService.task.findUniqueOrThrow.mockRejectedValue(
+        new PrismaClientKnownRequestError('Task does not exit', {
+          code: 'P2025',
+          clientVersion: '1.0.0',
+          meta: {},
+          batchRequestIdx: 1,
+        }),
+      );
+      await expect(taskService.deleteTask(invalidId, mockUser)).rejects.toThrow(
+        HttpException,
+      );
     });
   });
 });
