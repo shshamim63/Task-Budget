@@ -40,7 +40,7 @@ enum TaskStatus {
 
 model Task {
   id Int @default(autoincrement()) @id
-  title String
+  title String @unique
   description String?
   creator User @relation(fields: [creatorId], references: [id])
   creatorId Int

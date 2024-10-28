@@ -5,7 +5,14 @@ import { TaskPermissionService } from '../../src/helpers/task-permission-helper.
 import { generateUserJWTPayload } from '../helpers/auth.helpers';
 import { UserType } from '@prisma/client';
 import { GetTasksFilterDto } from '../../src/tasks/dto/get-tasks-filter.dto';
-import { generateTasks } from '../helpers/task.helpers';
+import {
+  generateTask,
+  generateTaskDto,
+  generateTasks,
+} from '../helpers/task.helpers';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { HttpException } from '@nestjs/common';
+import { PRISMA_ERROR_CODE } from '../../src/prisma/prisma-error-code';
 
 describe('TaskService', () => {
   let taskService: TasksService;
@@ -82,6 +89,44 @@ describe('TaskService', () => {
       expect(
         taskPermissionService.hasOperationPermission,
       ).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('createTask', () => {
+    it('should save a task successfully', async () => {
+      const mockTaskData = generateTaskDto();
+      const mockTask = generateTask(mockTaskData);
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      mockPrismaService.task.create.mockResolvedValue(mockTask);
+      const result = await taskService.createTask(mockTaskData, mockUser.id);
+      expect(prismaService.task.create).toHaveBeenCalled();
+      expect(result).toBeTruthy();
+    });
+
+    it('shouls throw error when task with title already exist', async () => {
+      const mockTaskData = generateTaskDto();
+      const mockUser = generateUserJWTPayload(UserType.ADMIN);
+      mockPrismaService.task.create.mockRejectedValue(
+        new PrismaClientKnownRequestError(
+          'Unique constraint failed on the field: task.title',
+          {
+            code: 'P2002',
+            clientVersion: '1.0.0',
+            meta: { target: ['title'] },
+            batchRequestIdx: 1,
+          },
+        ),
+      );
+      await expect(
+        taskService.createTask(mockTaskData, mockUser.id),
+      ).rejects.toThrow(
+        new HttpException(
+          PRISMA_ERROR_CODE.P2002.response,
+          PRISMA_ERROR_CODE.P2002.status,
+        ),
+      );
+
+      expect(prismaService.task.create).toHaveBeenCalled();
     });
   });
 });
