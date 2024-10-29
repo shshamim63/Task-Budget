@@ -44,42 +44,35 @@ export class TasksService {
       }),
     };
 
-    let searchCiteria = {};
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isAdminUser = user.userType === UserType.ADMIN;
 
-    if (user.userType === UserType.SUPER) {
-      searchCiteria = {
-        where: {
-          ...baseCondition,
-        },
-      };
-    } else if (user.userType === UserType.ADMIN) {
-      searchCiteria = {
-        where: {
-          OR: [
-            { creatorId: user.id },
-            {
+    const searchCiteria = {
+      where: isSuperUser
+        ? baseCondition
+        : isAdminUser
+          ? {
+              OR: [
+                { creatorId: user.id },
+                {
+                  members: {
+                    some: {
+                      memberId: user.id,
+                    },
+                  },
+                },
+              ],
+              ...baseCondition,
+            }
+          : {
               members: {
                 some: {
                   memberId: user.id,
                 },
               },
+              ...baseCondition,
             },
-          ],
-          ...baseCondition,
-        },
-      };
-    } else {
-      searchCiteria = {
-        where: {
-          members: {
-            some: {
-              memberId: user.id,
-            },
-          },
-          ...baseCondition,
-        },
-      };
-    }
+    };
 
     const tasks = await this.prismaService.task.findMany(searchCiteria);
 
@@ -87,9 +80,11 @@ export class TasksService {
   }
 
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
+    const isSuperUser = user.userType === UserType.SUPER;
+
     const query: Prisma.TaskWhereInput = {
       id,
-      ...(user.userType !== UserType.SUPER && {
+      ...(!isSuperUser && {
         OR: [
           { creatorId: user.id },
           {
