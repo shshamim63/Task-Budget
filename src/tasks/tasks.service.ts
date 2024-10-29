@@ -88,10 +88,26 @@ export class TasksService {
   }
 
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
-    let baseCondition: any = { id: id };
-    if (user.userType !== UserType.SUPER) {
-      baseCondition = {
-        ...baseCondition,
+    // let baseCondition: any = { id: id };
+    // if (user.userType !== UserType.SUPER) {
+    //   baseCondition = {
+    //     ...baseCondition,
+    //     OR: [
+    //       { creatorId: user.id },
+    //       {
+    //         members: {
+    //           some: {
+    //             memberId: user.id,
+    //           },
+    //         },
+    //       },
+    //     ],
+    //   };
+    // }
+
+    const query: Prisma.TaskWhereInput = {
+      id,
+      ...(user.userType !== UserType.SUPER && {
         OR: [
           { creatorId: user.id },
           {
@@ -102,11 +118,11 @@ export class TasksService {
             },
           },
         ],
-      };
-    }
+      }),
+    };
 
     const task = await this.prismaService.task.findFirst({
-      where: baseCondition,
+      where: query,
     });
 
     if (!task) throw new NotFoundException(`Task with id: ${id} not found`);

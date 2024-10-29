@@ -97,6 +97,45 @@ describe('TaskService', () => {
     });
   });
 
+  describe('getTaskById', () => {
+    describe('should return task response object matched with the Id', () => {
+      const mockTaskData = generateTask();
+      const mockUser = generateUserJWTPayload(UserType.SUPER);
+      it('when usertype is super', async () => {
+        mockPrismaService.task.findFirst.mockResolvedValue(mockTaskData);
+        const result = await taskService.getTaskById(mockTaskData.id, mockUser);
+        expect(mockPrismaService.task.findFirst).toHaveBeenCalledWith({
+          where: { id: mockTaskData.id },
+        });
+        expect(result.id).toEqual(mockTaskData.id);
+      });
+
+      it('when usertype is not super', async () => {
+        mockPrismaService.task.findFirst.mockResolvedValue(mockTaskData);
+        const result = await taskService.getTaskById(mockTaskData.id, {
+          ...mockUser,
+          userType: UserType.ADMIN,
+        });
+        expect(mockPrismaService.task.findFirst).toHaveBeenCalledWith({
+          where: {
+            id: mockTaskData.id,
+            OR: [
+              { creatorId: mockUser.id },
+              {
+                members: {
+                  some: {
+                    memberId: mockUser.id,
+                  },
+                },
+              },
+            ],
+          },
+        });
+        expect(result.id).toEqual(mockTaskData.id);
+      });
+    });
+  });
+
   describe('createTask', () => {
     it('should save a task successfully', async () => {
       const mockTaskData = generateTaskDto();
