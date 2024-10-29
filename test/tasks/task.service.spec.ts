@@ -11,7 +11,11 @@ import {
   generateTasks,
 } from '../helpers/task.helpers';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { ForbiddenException, HttpException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PRISMA_ERROR_CODE } from '../../src/prisma/prisma-error-code';
 import {
   RESPONSE_MESSAGE,
@@ -98,9 +102,9 @@ describe('TaskService', () => {
   });
 
   describe('getTaskById', () => {
+    const mockTaskData = generateTask();
+    const mockUser = generateUserJWTPayload(UserType.SUPER);
     describe('should return task response object matched with the Id', () => {
-      const mockTaskData = generateTask();
-      const mockUser = generateUserJWTPayload(UserType.SUPER);
       it('when usertype is super', async () => {
         mockPrismaService.task.findFirst.mockResolvedValue(mockTaskData);
         const result = await taskService.getTaskById(mockTaskData.id, mockUser);
@@ -132,6 +136,16 @@ describe('TaskService', () => {
           },
         });
         expect(result.id).toEqual(mockTaskData.id);
+      });
+    });
+    it('should raise NotFoundException when task with id does not exist', async () => {
+      const indvalidTaskId = faker.number.int({ min: 1 });
+      mockPrismaService.task.findFirst.mockResolvedValue(null);
+      await expect(
+        taskService.getTaskById(indvalidTaskId, mockUser),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrismaService.task.findFirst).toHaveBeenCalledWith({
+        where: { id: indvalidTaskId },
       });
     });
   });

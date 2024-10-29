@@ -3,7 +3,6 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 
 import { TaskStatus } from './task.model';
@@ -88,23 +87,6 @@ export class TasksService {
   }
 
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
-    // let baseCondition: any = { id: id };
-    // if (user.userType !== UserType.SUPER) {
-    //   baseCondition = {
-    //     ...baseCondition,
-    //     OR: [
-    //       { creatorId: user.id },
-    //       {
-    //         members: {
-    //           some: {
-    //             memberId: user.id,
-    //           },
-    //         },
-    //       },
-    //     ],
-    //   };
-    // }
-
     const query: Prisma.TaskWhereInput = {
       id,
       ...(user.userType !== UserType.SUPER && {
@@ -121,11 +103,7 @@ export class TasksService {
       }),
     };
 
-    const task = await this.prismaService.task.findFirst({
-      where: query,
-    });
-
-    if (!task) throw new NotFoundException(`Task with id: ${id} not found`);
+    const task = await this.getFindFirstTask(query);
 
     return new TaskResponseDto(task);
   }
@@ -227,6 +205,19 @@ export class TasksService {
   private async removeTaskById(taskId: number) {
     try {
       await this.prismaService.task.delete({ where: { id: taskId } });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async getFindFirstTask(
+    query: Prisma.TaskWhereInput,
+  ): Promise<Task> | never {
+    try {
+      const currentTask = await this.prismaService.task.findFirst({
+        where: query,
+      });
+      return currentTask;
     } catch (error) {
       this.handleError(error);
     }
