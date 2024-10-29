@@ -3,6 +3,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { TaskStatus } from './task.model';
@@ -99,6 +100,9 @@ export class TasksService {
     };
 
     const task = await this.getFindFirstTask(query);
+
+    if (!task)
+      throw new NotFoundException(`Task with id: ${id} does not exist`);
 
     return new TaskResponseDto(task);
   }

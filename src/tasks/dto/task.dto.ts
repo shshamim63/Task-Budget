@@ -15,7 +15,7 @@ export class TaskResponseDto {
   ) {
     Object.assign(this, {
       ...partial,
-      budget: partial.budget ? partial.budget.toNumber() : 0,
+      budget: partial.budget ? Number(partial.budget) : 0,
     });
   }
 }
