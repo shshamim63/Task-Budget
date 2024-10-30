@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { UserType } from '@prisma/client';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 
 @Injectable()
 export class TaskPermissionService {
@@ -15,6 +16,9 @@ export class TaskPermissionService {
 
     if (isAdminUser && isTaskCreator) return true;
 
-    return false;
+    throw new ForbiddenException(
+      RESPONSE_MESSAGE.PERMISSION_DENIED,
+      ERROR_NAME.PERMISSION_DENIED,
+    );
   }
 }

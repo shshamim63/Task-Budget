@@ -27,6 +27,7 @@ describe('TaskService', () => {
   let taskService: TasksService;
   let prismaService: PrismaService;
   let taskPermissionService: TaskPermissionService;
+  let taskPermissionSpy: jest.SpyInstance;
 
   const mockPrismaService = {
     task: {
@@ -39,16 +40,19 @@ describe('TaskService', () => {
     },
   };
 
-  const mockTaskPermissionService = {
-    hasOperationPermission: jest.fn(),
-  };
+  const mockUser = generateUserJWTPayload(UserType.USER);
+  const mockAdminUser = generateUserJWTPayload(UserType.ADMIN);
+  const mockSuperUser = generateUserJWTPayload(UserType.SUPER);
+
+  const mockTasks = generateTasks();
+  const mockTaskData = generateTask();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TasksService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: TaskPermissionService, useValue: mockTaskPermissionService },
+        TaskPermissionService,
       ],
     }).compile();
 
@@ -57,18 +61,16 @@ describe('TaskService', () => {
     taskPermissionService = module.get<TaskPermissionService>(
       TaskPermissionService,
     );
+    taskPermissionSpy = jest.spyOn(
+      taskPermissionService,
+      'hasOperationPermission',
+    );
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    taskPermissionSpy.mockRestore();
   });
-
-  const mockUser = generateUserJWTPayload(UserType.USER);
-  const mockAdminUser = generateUserJWTPayload(UserType.ADMIN);
-  const mockSuperUser = generateUserJWTPayload(UserType.SUPER);
-
-  const mockTasks = generateTasks();
-  const mockTaskData = generateTask();
 
   describe('getTasks', () => {
     it('should return the tasks when filterDto is empty', async () => {
@@ -88,9 +90,6 @@ describe('TaskService', () => {
         ]),
       );
       expect(prismaService.task.findMany).toHaveBeenCalled();
-      expect(
-        taskPermissionService.hasOperationPermission,
-      ).toHaveBeenCalledTimes(0);
     });
 
     it('should return empty array when tasks matching filterDto is absent', async () => {
@@ -99,9 +98,6 @@ describe('TaskService', () => {
       const result = await taskService.getTasks(mockUser, filterDto);
       expect(result).toEqual([]);
       expect(prismaService.task.findMany).toHaveBeenCalled();
-      expect(
-        taskPermissionService.hasOperationPermission,
-      ).toHaveBeenCalledTimes(0);
     });
   });
 
@@ -201,7 +197,6 @@ describe('TaskService', () => {
         ...mockTaskData,
         creatorId: mockAdminUser.id,
       });
-      mockTaskPermissionService.hasOperationPermission.mockReturnValue(true);
 
       const result = await taskService.deleteTask(
         mockTaskData.id,
@@ -213,7 +208,6 @@ describe('TaskService', () => {
 
     it('should raise error when user does not have permission', async () => {
       mockPrismaService.task.findUniqueOrThrow.mockResolvedValue(mockTaskData);
-      mockTaskPermissionService.hasOperationPermission.mockReturnValue(false);
 
       await expect(
         taskService.deleteTask(mockTaskData.id, mockUser),
@@ -224,6 +218,7 @@ describe('TaskService', () => {
       ).rejects.toMatchObject({
         message: RESPONSE_MESSAGE.PERMISSION_DENIED,
       });
+      expect(taskPermissionSpy).toHaveBeenCalled();
     });
 
     it('should raise error when task with id does not exist', async () => {
@@ -243,6 +238,46 @@ describe('TaskService', () => {
   });
 
   describe('updateTask', () => {
-    it('should update task successfully', async () => {});
+    const updateTaskDto = generateTaskDto();
+    it('should raise error when task with id does not exist', async () => {
+      const invalidTaskId = faker.number.int({ min: 1 });
+      mockPrismaService.task.findUniqueOrThrow.mockRejectedValue(
+        new PrismaClientKnownRequestError('Task does not exit', {
+          code: 'P2025',
+          clientVersion: '1.0.0',
+          meta: {},
+          batchRequestIdx: 1,
+        }),
+      );
+
+      await expect(
+        taskService.updateTask(invalidTaskId, updateTaskDto, mockSuperUser),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw error when user does not have permission', async () => {
+      const { id: validTaskId } = mockTaskData;
+      mockPrismaService.task.findUniqueOrThrow.mockResolvedValue(mockTaskData);
+      await expect(
+        taskService.updateTask(validTaskId, updateTaskDto, mockUser),
+      ).rejects.toThrow(ForbiddenException);
+    });
+    it('should update task successfully', async () => {
+      const { id: validTaskId } = mockTaskData;
+      mockPrismaService.task.findUniqueOrThrow.mockResolvedValue(mockTaskData);
+      mockPrismaService.task.update.mockResolvedValue({
+        ...mockTaskData,
+        ...updateTaskDto,
+      });
+      const result = await taskService.updateTask(
+        validTaskId,
+        updateTaskDto,
+        mockSuperUser,
+      );
+      expect(result).toEqual({
+        ...mockTaskData,
+        ...updateTaskDto,
+      });
+    });
   });
 });
