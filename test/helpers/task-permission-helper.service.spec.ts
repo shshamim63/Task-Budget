@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskPermissionService } from '../../src/helpers/task-permission-helper.service';
 import { JWTPayload } from '../../src/auth/interfaces/auth.interface';
-import { generateUserJWTPayload } from '../test-seed/auth.helpers';
+import { generateUserJWTPayload } from '../mock-data/auth.mock';
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
-import { generateTask } from '../test-seed/task.helpers';
+import { generateTask } from '../mock-data/task.mock';
 import { UserType } from '@prisma/client';
 import { ForbiddenException } from '@nestjs/common';
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../../src/utils/constants';

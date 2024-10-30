@@ -2,14 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from '../../src/tasks/tasks.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { TaskPermissionService } from '../../src/helpers/task-permission-helper.service';
-import { generateUserJWTPayload } from '../test-seed/auth.helpers';
+import { generateUserJWTPayload } from '../mock-data/auth.mock';
 import { UserType } from '@prisma/client';
 import { GetTasksFilterDto } from '../../src/tasks/dto/get-tasks-filter.dto';
 import {
   generateTask,
   generateTaskDto,
   generateTasks,
-} from '../test-seed/task.helpers';
+} from '../mock-data/task.mock';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import {
   ForbiddenException,

@@ -7,7 +7,7 @@ import { AuthService } from '../../src/auth/auth.service';
 
 import { SignInDto, SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
 import { UserResponseDto } from '../../src/auth/dto/user.dto';
-import { generateAuthenticatedUser } from '../test-seed/auth.helpers';
+import { generateAuthenticatedUser } from '../mock-data/auth.mock';
 
 describe('AuthController', () => {
   let authController: AuthController;
