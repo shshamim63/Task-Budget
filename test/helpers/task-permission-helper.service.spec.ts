@@ -53,4 +53,19 @@ describe('TaskPermissionService', () => {
       ),
     );
   });
+
+  it('should drny permission for USER role accessor', () => {
+    const user: JWTPayload = generateUserJWTPayload(UserType.USER);
+    const task: TaskResponseDto = generateTask();
+
+    expect(() => service.hasOperationPermission(user, task)).toThrow(
+      ForbiddenException,
+    );
+    expect(() => service.hasOperationPermission(user, task)).toThrow(
+      new ForbiddenException(
+        RESPONSE_MESSAGE.PERMISSION_DENIED,
+        ERROR_NAME.PERMISSION_DENIED,
+      ),
+    );
+  });
 });
