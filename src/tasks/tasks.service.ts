@@ -11,7 +11,7 @@ import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
-import { Prisma, UserType } from '@prisma/client';
+import { Prisma, Task, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { CustomError } from '../common/exceptions/custom-error.exception';
@@ -40,53 +40,15 @@ export class TasksService {
       }),
     };
 
-    let searchCiteria = {};
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isAdminUser = user.userType === UserType.ADMIN;
 
-    if (user.userType === UserType.SUPER) {
-      searchCiteria = {
-        where: {
-          ...baseCondition,
-        },
-      };
-    } else if (user.userType === UserType.ADMIN) {
-      searchCiteria = {
-        where: {
-          OR: [
-            { creatorId: user.id },
-            {
-              members: {
-                some: {
-                  memberId: user.id,
-                },
-              },
-            },
-          ],
-          ...baseCondition,
-        },
-      };
-    } else {
-      searchCiteria = {
-        where: {
-          members: {
-            some: {
-              memberId: user.id,
-            },
-          },
-          ...baseCondition,
-        },
-      };
-    }
+    let whereCondition: Prisma.TaskWhereInput;
 
-    const tasks = await this.prismaService.task.findMany(searchCiteria);
-
-    return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
-  }
-
-  async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
-    let baseCondition: any = { id: id };
-    if (user.userType !== UserType.SUPER) {
-      baseCondition = {
-        ...baseCondition,
+    if (isSuperUser) {
+      whereCondition = baseCondition;
+    } else if (isAdminUser) {
+      whereCondition = {
         OR: [
           { creatorId: user.id },
           {
@@ -97,14 +59,51 @@ export class TasksService {
             },
           },
         ],
+        ...baseCondition,
+      };
+    } else {
+      whereCondition = {
+        members: {
+          some: {
+            memberId: user.id,
+          },
+        },
+        ...baseCondition,
       };
     }
 
-    const task = await this.prismaService.task.findFirst({
-      where: baseCondition,
-    });
+    const searchCriteria = {
+      where: whereCondition,
+    };
 
-    if (!task) throw new NotFoundException(`Task with id: ${id} not found`);
+    const tasks = await this.prismaService.task.findMany(searchCriteria);
+
+    return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
+  }
+
+  async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
+    const isSuperUser = user.userType === UserType.SUPER;
+
+    const query: Prisma.TaskWhereInput = {
+      id,
+      ...(!isSuperUser && {
+        OR: [
+          { creatorId: user.id },
+          {
+            members: {
+              some: {
+                memberId: user.id,
+              },
+            },
+          },
+        ],
+      }),
+    };
+
+    const task = await this.getFindFirstTask(query);
+
+    if (!task)
+      throw new NotFoundException(`Task with id: ${id} does not exist`);
 
     return new TaskResponseDto(task);
   }
@@ -123,28 +122,22 @@ export class TasksService {
       budget: budget ? new Prisma.Decimal(budget) : undefined,
     };
 
-    try {
-      const task = await this.prismaService.task.create({ data });
-      return new TaskResponseDto(task);
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+    const task = await this.saveTask(data);
+
+    return new TaskResponseDto(task);
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
-    try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: id },
-      });
-      this.taskPermissionService.hasOperationPermission(
-        user,
-        new TaskResponseDto(task),
-      );
-      await this.prismaService.task.delete({ where: { id: id } });
-      return TASK_RESPONSE_MESSAGE.DELETE_TASK;
-    } catch (error) {
-      this.handleError(error);
-    }
+    const currentTask = await this.getCurrentTaskById(id);
+
+    this.taskPermissionService.hasOperationPermission(
+      user,
+      new TaskResponseDto(currentTask),
+    );
+
+    await this.removeTaskById(id);
+
+    return TASK_RESPONSE_MESSAGE.DELETE_TASK;
   }
 
   async updateTask(
@@ -152,22 +145,16 @@ export class TasksService {
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: id },
-      });
-      this.taskPermissionService.hasOperationPermission(
-        user,
-        new TaskResponseDto(task),
-      );
-      const currentTask = await this.prismaService.task.update({
-        where: { id: id },
-        data: updateTaskDto,
-      });
-      return new TaskResponseDto(currentTask);
-    } catch (error) {
-      this.handleError(error);
-    }
+    const currentTask = await this.getCurrentTaskById(id);
+
+    this.taskPermissionService.hasOperationPermission(
+      user,
+      new TaskResponseDto(currentTask),
+    );
+
+    const updatedTask = await this.updateCurrentTask(id, updateTaskDto);
+
+    return new TaskResponseDto(updatedTask);
   }
 
   async updateTaskStatus(
@@ -175,21 +162,64 @@ export class TasksService {
     status: TaskStatus,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
+    const currentTask = await this.getCurrentTaskById(id);
+    this.taskPermissionService.hasOperationPermission(
+      user,
+      new TaskResponseDto(currentTask),
+    );
+
+    const updatedTask = await this.updateCurrentTask(id, { status: status });
+    return new TaskResponseDto(updatedTask);
+  }
+
+  private async updateCurrentTask(taskId, data) {
+    try {
+      const task = await this.prismaService.task.update({
+        where: { id: taskId },
+        data: data,
+      });
+      return task;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async removeTaskById(taskId: number) {
+    try {
+      await this.prismaService.task.delete({ where: { id: taskId } });
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async getFindFirstTask(
+    query: Prisma.TaskWhereInput,
+  ): Promise<Task> | never {
+    try {
+      const currentTask = await this.prismaService.task.findFirst({
+        where: query,
+      });
+      return currentTask;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  private async getCurrentTaskById(taskId: number): Promise<Task> | never {
     try {
       const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: id },
+        where: { id: taskId },
       });
+      return task;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
 
-      this.taskPermissionService.hasOperationPermission(
-        user,
-        new TaskResponseDto(task),
-      );
-
-      const updatedTask = await this.prismaService.task.update({
-        where: { id: id },
-        data: { status: status },
-      });
-      return new TaskResponseDto(updatedTask);
+  private async saveTask(data) {
+    try {
+      const task = await this.prismaService.task.create({ data });
+      return task;
     } catch (error) {
       this.handleError(error);
     }
