@@ -12,7 +12,7 @@ import {
   generateSignUpDto,
   generateToken,
   generateUserJWTPayload,
-} from '../helpers/auth.helpers';
+} from '../test-seed/auth.helpers';
 
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { SignInParams } from '../../src/auth/interfaces/auth.interface';

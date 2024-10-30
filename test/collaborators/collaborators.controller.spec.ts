@@ -6,8 +6,8 @@ import { faker } from '@faker-js/faker';
 
 import { UserType } from '@prisma/client';
 
-import { generateUserJWTPayload } from '../helpers/auth.helpers';
-import { generateTask } from '../helpers/task.helpers';
+import { generateUserJWTPayload } from '../test-seed/auth.helpers';
+import { generateTask } from '../test-seed/task.helpers';
 
 import { CollaboratorsController } from '../../src/collaborators/collaborators.controller';
 import { CollaboratorsService } from '../../src/collaborators/collaborators.service';
@@ -24,7 +24,7 @@ import { CreateCollaboratorsDto } from '../../src/collaborators/dto/create-colla
 import {
   generateCollaboratorId,
   generateMockCollaboratorsResponse,
-} from '../helpers/collaborators.helper';
+} from '../test-seed/collaborators.helper';
 
 describe('CollaboratorsController', () => {
   let collaboratorsController: CollaboratorsController;

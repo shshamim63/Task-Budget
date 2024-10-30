@@ -14,7 +14,7 @@ import { ERROR_NAME, RESPONSE_MESSAGE } from '../../../src/utils/constants';
 import {
   generateMockUser,
   generateUserJWTPayload,
-} from '../../helpers/auth.helpers';
+} from '../../test-seed/auth.helpers';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;

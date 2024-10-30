@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TasksController } from '../../src/tasks/tasks.controller';
 import { TasksService } from '../../src/tasks/tasks.service';
-import { generateTask, generateTasks } from '../helpers/task.helpers';
+import { generateTask, generateTasks } from '../test-seed/task.helpers';
 import { AuthGuard } from '../../src/auth/guards/auth.guard';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
-import { generateUserJWTPayload } from '../helpers/auth.helpers';
+import { generateUserJWTPayload } from '../test-seed/auth.helpers';
 import { UserType } from '@prisma/client';
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 import { GetTasksFilterDto } from '../../src/tasks/dto/get-tasks-filter.dto';

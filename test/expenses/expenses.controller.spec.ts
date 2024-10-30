@@ -11,8 +11,8 @@ import { faker } from '@faker-js/faker/.';
 import { UserType } from '@prisma/client';
 import { ExpenseResponseDto } from '../../src/expenses/dto/expense.dto';
 import { UpdateExpenseDto } from '../../src/expenses/dto/update-expense.dto';
-import { generateTask } from '../helpers/task.helpers';
-import { generateUserJWTPayload } from '../helpers/auth.helpers';
+import { generateTask } from '../test-seed/task.helpers';
+import { generateUserJWTPayload } from '../test-seed/auth.helpers';
 
 describe('ExpensesController', () => {
   let expensesController: ExpensesController;
