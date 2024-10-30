@@ -43,7 +43,7 @@ export class TasksService {
     const isSuperUser = user.userType === UserType.SUPER;
     const isAdminUser = user.userType === UserType.ADMIN;
 
-    let whereCondition;
+    let whereCondition: Prisma.TaskWhereInput;
 
     if (isSuperUser) {
       whereCondition = baseCondition;
