@@ -14,7 +14,7 @@ export const generateTaskDto = (): CreateTaskDto => {
 export const generateTask = (
   taskDto: CreateTaskDto = {} as CreateTaskDto,
 ): TaskResponseDto => {
-  return {
+  const task = {
     id: faker.number.int(),
     title: taskDto.title ?? faker.lorem.words(),
     description: taskDto.description ?? faker.lorem.sentence(),
@@ -22,8 +22,9 @@ export const generateTask = (
     status: TaskStatus.OPEN,
     budget: new Prisma.Decimal(
       taskDto.budget ?? faker.number.float({ min: 100, max: 10000 }),
-    ) as unknown as number,
+    ),
   };
+  return new TaskResponseDto(task);
 };
 
 export const generateTasks = (numOfTasks: number = 1): TaskResponseDto[] => {

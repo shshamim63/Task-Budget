@@ -22,6 +22,7 @@ import {
   TASK_RESPONSE_MESSAGE,
 } from '../../src/utils/constants';
 import { faker } from '@faker-js/faker/.';
+import { TaskStatus } from '../../src/tasks/task.model';
 
 describe('TaskService', () => {
   let taskService: TasksService;
@@ -277,6 +278,59 @@ describe('TaskService', () => {
       expect(result).toEqual({
         ...mockTaskData,
         ...updateTaskDto,
+      });
+    });
+  });
+
+  describe('updateTaskStatus', () => {
+    it('should raise error when task with id does not exist', async () => {
+      const invalidTaskId = faker.number.int({ min: 1 });
+      mockPrismaService.task.findUniqueOrThrow.mockRejectedValue(
+        new PrismaClientKnownRequestError('Task does not exit', {
+          code: 'P2025',
+          clientVersion: '1.0.0',
+          meta: {},
+          batchRequestIdx: 1,
+        }),
+      );
+
+      await expect(
+        taskService.updateTaskStatus(
+          invalidTaskId,
+          TaskStatus.IN_PROGRESS,
+          mockSuperUser,
+        ),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw error when user does not have permission', async () => {
+      const { id: validTaskId } = mockTaskData;
+      mockPrismaService.task.findUniqueOrThrow.mockResolvedValue(mockTaskData);
+      await expect(
+        taskService.updateTaskStatus(
+          validTaskId,
+          TaskStatus.IN_PROGRESS,
+          mockUser,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+    it('should update task status successfully', async () => {
+      const { id: validTaskId } = mockTaskData;
+      mockPrismaService.task.findUniqueOrThrow.mockResolvedValue(mockTaskData);
+      mockPrismaService.task.update.mockResolvedValue({
+        ...mockTaskData,
+        status: TaskStatus.IN_PROGRESS,
+      });
+
+      const result = await taskService.updateTaskStatus(
+        validTaskId,
+        TaskStatus.IN_PROGRESS,
+        mockSuperUser,
+      );
+
+      expect({ ...result }).toEqual({
+        ...mockTaskData,
+        status: TaskStatus.IN_PROGRESS,
       });
     });
   });
