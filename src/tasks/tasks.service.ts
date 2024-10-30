@@ -43,34 +43,40 @@ export class TasksService {
     const isSuperUser = user.userType === UserType.SUPER;
     const isAdminUser = user.userType === UserType.ADMIN;
 
-    const searchCiteria = {
-      where: isSuperUser
-        ? baseCondition
-        : isAdminUser
-          ? {
-              OR: [
-                { creatorId: user.id },
-                {
-                  members: {
-                    some: {
-                      memberId: user.id,
-                    },
-                  },
-                },
-              ],
-              ...baseCondition,
-            }
-          : {
-              members: {
-                some: {
-                  memberId: user.id,
-                },
+    let whereCondition;
+
+    if (isSuperUser) {
+      whereCondition = baseCondition;
+    } else if (isAdminUser) {
+      whereCondition = {
+        OR: [
+          { creatorId: user.id },
+          {
+            members: {
+              some: {
+                memberId: user.id,
               },
-              ...baseCondition,
             },
+          },
+        ],
+        ...baseCondition,
+      };
+    } else {
+      whereCondition = {
+        members: {
+          some: {
+            memberId: user.id,
+          },
+        },
+        ...baseCondition,
+      };
+    }
+
+    const searchCriteria = {
+      where: whereCondition,
     };
 
-    const tasks = await this.prismaService.task.findMany(searchCiteria);
+    const tasks = await this.prismaService.task.findMany(searchCriteria);
 
     return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
