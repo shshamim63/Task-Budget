@@ -94,11 +94,28 @@ describe('TaskService', () => {
     });
 
     it('should return empty array when tasks matching filterDto is absent', async () => {
-      const filterDto = {} as GetTasksFilterDto;
+      const filterDto = {
+        status: TaskStatus.IN_PROGRESS,
+        search: faker.lorem.word(),
+      } as GetTasksFilterDto;
       mockPrismaService.task.findMany.mockResolvedValue([]);
       const result = await taskService.getTasks(mockUser, filterDto);
       expect(result).toEqual([]);
       expect(prismaService.task.findMany).toHaveBeenCalled();
+      expect(prismaService.task.findMany).toHaveBeenCalledWith({
+        where: {
+          status: filterDto.status,
+          OR: [
+            { title: { contains: filterDto.search } },
+            { description: { contains: filterDto.search } },
+          ],
+          members: {
+            some: {
+              memberId: mockUser.id,
+            },
+          },
+        },
+      });
     });
   });
 
