@@ -1,4 +1,6 @@
 import { validate } from 'class-validator';
+import { faker } from '@faker-js/faker/.';
+
 import { Match } from '../../src/decorators/match.decorator';
 
 class TestClass {
@@ -10,9 +12,10 @@ class TestClass {
 
 describe('Match Decorator', () => {
   it('should validate when passwords match', async () => {
+    const demoPassword = faker.internet.password();
     const testInstance = new TestClass();
-    testInstance.password = 'securePassword';
-    testInstance.confirmPassword = 'securePassword';
+    testInstance.password = demoPassword;
+    testInstance.confirmPassword = demoPassword;
 
     const errors = await validate(testInstance);
     expect(errors.length).toBe(0);
@@ -20,8 +23,8 @@ describe('Match Decorator', () => {
 
   it('should fail validation when passwords do not match', async () => {
     const testInstance = new TestClass();
-    testInstance.password = 'securePassword';
-    testInstance.confirmPassword = 'differentPassword';
+    testInstance.password = faker.internet.password();
+    testInstance.confirmPassword = faker.internet.password();
 
     const errors = await validate(testInstance);
     console.log(errors);
