@@ -27,9 +27,9 @@ describe('Match Decorator', () => {
     testInstance.confirmPassword = faker.internet.password();
 
     const errors = await validate(testInstance);
-    console.log(errors);
+
     expect(errors.length).toBe(1);
-    expect(errors[0].constraints?.matches).toBe(
+    expect(errors[0].constraints?.Match).toBe(
       'confirmPassword must match password',
     );
   });
