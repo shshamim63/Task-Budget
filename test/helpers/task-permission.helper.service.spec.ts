@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TaskPermissionService } from '../../src/helpers/task-permission-helper.service';
+import { TaskPermissionService } from '../../src/helpers/task-permission.helper.service';
 import { JWTPayload } from '../../src/auth/interfaces/auth.interface';
 import { generateUserJWTPayload } from '../mock-data/auth.mock';
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
