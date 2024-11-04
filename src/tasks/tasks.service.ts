@@ -1,82 +1,31 @@
-import {
-  HttpException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 import { TaskResponseDto } from './dto/task.dto';
 import { Prisma, Task, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { CustomError } from '../common/exceptions/custom-error.exception';
-import { TaskPermissionService } from '../helpers/task-permission-helper.service';
+
+import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
+import { ErrorHandlerService } from '../helpers/error.helper.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly taskPermissionService: TaskPermissionService,
+    private readonly errorHandlerService: ErrorHandlerService,
   ) {}
 
   async getTasks(
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
   ): Promise<TaskResponseDto[]> {
-    const { status, search } = filterDto;
-    const baseCondition = {
-      ...(status && { status: status }),
-      ...(search && {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-        ],
-      }),
-    };
-
-    const isSuperUser = user.userType === UserType.SUPER;
-    const isAdminUser = user.userType === UserType.ADMIN;
-
-    let whereCondition: Prisma.TaskWhereInput;
-
-    if (isSuperUser) {
-      whereCondition = baseCondition;
-    } else if (isAdminUser) {
-      whereCondition = {
-        OR: [
-          { creatorId: user.id },
-          {
-            members: {
-              some: {
-                memberId: user.id,
-              },
-            },
-          },
-        ],
-        ...baseCondition,
-      };
-    } else {
-      whereCondition = {
-        members: {
-          some: {
-            memberId: user.id,
-          },
-        },
-        ...baseCondition,
-      };
-    }
-
-    const searchCriteria = {
-      where: whereCondition,
-    };
-
-    const tasks = await this.prismaService.task.findMany(searchCriteria);
+    const query = this.buildGetTasksWhere(user, filterDto);
+    const tasks = await this.prismaService.task.findMany(query);
 
     return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
@@ -180,7 +129,7 @@ export class TasksService {
       });
       return task;
     } catch (error) {
-      this.handleError(error);
+      this.errorHandlerService.handle(error);
     }
   }
 
@@ -188,7 +137,7 @@ export class TasksService {
     try {
       await this.prismaService.task.delete({ where: { id: taskId } });
     } catch (error) {
-      this.handleError(error);
+      this.errorHandlerService.handle(error);
     }
   }
 
@@ -201,7 +150,7 @@ export class TasksService {
       });
       return currentTask;
     } catch (error) {
-      this.handleError(error);
+      this.errorHandlerService.handle(error);
     }
   }
 
@@ -212,7 +161,7 @@ export class TasksService {
       });
       return task;
     } catch (error) {
-      this.handleError(error);
+      this.errorHandlerService.handle(error);
     }
   }
 
@@ -221,18 +170,61 @@ export class TasksService {
       const task = await this.prismaService.task.create({ data });
       return task;
     } catch (error) {
-      this.handleError(error);
+      this.errorHandlerService.handle(error);
     }
   }
 
-  private handleError(error: CustomError): never {
-    if (error instanceof PrismaClientKnownRequestError) {
-      const { response, status } = PRISMA_ERROR_CODE[error.code];
-      throw new HttpException(response, status);
-    } else if (error instanceof HttpException) {
-      throw error;
+  private buildGetTasksWhere(
+    user: JWTPayload,
+    filterDto?: GetTasksFilterDto,
+  ): { where: Prisma.TaskWhereInput } {
+    const { status, search } = filterDto;
+    const baseCondition = {
+      ...(status && { status: status }),
+      ...(search && {
+        OR: [
+          { title: { contains: search } },
+          { description: { contains: search } },
+        ],
+      }),
+    };
+
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isAdminUser = user.userType === UserType.ADMIN;
+
+    let whereCondition: Prisma.TaskWhereInput;
+
+    if (isSuperUser) {
+      whereCondition = baseCondition;
+    } else if (isAdminUser) {
+      whereCondition = {
+        OR: [
+          { creatorId: user.id },
+          {
+            members: {
+              some: {
+                memberId: user.id,
+              },
+            },
+          },
+        ],
+        ...baseCondition,
+      };
     } else {
-      throw new InternalServerErrorException(error.message);
+      whereCondition = {
+        members: {
+          some: {
+            memberId: user.id,
+          },
+        },
+        ...baseCondition,
+      };
     }
+
+    const searchCriteria = {
+      where: whereCondition,
+    };
+
+    return searchCriteria;
   }
 }
