@@ -6,17 +6,17 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-import { PrismaService } from '../../prisma/prisma.service';
 import { TokenSerive } from '../../token/token.service';
 
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+import { UserRepository } from '../repositories/user.repository';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly accessToken = process.env.ACCESS_TOKEN;
 
   constructor(
-    private readonly prismaService: PrismaService,
+    private readonly userRepository: UserRepository,
     private readonly tokenService: TokenSerive,
   ) {}
 
@@ -32,7 +32,7 @@ export class AuthGuard implements CanActivate {
 
     const payload = this.tokenService.verifyToken(token);
 
-    const user = await this.prismaService.user.findUnique({
+    const user = await this.userRepository.findUnique({
       where: { id: payload.id },
     });
 

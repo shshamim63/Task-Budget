@@ -19,6 +19,7 @@ import {
   SignUpParams,
   TokenPayload,
 } from './interfaces/auth.interface';
+import { UserRepository } from './repositories/user.repository';
 
 @Injectable()
 export class AuthService {
@@ -28,15 +29,17 @@ export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenSerive,
+    private readonly userRepository: UserRepository,
   ) {}
 
   async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
     const { email, password, username } = authCredentials;
-    const userExist = await this.prismaService.user.findFirst({
+    const findQuery = {
       where: {
         OR: [{ email: email }, { username: username }],
       },
-    });
+    };
+    const userExist = await this.userRepository.findFirst(findQuery);
 
     if (userExist) {
       const errorMessage =
@@ -48,16 +51,17 @@ export class AuthService {
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
     const data = { email, username, password_hash: hashPassword };
-    const user = await this.prismaService.user.create({ data });
+    const user = await this.userRepository.create({ data });
     const payload = this.generateTokenPayload(user);
     const token = this.tokenService.generateToken(payload);
     return new UserResponseDto({ ...user, token });
   }
 
   async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
-    const user = await this.prismaService.user.findUnique({
+    const findQuery = {
       where: { email },
-    });
+    };
+    const user = await this.userRepository.findUnique(findQuery);
 
     if (!user) throw new BadRequestException('Invalid credentials');
 
