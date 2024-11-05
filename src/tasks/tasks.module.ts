@@ -6,6 +6,8 @@ import { TokenModule } from '../token/token.module';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { TaskRepository } from './repositories/task.repository';
+import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+import { UserRepository } from '../auth/repositories/user.repository';
 
 @Module({
   imports: [PrismaModule, TokenModule],
@@ -14,6 +16,8 @@ import { TaskRepository } from './repositories/task.repository';
     TasksService,
     TaskPermissionService,
     TaskRepository,
+    UserRepository,
+    AsyncErrorHandlerService,
     ErrorHandlerService,
   ],
 })

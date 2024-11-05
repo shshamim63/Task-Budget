@@ -1,72 +1,58 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ErrorHandlerService } from '../../helpers/error.helper.service';
 import { TaskResponse } from '../interface/task-response.interface';
 import { Task } from '@prisma/client';
+import { AsyncErrorHandlerService } from '../../helpers/execute-with-error.helper.service';
 
 @Injectable()
 export class TaskRepository {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly errorHandlerService: ErrorHandlerService,
+    private asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
   async findFirst(query): Promise<Task> {
-    try {
-      return await this.prismaService.task.findFirst(query);
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.findFirst(query),
+    );
   }
 
   async findUnique(query): Promise<TaskResponse> {
-    try {
-      return await this.prismaService.task.findUnique(query);
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.findUnique(query),
+    );
   }
 
-  async findUniqueOrThrow(query): Promise<Task> | never {
-    try {
-      return await this.prismaService.task.findUniqueOrThrow(query);
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+  async findUniqueOrThrow(query): Promise<Task> {
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.findUniqueOrThrow(query),
+    );
   }
 
   async findMany(query): Promise<TaskResponse[]> {
-    try {
-      return await this.prismaService.task.findMany(query);
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.findMany(query),
+    );
   }
 
   async create(data): Promise<Task> {
-    try {
-      return await this.prismaService.task.create({ data });
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.create({ data }),
+    );
   }
 
   async delete(query): Promise<void> {
-    try {
-      await this.prismaService.task.delete(query);
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.delete(query),
+    );
   }
 
   async update(query, data): Promise<Task> {
-    try {
-      return await this.prismaService.task.update({
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.update({
         ...query,
         data,
-      });
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+      }),
+    );
   }
 }
