@@ -3,21 +3,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponseDto } from './dto/task.dto';
-import { Prisma, Task, UserType } from '@prisma/client';
+import { Prisma, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
-import { ErrorHandlerService } from '../helpers/error.helper.service';
+import { TaskRepository } from './repositories/task.repository';
+import { TaskQuery } from './interface/task-response.interface';
 
 @Injectable()
 export class TasksService {
   constructor(
-    private readonly prismaService: PrismaService,
     private readonly taskPermissionService: TaskPermissionService,
-    private readonly errorHandlerService: ErrorHandlerService,
+    private readonly taskRepository: TaskRepository,
   ) {}
 
   async getTasks(
@@ -25,7 +24,7 @@ export class TasksService {
     filterDto?: GetTasksFilterDto,
   ): Promise<TaskResponseDto[]> {
     const query = this.buildGetTasksWhere(user, filterDto);
-    const tasks = await this.prismaService.task.findMany(query);
+    const tasks = await this.taskRepository.findMany(query);
 
     return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
@@ -33,23 +32,25 @@ export class TasksService {
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
     const isSuperUser = user.userType === UserType.SUPER;
 
-    const query: Prisma.TaskWhereInput = {
-      id,
-      ...(!isSuperUser && {
-        OR: [
-          { creatorId: user.id },
-          {
-            members: {
-              some: {
-                memberId: user.id,
+    const query: TaskQuery = {
+      where: {
+        id,
+        ...(!isSuperUser && {
+          OR: [
+            { creatorId: user.id },
+            {
+              members: {
+                some: {
+                  memberId: user.id,
+                },
               },
             },
-          },
-        ],
-      }),
+          ],
+        }),
+      },
     };
 
-    const task = await this.getFindFirstTask(query);
+    const task = await this.taskRepository.findFirst(query);
 
     if (!task)
       throw new NotFoundException(`Task with id: ${id} does not exist`);
@@ -71,20 +72,21 @@ export class TasksService {
       budget: budget ? new Prisma.Decimal(budget) : undefined,
     };
 
-    const task = await this.saveTask(data);
+    const task = await this.taskRepository.create(data);
 
     return new TaskResponseDto(task);
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
-    const currentTask = await this.getCurrentTaskById(id);
+    const query: TaskQuery = { where: { id: id } };
+
+    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
     this.taskPermissionService.hasOperationPermission(
       user,
       new TaskResponseDto(currentTask),
     );
-
-    await this.removeTaskById(id);
+    await this.taskRepository.delete(query);
 
     return TASK_RESPONSE_MESSAGE.DELETE_TASK;
   }
@@ -94,14 +96,15 @@ export class TasksService {
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const currentTask = await this.getCurrentTaskById(id);
+    const query: TaskQuery = { where: { id: id } };
+    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
     this.taskPermissionService.hasOperationPermission(
       user,
       new TaskResponseDto(currentTask),
     );
 
-    const updatedTask = await this.updateCurrentTask(id, updateTaskDto);
+    const updatedTask = await this.taskRepository.update(query, updateTaskDto);
 
     return new TaskResponseDto(updatedTask);
   }
@@ -111,73 +114,24 @@ export class TasksService {
     status: TaskStatus,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const currentTask = await this.getCurrentTaskById(id);
+    const query: TaskQuery = { where: { id: id } };
+    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
+
     this.taskPermissionService.hasOperationPermission(
       user,
       new TaskResponseDto(currentTask),
     );
 
-    const updatedTask = await this.updateCurrentTask(id, { status: status });
+    const data = { status: status };
+    const updatedTask = await this.taskRepository.update(query, data);
+
     return new TaskResponseDto(updatedTask);
-  }
-
-  private async updateCurrentTask(taskId, data) {
-    try {
-      const task = await this.prismaService.task.update({
-        where: { id: taskId },
-        data: data,
-      });
-      return task;
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
-  }
-
-  private async removeTaskById(taskId: number) {
-    try {
-      await this.prismaService.task.delete({ where: { id: taskId } });
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
-  }
-
-  private async getFindFirstTask(
-    query: Prisma.TaskWhereInput,
-  ): Promise<Task> | never {
-    try {
-      const currentTask = await this.prismaService.task.findFirst({
-        where: query,
-      });
-      return currentTask;
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
-  }
-
-  private async getCurrentTaskById(taskId: number): Promise<Task> | never {
-    try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
-        where: { id: taskId },
-      });
-      return task;
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
-  }
-
-  private async saveTask(data) {
-    try {
-      const task = await this.prismaService.task.create({ data });
-      return task;
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
   }
 
   private buildGetTasksWhere(
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
-  ): { where: Prisma.TaskWhereInput } {
+  ): TaskQuery {
     const { status, search } = filterDto;
     const baseCondition = {
       ...(status && { status: status }),
