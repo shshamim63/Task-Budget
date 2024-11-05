@@ -1,28 +1,33 @@
 import { Injectable } from '@nestjs/common';
+
 import { PrismaService } from '../../prisma/prisma.service';
+
 import { CreateCollaborator } from '../interface/collaborator.interface';
-import { ErrorHandlerService } from '../../helpers/error.helper.service';
+
+import { AsyncErrorHandlerService } from '../../helpers/execute-with-error.helper.service';
 
 @Injectable()
 export class CollaboratorRepository {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly errorHandlerService: ErrorHandlerService,
+    private asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
   async createMany(data: CreateCollaborator[]) {
-    try {
-      await this.prismaService.userTasks.createMany({ data });
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.userTasks.createMany({ data }),
+    );
   }
 
   async delete(query) {
-    try {
-      await this.prismaService.userTasks.delete(query);
-    } catch (error) {
-      this.errorHandlerService.handle(error);
-    }
+    await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.userTasks.delete(query),
+    );
+  }
+
+  async findUnique(query) {
+    return this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.userTasks.delete(query),
+    );
   }
 }
