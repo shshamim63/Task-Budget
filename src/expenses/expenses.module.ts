@@ -5,10 +5,11 @@ import { PrismaModule } from '../prisma/prisma.module';
 
 import { ExpensesService } from './expenses.service';
 import { ExpensesController } from './expenses.controller';
+import { ErrorHandlerService } from '../helpers/error.helper.service';
 
 @Module({
   imports: [PrismaModule, TokenModule],
   controllers: [ExpensesController],
-  providers: [ExpensesService],
+  providers: [ExpensesService, ErrorHandlerService],
 })
 export class ExpensesModule {}
