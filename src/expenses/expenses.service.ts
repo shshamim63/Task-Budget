@@ -15,10 +15,16 @@ import { ExpenseResponseDto } from './dto/expense.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import { CollaboratorRepository } from '../collaborators/repositories/collaborator.repository';
+import { ExpenseRepository } from './repositories/expense.repository';
 
 @Injectable()
 export class ExpensesService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly expenseRepository: ExpenseRepository,
+    private readonly collaboratorRepository: CollaboratorRepository,
+  ) {}
 
   async createExpense(
     user: JWTPayload,
@@ -47,8 +53,7 @@ export class ExpensesService {
       taskId: taskId,
       contributorId: userId,
     };
-
-    const expense = await this.prismaService.expense.create({
+    const createArgument = {
       data,
       select: {
         id: true,
@@ -63,7 +68,8 @@ export class ExpensesService {
           },
         },
       },
-    });
+    };
+    const expense = await this.expenseRepository.create(createArgument);
 
     return new ExpenseResponseDto(expense);
   }
@@ -79,8 +85,7 @@ export class ExpensesService {
       throw new ForbiddenException(
         'User does not have permission to access the info',
       );
-
-    const expense = await this.prismaService.expense.findUnique({
+    const query = {
       where: { id: expenseId },
       select: {
         id: true,
@@ -95,7 +100,8 @@ export class ExpensesService {
           },
         },
       },
-    });
+    };
+    const expense = await this.expenseRepository.findUnique(query);
 
     return new ExpenseResponseDto(expense);
   }
@@ -111,7 +117,7 @@ export class ExpensesService {
         'User does not have permission to access the info',
       );
 
-    const expenses = await this.prismaService.expense.findMany({
+    const query = {
       where: { taskId: task.id },
       select: {
         id: true,
@@ -126,7 +132,9 @@ export class ExpensesService {
           },
         },
       },
-    });
+    };
+
+    const expenses = await this.expenseRepository.findMany(query);
 
     return expenses.map((expense) => new ExpenseResponseDto(expense));
   }
@@ -137,9 +145,10 @@ export class ExpensesService {
     updateExpenseDto: UpdateExpenseDto,
     expenseId: number,
   ): Promise<ExpenseResponseDto> {
-    const currentExpense = await this.prismaService.expense.findFirst({
+    const query = {
       where: { id: expenseId },
-    });
+    };
+    const currentExpense = await this.expenseRepository.findFirst(query);
 
     if (!currentExpense)
       throw new NotFoundException(
@@ -156,12 +165,10 @@ export class ExpensesService {
     if (!isAuthorized)
       throw new ForbiddenException('User cannot update the expense');
 
-    const updatedExpense = await this.prismaService.expense.update({
-      where: {
-        id: expenseId,
-      },
-      data: updateExpenseDto,
-    });
+    const updatedExpense = await this.expenseRepository.update(
+      query,
+      updateExpenseDto,
+    );
 
     return new ExpenseResponseDto(updatedExpense);
   }
@@ -189,12 +196,13 @@ export class ExpensesService {
     createExpenseDto,
     taskBudget,
   ): Promise<boolean> {
+    const query = { where: { taskId } };
+    const aggregateArg = {
+      _sum: { amount: true },
+    };
     const {
       _sum: { amount: totalExpense },
-    } = await this.prismaService.expense.aggregate({
-      where: { taskId: taskId },
-      _sum: { amount: true },
-    });
+    } = await this.expenseRepository.aggregate(query, aggregateArg);
 
     const { amount: currentExpenseAmount } = createExpenseDto;
 
@@ -234,14 +242,15 @@ export class ExpensesService {
     userId: number,
     taskId: number,
   ): Promise<boolean> {
-    const collaboration = await this.prismaService.userTasks.findUnique({
+    const query = {
       where: {
         memberId_taskId: {
           memberId: userId,
           taskId: taskId,
         },
       },
-    });
+    };
+    const collaboration = await this.collaboratorRepository.findUnique(query);
 
     return !!collaboration;
   }
