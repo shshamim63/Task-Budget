@@ -1,12 +1,11 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
-import { TaskResponseDto } from '../tasks/dto/task.dto';
-import { UserType } from '@prisma/client';
+import { Task, UserType } from '@prisma/client';
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 
 @Injectable()
 export class TaskPermissionService {
-  hasOperationPermission(user: JWTPayload, task: TaskResponseDto): boolean {
+  hasOperationPermission(user: JWTPayload, task: Task): boolean {
     const isSuperUser = user.userType === UserType.SUPER;
 
     if (isSuperUser) return true;

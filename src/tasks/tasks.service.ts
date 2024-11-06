@@ -4,7 +4,7 @@ import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 import { TaskResponseDto } from './dto/task.dto';
-import { Prisma, UserType } from '@prisma/client';
+import { Prisma, Task, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
@@ -30,26 +30,7 @@ export class TasksService {
   }
 
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
-    const isSuperUser = user.userType === UserType.SUPER;
-
-    const query: TaskQuery = {
-      where: {
-        id,
-        ...(!isSuperUser && {
-          OR: [
-            { creatorId: user.id },
-            {
-              members: {
-                some: {
-                  memberId: user.id,
-                },
-              },
-            },
-          ],
-        }),
-      },
-    };
-
+    const query = this.buildGetTaskByIdQuery(id, user);
     const task = await this.taskRepository.findFirst(query);
 
     if (!task)
@@ -62,30 +43,19 @@ export class TasksService {
     createTaskDTO: CreateTaskDto,
     userId: number,
   ): Promise<TaskResponseDto> {
-    const { title, description, budget } = createTaskDTO;
-
-    const data = {
-      title,
-      description,
-      status: TaskStatus.OPEN,
-      creatorId: userId,
-      budget: budget ? new Prisma.Decimal(budget) : undefined,
-    };
-
+    const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create(data);
 
     return new TaskResponseDto(task);
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
-    const query: TaskQuery = { where: { id: id } };
+    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
 
     const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
-    this.taskPermissionService.hasOperationPermission(
-      user,
-      new TaskResponseDto(currentTask),
-    );
+    this.checkPermission(user, currentTask);
+
     await this.taskRepository.delete(query);
 
     return TASK_RESPONSE_MESSAGE.DELETE_TASK;
@@ -96,14 +66,9 @@ export class TasksService {
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const query: TaskQuery = { where: { id: id } };
+    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
     const currentTask = await this.taskRepository.findUniqueOrThrow(query);
-
-    this.taskPermissionService.hasOperationPermission(
-      user,
-      new TaskResponseDto(currentTask),
-    );
-
+    this.checkPermission(user, currentTask);
     const updatedTask = await this.taskRepository.update(query, updateTaskDto);
 
     return new TaskResponseDto(updatedTask);
@@ -114,13 +79,10 @@ export class TasksService {
     status: TaskStatus,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const query: TaskQuery = { where: { id: id } };
+    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
     const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
-    this.taskPermissionService.hasOperationPermission(
-      user,
-      new TaskResponseDto(currentTask),
-    );
+    this.checkPermission(user, currentTask);
 
     const data = { status: status };
     const updatedTask = await this.taskRepository.update(query, data);
@@ -132,7 +94,10 @@ export class TasksService {
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
   ): TaskQuery {
-    const { status, search } = filterDto;
+    const { status, search } = filterDto || {};
+    const isSuperUser = user.userType === UserType.SUPER;
+    const isAdminUser = user.userType === UserType.ADMIN;
+
     const baseCondition = {
       ...(status && { status: status }),
       ...(search && {
@@ -143,42 +108,56 @@ export class TasksService {
       }),
     };
 
-    const isSuperUser = user.userType === UserType.SUPER;
-    const isAdminUser = user.userType === UserType.ADMIN;
+    const whereCondition: Prisma.TaskWhereInput = isSuperUser
+      ? baseCondition
+      : {
+          OR: isAdminUser
+            ? [
+                { creatorId: user.id },
+                { members: { some: { memberId: user.id } } },
+              ]
+            : undefined,
+          members:
+            !isSuperUser && !isAdminUser
+              ? { some: { memberId: user.id } }
+              : undefined,
+          ...baseCondition,
+        };
 
-    let whereCondition: Prisma.TaskWhereInput;
-
-    if (isSuperUser) {
-      whereCondition = baseCondition;
-    } else if (isAdminUser) {
-      whereCondition = {
-        OR: [
-          { creatorId: user.id },
-          {
-            members: {
-              some: {
-                memberId: user.id,
-              },
-            },
-          },
-        ],
-        ...baseCondition,
-      };
-    } else {
-      whereCondition = {
-        members: {
-          some: {
-            memberId: user.id,
-          },
-        },
-        ...baseCondition,
-      };
-    }
-
-    const searchCriteria = {
+    return {
       where: whereCondition,
     };
+  }
 
-    return searchCriteria;
+  private buildGetTaskByIdQuery(id: number, user?: JWTPayload): TaskQuery {
+    const baseQuery: TaskQuery = { where: { id } };
+
+    if (!user) return baseQuery;
+
+    const isSuperUser = user.userType === UserType.SUPER;
+
+    if (!isSuperUser) {
+      baseQuery.where.OR = [
+        { creatorId: user.id },
+        { members: { some: { memberId: user.id } } },
+      ];
+    }
+    return baseQuery;
+  }
+
+  private prepareTaskCreateData(createTaskDTO, userId) {
+    const { title, description, budget } = createTaskDTO;
+
+    return {
+      title,
+      description,
+      status: TaskStatus.OPEN,
+      creatorId: userId,
+      budget: budget ? new Prisma.Decimal(budget) : undefined,
+    };
+  }
+
+  private checkPermission(user: JWTPayload, task: Task) {
+    this.taskPermissionService.hasOperationPermission(user, task);
   }
 }
