@@ -9,7 +9,6 @@ import * as bcrypt from 'bcrypt';
 
 import { User } from '@prisma/client';
 
-import { PrismaService } from '../prisma/prisma.service';
 import { TokenSerive } from '../token/token.service';
 
 import { UserResponseDto } from './dto/user.dto';
@@ -24,21 +23,20 @@ import { UserRepository } from './repositories/user.repository';
 @Injectable()
 export class AuthService {
   private readonly saltRound = process.env.SALTROUND;
-  private readonly accessToken = process.env.ACCESS_TOKEN;
 
   constructor(
-    private readonly prismaService: PrismaService,
     private readonly tokenService: TokenSerive,
     private readonly userRepository: UserRepository,
   ) {}
 
-  async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
-    const { email, password, username } = authCredentials;
+  async signup(signUpCredentials: SignUpParams): Promise<UserResponseDto> {
+    const { email, password, username } = signUpCredentials;
     const findQuery = {
       where: {
         OR: [{ email: email }, { username: username }],
       },
     };
+
     const userExist = await this.userRepository.findFirst(findQuery);
 
     if (userExist) {
@@ -48,6 +46,7 @@ export class AuthService {
           : `Account with username ${username}`;
       throw new ConflictException(errorMessage + ' ' + 'already exist');
     }
+
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
     const data = { email, username, password_hash: hashPassword };

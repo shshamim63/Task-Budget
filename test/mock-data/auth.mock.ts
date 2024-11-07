@@ -1,13 +1,9 @@
 import { faker } from '@faker-js/faker/.';
 
-import * as bcrypt from 'bcrypt';
-
 import { UserType } from '@prisma/client';
 
 import { JWTPayload } from '../../src/auth/interfaces/auth.interface';
 import { SignUpDto } from '../../src/auth/dto/auth-credentials.dto';
-
-const saltRound = Number(process.env.SALTROUND);
 
 export const generateUserJWTPayload = (type: UserType): JWTPayload => {
   return {
@@ -20,24 +16,28 @@ export const generateUserJWTPayload = (type: UserType): JWTPayload => {
   };
 };
 
-export const generateMockUser = async (payload: JWTPayload) => {
+export const generateMockUser = (payload: JWTPayload | SignUpDto) => {
   return {
-    id: payload.id,
+    id: 'id' in payload ? payload.id : faker.number.int(),
     email: payload.email,
     username: payload.username,
-    password_hash: await bcrypt.hash(faker.internet.password(), saltRound),
+    password_hash:
+      'password_hash' in payload
+        ? payload.password_hash
+        : generateEncryptedString(72),
     userType: UserType.USER,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 };
 
-export const generateToken = () => faker.string.alphanumeric({ length: 64 });
+export const generateEncryptedString = (length = 64) =>
+  faker.string.alphanumeric({ length });
 
 export const generateAuthenticatedUser = () => {
   return {
     id: faker.number.int(),
-    token: generateToken(),
+    token: generateEncryptedString(),
     createdAt: faker.date.anytime(),
     updatedAt: faker.date.anytime(),
     email: faker.internet.email(),
