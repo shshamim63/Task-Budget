@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class TokenSerive {
+export class TokenService {
   private readonly accessToken = process.env.ACCESS_TOKEN;
 
   generateToken(payload: TokenPayload): string {
@@ -50,6 +50,7 @@ export class TokenSerive {
 
   getTokenFromHeader(request: Request): string | undefined {
     const authorizationToken = request?.headers?.authorization;
+
     if (authorizationToken) {
       const [type, token] = authorizationToken.split(' ');
       return type === AUTHORIZATION_TYPE ? token : undefined;
