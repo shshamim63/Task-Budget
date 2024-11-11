@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { AsyncErrorHandlerService } from '../../helpers/execute-with-error.helper.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 @Injectable()
 export class UserRepository {

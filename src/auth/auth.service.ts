@@ -7,9 +7,7 @@ import {
 
 import * as bcrypt from 'bcrypt';
 
-import { User } from '@prisma/client';
-
-import { TokenSerive } from '../token/token.service';
+import { TokenService } from '../token/token.service';
 
 import { UserResponseDto } from './dto/user.dto';
 
@@ -18,14 +16,15 @@ import {
   SignUpParams,
   TokenPayload,
 } from './interfaces/auth.interface';
-import { UserRepository } from './repositories/user.repository';
+import { UserRepository } from './user.repository';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   private readonly saltRound = process.env.SALTROUND;
 
   constructor(
-    private readonly tokenService: TokenSerive,
+    private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
   ) {}
 
@@ -50,8 +49,8 @@ export class AuthService {
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
     const data = { email, username, password_hash: hashPassword };
-    const user = await this.userRepository.create({ data });
-    const payload = this.generateTokenPayload(user);
+    const user = await this.userRepository.create(data);
+    const payload = this.createAuthTokenPayload(user);
     const token = this.tokenService.generateToken(payload);
     return new UserResponseDto({ ...user, token });
   }
@@ -70,15 +69,15 @@ export class AuthService {
     if (!isValidPassword)
       throw new UnauthorizedException('Invalid credentials');
 
-    const payload = this.generateTokenPayload(user);
+    const payload = this.createAuthTokenPayload({ ...user });
 
     const token = this.tokenService.generateToken(payload);
 
     return new UserResponseDto({ ...user, token });
   }
 
-  private generateTokenPayload(user: User): TokenPayload {
-    const { id, email, username, userType } = user;
+  private createAuthTokenPayload(data: User): TokenPayload {
+    const { id, email, username, userType } = data;
     return {
       id,
       email,

@@ -3,7 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
-import { UserRepository } from './repositories/user.repository';
+import { UserRepository } from './user.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 
@@ -16,5 +16,6 @@ import { ErrorHandlerService } from '../helpers/error.helper.service';
     AsyncErrorHandlerService,
     ErrorHandlerService,
   ],
+  exports: [UserRepository],
 })
 export class AuthModule {}
