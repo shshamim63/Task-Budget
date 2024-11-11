@@ -37,6 +37,7 @@ export class AuthGuard implements CanActivate {
     const user = await this.userRepository.findUnique({
       where: { id: payload.id },
     });
+
     if (!user) {
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.USER_MISSING,

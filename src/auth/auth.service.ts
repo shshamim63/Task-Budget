@@ -11,13 +11,8 @@ import { TokenService } from '../token/token.service';
 
 import { UserResponseDto } from './dto/user.dto';
 
-import {
-  SignInParams,
-  SignUpParams,
-  TokenPayload,
-} from './interfaces/auth.interface';
+import { SignInParams, SignUpParams } from './interfaces/auth.interface';
 import { UserRepository } from './user.repository';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +45,7 @@ export class AuthService {
 
     const data = { email, username, password_hash: hashPassword };
     const user = await this.userRepository.create(data);
-    const payload = this.createAuthTokenPayload(user);
+    const payload = this.tokenService.createAuthTokenPayload({ ...user });
     const token = this.tokenService.generateToken(payload);
     return new UserResponseDto({ ...user, token });
   }
@@ -69,20 +64,10 @@ export class AuthService {
     if (!isValidPassword)
       throw new UnauthorizedException('Invalid credentials');
 
-    const payload = this.createAuthTokenPayload({ ...user });
+    const payload = this.tokenService.createAuthTokenPayload({ ...user });
 
     const token = this.tokenService.generateToken(payload);
 
     return new UserResponseDto({ ...user, token });
-  }
-
-  private createAuthTokenPayload(data: User): TokenPayload {
-    const { id, email, username, userType } = data;
-    return {
-      id,
-      email,
-      username,
-      userType,
-    };
   }
 }

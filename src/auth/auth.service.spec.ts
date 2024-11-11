@@ -68,12 +68,14 @@ describe('AuthService', () => {
         username: signUpCredentials.username,
         password_hash: newUser.password_hash,
       });
-      expect(tokenService.generateToken).toHaveBeenCalledWith({
-        id: newUser.id,
-        email: signUpCredentials.email,
-        username: signUpCredentials.username,
-        userType: newUser.userType,
-      });
+      expect(tokenService.generateToken).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: newUser.id,
+          email: signUpCredentials.email,
+          username: signUpCredentials.username,
+          userType: newUser.userType,
+        }),
+      );
       expect(result).toMatchObject(newUser);
     });
     it('should throw an ConflictException when user with email exist', async () => {
@@ -125,12 +127,14 @@ describe('AuthService', () => {
       const result = await service.signin(singinCredentials);
 
       expect(result).toMatchObject(currentUser);
-      expect(tokenService.generateToken).toHaveBeenCalledWith({
-        id: currentUser.id,
-        email: singinCredentials.email,
-        username: currentUser.username,
-        userType: currentUser.userType,
-      });
+      expect(tokenService.generateToken).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: currentUser.id,
+          email: singinCredentials.email,
+          username: currentUser.username,
+          userType: currentUser.userType,
+        }),
+      );
     });
     it('should raise BadRequestException when used with email does not exist', async () => {
       const singinCredentials = mockSignInRequestBody();

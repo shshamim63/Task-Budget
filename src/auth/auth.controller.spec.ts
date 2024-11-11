@@ -9,7 +9,7 @@ import {
   mockSignInRequestBody,
   mockSignUpRequestBody,
 } from './__mock__/auth-data.mock';
-import { mockAuthService } from './__mock__/auth.service.mock';
+import { AuthServiceMock } from './__mock__/auth.service.mock';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -18,7 +18,7 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [{ provide: AuthService, useValue: AuthServiceMock }],
     }).compile();
 
     authController = module.get<AuthController>(AuthController);

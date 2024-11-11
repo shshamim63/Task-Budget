@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker/.';
 
-import { User, UserType } from '@prisma/client';
+import { UserType } from '@prisma/client';
 
 import { SignInDto, SignUpDto } from '../dto/auth-credentials.dto';
 
@@ -54,18 +54,5 @@ export const mockSignUpRequestBody = (): SignUpDto => {
     username: faker.internet.userName(),
     password: password,
     confirmPassword: password,
-  };
-};
-
-export const mockTokenPayload = (user = {} as User) => {
-  const { id, email, userType, username } = user;
-
-  return {
-    id: id ?? faker.number.int({ min: 1 }),
-    email: email ?? faker.internet.email(),
-    username: username ?? faker.internet.userName(),
-    userType: userType ?? UserType.USER,
-    exp: faker.number.int(),
-    iat: faker.number.int(),
   };
 };

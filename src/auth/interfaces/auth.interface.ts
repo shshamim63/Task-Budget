@@ -1,4 +1,5 @@
 import { UserType } from '@prisma/client';
+import { User } from '../../decorators/user.decorator';
 
 export interface SignInParams {
   email: string;
@@ -20,3 +21,5 @@ export interface JWTPayload extends TokenPayload {
   exp: number;
   iat: number;
 }
+
+export type AuthUser = typeof User;
