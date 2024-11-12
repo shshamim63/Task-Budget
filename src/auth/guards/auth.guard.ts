@@ -4,45 +4,52 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
-
-import { PrismaService } from '../../prisma/prisma.service';
-import { TokenSerive } from '../../token/token.service';
-
+import { TokenService } from '../../token/token.service';
+import { UserRepository } from '../user.repository';
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  private readonly accessToken = process.env.ACCESS_TOKEN;
-
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly tokenService: TokenSerive,
+    private readonly tokenService: TokenService,
+    private readonly userRepository: UserRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest();
     const token = this.tokenService.getTokenFromHeader(request);
 
-    if (!token)
+    if (!token) {
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.MISSING_AUTH,
         ERROR_NAME.MISSING_AUTH,
       );
+    }
 
     const payload = this.tokenService.verifyToken(token);
 
-    const user = await this.prismaService.user.findUnique({
+    if (!payload) {
+      throw new UnauthorizedException(
+        RESPONSE_MESSAGE.INVALID_TOKEN,
+        ERROR_NAME.INVALID_TOKEN,
+      );
+    }
+
+    const user = await this.userRepository.findUnique({
       where: { id: payload.id },
     });
 
-    if (!user)
+    if (!user) {
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.USER_MISSING,
         ERROR_NAME.USER_MISSING,
       );
+    }
 
-    request.user = payload;
+    const currentPayload = this.tokenService.createAuthTokenPayload({
+      ...user,
+    });
+    request.user = currentPayload;
     return true;
   }
 }

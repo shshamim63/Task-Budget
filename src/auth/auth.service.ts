@@ -7,36 +7,31 @@ import {
 
 import * as bcrypt from 'bcrypt';
 
-import { User } from '@prisma/client';
-
-import { PrismaService } from '../prisma/prisma.service';
-import { TokenSerive } from '../token/token.service';
+import { TokenService } from '../token/token.service';
 
 import { UserResponseDto } from './dto/user.dto';
 
-import {
-  SignInParams,
-  SignUpParams,
-  TokenPayload,
-} from './interfaces/auth.interface';
+import { SignInParams, SignUpParams } from './interfaces/auth.interface';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class AuthService {
   private readonly saltRound = process.env.SALTROUND;
-  private readonly accessToken = process.env.ACCESS_TOKEN;
 
   constructor(
-    private readonly prismaService: PrismaService,
-    private readonly tokenService: TokenSerive,
+    private readonly tokenService: TokenService,
+    private readonly userRepository: UserRepository,
   ) {}
 
-  async signup(authCredentials: SignUpParams): Promise<UserResponseDto> {
-    const { email, password, username } = authCredentials;
-    const userExist = await this.prismaService.user.findFirst({
+  async signup(signUpCredentials: SignUpParams): Promise<UserResponseDto> {
+    const { email, password, username } = signUpCredentials;
+    const findQuery = {
       where: {
         OR: [{ email: email }, { username: username }],
       },
-    });
+    };
+
+    const userExist = await this.userRepository.findFirst(findQuery);
 
     if (userExist) {
       const errorMessage =
@@ -45,19 +40,21 @@ export class AuthService {
           : `Account with username ${username}`;
       throw new ConflictException(errorMessage + ' ' + 'already exist');
     }
+
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
     const data = { email, username, password_hash: hashPassword };
-    const user = await this.prismaService.user.create({ data });
-    const payload = this.generateTokenPayload(user);
+    const user = await this.userRepository.create(data);
+    const payload = this.tokenService.createAuthTokenPayload({ ...user });
     const token = this.tokenService.generateToken(payload);
     return new UserResponseDto({ ...user, token });
   }
 
   async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
-    const user = await this.prismaService.user.findUnique({
+    const findQuery = {
       where: { email },
-    });
+    };
+    const user = await this.userRepository.findUnique(findQuery);
 
     if (!user) throw new BadRequestException('Invalid credentials');
 
@@ -67,20 +64,10 @@ export class AuthService {
     if (!isValidPassword)
       throw new UnauthorizedException('Invalid credentials');
 
-    const payload = this.generateTokenPayload(user);
+    const payload = this.tokenService.createAuthTokenPayload({ ...user });
 
     const token = this.tokenService.generateToken(payload);
 
     return new UserResponseDto({ ...user, token });
-  }
-
-  private generateTokenPayload(user: User): TokenPayload {
-    const { id, email, username, userType } = user;
-    return {
-      id,
-      email,
-      username,
-      userType,
-    };
   }
 }

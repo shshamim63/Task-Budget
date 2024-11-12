@@ -3,15 +3,20 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-  NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+
 import { Observable } from 'rxjs';
 import { TaskResponseDto } from '../dto/task.dto';
+import { ErrorHandlerService } from '../../helpers/error.helper.service';
+import { TaskRepository } from '../task.repository';
+import { TaskQuery } from '../interface/task-response.interface';
 
 @Injectable()
 export class TaskInterceptor implements NestInterceptor {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly taskRepository: TaskRepository,
+    private readonly errorHandlerService: ErrorHandlerService,
+  ) {}
 
   async intercept(
     context: ExecutionContext,
@@ -21,14 +26,14 @@ export class TaskInterceptor implements NestInterceptor {
     const taskId = request.params.taskId;
 
     try {
-      const task = await this.prismaService.task.findUniqueOrThrow({
+      const query: TaskQuery = {
         where: { id: Number(taskId) },
-      });
+      };
+      const task = await this.taskRepository.findUniqueOrThrow(query);
 
       request.task = new TaskResponseDto(task);
     } catch (error) {
-      console.error(error);
-      throw new NotFoundException(`Task with ID ${taskId} not found`);
+      this.errorHandlerService.handle(error);
     }
 
     return next.handle();

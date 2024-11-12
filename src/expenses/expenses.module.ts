@@ -5,10 +5,24 @@ import { PrismaModule } from '../prisma/prisma.module';
 
 import { ExpensesService } from './expenses.service';
 import { ExpensesController } from './expenses.controller';
+import { ErrorHandlerService } from '../helpers/error.helper.service';
+import { TaskRepository } from '../tasks/task.repository';
+import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+import { CollaboratorRepository } from '../collaborators/collaborator.repository';
+import { ExpenseRepository } from './expense.repository';
+import { UserRepository } from '../auth/user.repository';
 
 @Module({
   imports: [PrismaModule, TokenModule],
   controllers: [ExpensesController],
-  providers: [ExpensesService],
+  providers: [
+    ExpensesService,
+    ExpenseRepository,
+    UserRepository,
+    TaskRepository,
+    CollaboratorRepository,
+    ErrorHandlerService,
+    AsyncErrorHandlerService,
+  ],
 })
 export class ExpensesModule {}

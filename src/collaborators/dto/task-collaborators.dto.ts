@@ -25,7 +25,7 @@ export class TaskCollaborators {
   ) {
     Object.assign(this, {
       ...partial,
-      budget: partial.budget ? partial.budget.toNumber() : 0,
+      budget: partial.budget ? Number(partial.budget) : 0,
     });
   }
 }
