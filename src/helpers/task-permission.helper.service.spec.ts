@@ -8,7 +8,7 @@ import { ERROR_NAME, RESPONSE_MESSAGE } from '../../src/utils/constants';
 
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 
-import { generateTask } from '../tasks/__mock__/task.mock';
+import { generateTask } from '../tasks/__mock__/task-data.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 
