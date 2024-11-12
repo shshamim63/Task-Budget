@@ -7,7 +7,6 @@ import {
 
 import { Expense, UserType } from '@prisma/client';
 
-import { PrismaService } from '../prisma/prisma.service';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { CreateExpenseDto } from './dto/create-expense.dto';
@@ -15,13 +14,12 @@ import { ExpenseResponseDto } from './dto/expense.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { Decimal } from '@prisma/client/runtime/library';
-import { CollaboratorRepository } from '../collaborators/repositories/collaborator.repository';
-import { ExpenseRepository } from './repositories/expense.repository';
+import { CollaboratorRepository } from '../collaborators/collaborator.repository';
+import { ExpenseRepository } from './expense.repository';
 
 @Injectable()
 export class ExpensesService {
   constructor(
-    private readonly prismaService: PrismaService,
     private readonly expenseRepository: ExpenseRepository,
     private readonly collaboratorRepository: CollaboratorRepository,
   ) {}
