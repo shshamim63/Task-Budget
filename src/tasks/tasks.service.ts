@@ -9,7 +9,7 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
-import { TaskRepository } from './repositories/task.repository';
+import { TaskRepository } from './task.repository';
 import { TaskQuery } from './interface/task-response.interface';
 
 @Injectable()

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { TaskResponse } from '../interface/task-response.interface';
 import { Task } from '@prisma/client';
-import { AsyncErrorHandlerService } from '../../helpers/execute-with-error.helper.service';
+
+import { PrismaService } from '../prisma/prisma.service';
+import { TaskResponse } from './interface/task-response.interface';
+import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 @Injectable()
 export class TaskRepository {

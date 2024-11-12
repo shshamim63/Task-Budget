@@ -5,9 +5,9 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
-import { TaskRepository } from './repositories/task.repository';
+import { TaskRepository } from './task.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
-import { UserRepository } from '../auth/repositories/user.repository';
+import { UserRepository } from '../auth/user.repository';
 
 @Module({
   imports: [PrismaModule, TokenModule],
