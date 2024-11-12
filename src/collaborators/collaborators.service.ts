@@ -9,9 +9,9 @@ import { TaskCollaborators } from './dto/task-collaborators.dto';
 
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 
-import { CollaboratorRepository } from './repositories/collaborator.repository';
-import { TaskRepository } from '../tasks/repositories/task.repository';
-import { UserRepository } from '../auth/repositories/user.repository';
+import { CollaboratorRepository } from './collaborator.repository';
+import { TaskRepository } from '../tasks/task.repository';
+import { UserRepository } from '../auth/user.repository';
 
 @Injectable()
 export class CollaboratorsService {

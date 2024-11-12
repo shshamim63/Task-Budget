@@ -1,6 +1,19 @@
 import { faker } from '@faker-js/faker/.';
 import { TaskStatus, UserType } from '@prisma/client';
 
+export const generateCollaboratorId = () => {
+  return {
+    collaboratorId: faker.number.int({ min: 1 }),
+  };
+};
+
+export const generateCollaboratorList = (numOfCollaborators) => {
+  return faker.helpers.uniqueArray(
+    () => ({ id: faker.number.int({ min: 1 }) }),
+    numOfCollaborators,
+  );
+};
+
 const generateMember = () => {
   return {
     id: faker.number.int({ min: 1 }),
@@ -8,6 +21,7 @@ const generateMember = () => {
     email: faker.internet.email(),
   };
 };
+
 export const generateTaskWithCollaboratorData = (numOfMembers, task) => {
   return {
     id: task.id,

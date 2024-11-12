@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
-import { CreateCollaborator } from '../interface/collaborator.interface';
+import { CreateCollaborator } from './interface/collaborator.interface';
 
-import { AsyncErrorHandlerService } from '../../helpers/execute-with-error.helper.service';
+import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 @Injectable()
 export class CollaboratorRepository {

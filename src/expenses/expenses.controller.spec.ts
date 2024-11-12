@@ -6,7 +6,7 @@ import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
 import { ExecutionContext } from '@nestjs/common';
 import { ExpensesServiceMock } from './__mock__/expenses.service.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
-import { generateTask } from '../tasks/__mock__/task.mock';
+import { generateTask } from '../tasks/__mock__/task-data.mock';
 import {
   mockCreateExpenseRequestBody,
   mockExpense,
