@@ -4,12 +4,10 @@ import * as jwt from 'jsonwebtoken';
 import { TokenService } from '../../src/token/token.service';
 
 import {
-  AUTHORIZATION_TYPE,
   ERROR_NAME,
   RESPONSE_MESSAGE,
   STATUS_CODE,
 } from '../../src/utils/constants';
-import { mockUser } from '../auth/__mock__/auth-data.mock';
 import {
   mockRequest,
   mockToken,

@@ -13,6 +13,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class TokenService {
@@ -57,5 +58,15 @@ export class TokenService {
     }
 
     return undefined;
+  }
+
+  createAuthTokenPayload(data: User): TokenPayload {
+    const { id, email, username, userType } = data;
+    return {
+      id,
+      email,
+      username,
+      userType,
+    };
   }
 }
