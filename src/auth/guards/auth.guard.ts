@@ -27,6 +27,7 @@ export class AuthGuard implements CanActivate {
     }
 
     const payload = this.tokenService.verifyToken(token);
+
     if (!payload) {
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.INVALID_TOKEN,
@@ -45,7 +46,10 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    request.user = user;
+    const currentPayload = this.tokenService.createAuthTokenPayload({
+      ...user,
+    });
+    request.user = currentPayload;
     return true;
   }
 }
