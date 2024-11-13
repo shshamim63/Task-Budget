@@ -19,7 +19,7 @@ export class ExpenseResponseDto {
   ) {
     Object.assign(this, {
       ...partial,
-      amount: partial.amount ? partial.amount.toNumber() : 0,
+      amount: partial.amount ? Number(partial.amount) : 0,
     });
   }
 }

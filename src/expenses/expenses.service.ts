@@ -198,6 +198,7 @@ export class ExpensesService {
     const aggregateArg = {
       _sum: { amount: true },
     };
+
     const {
       _sum: { amount: totalExpense },
     } = await this.expenseRepository.aggregate(query, aggregateArg);
