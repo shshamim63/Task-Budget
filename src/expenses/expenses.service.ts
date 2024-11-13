@@ -16,6 +16,7 @@ import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 import { CollaboratorRepository } from '../collaborators/collaborator.repository';
 import { ExpenseRepository } from './expense.repository';
+import { RESPONSE_MESSAGE } from '../utils/constants';
 
 @Injectable()
 export class ExpensesService {
@@ -35,7 +36,7 @@ export class ExpensesService {
     const isAuthorized = await this.hasPermission({ user, task });
 
     if (!isAuthorized)
-      throw new ForbiddenException('User cannot initiate expense');
+      throw new ForbiddenException(RESPONSE_MESSAGE.EXPENSE_PERMISSION_DENIED);
 
     const isExceedingBudget = await this.isExceddingTaskBudget(
       taskId,
@@ -44,7 +45,7 @@ export class ExpensesService {
     );
 
     if (isExceedingBudget)
-      throw new BadRequestException('Expenses exceeds task budget');
+      throw new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED);
 
     const data = {
       ...createExpenseDto,
