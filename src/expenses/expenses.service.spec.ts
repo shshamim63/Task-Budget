@@ -43,99 +43,126 @@ describe('', () => {
     jest.clearAllMocks();
   });
 
-  describe('createExpense', () => {
-    describe('when contribuotr has role user', () => {
-      it('should create a new expense', async () => {
-        const currentUser = mockUser();
-        const tokenPayload = mockTokenPayload(currentUser);
-        const task = generateTask();
-        const createExpenseRequestBody = mockCreateExpenseRequestBody();
-        const expense = mockExpense({
-          taskId: task.id,
-          requestBody: createExpenseRequestBody,
+  describe('ExpensesService', () => {
+    describe('createExpense', () => {
+      describe('when contribuotr has role user', () => {
+        it('should create a new expense', async () => {
+          const currentUser = mockUser();
+          const tokenPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const createExpenseRequestBody = mockCreateExpenseRequestBody();
+          const expense = mockExpense({
+            taskId: task.id,
+            requestBody: createExpenseRequestBody,
+          });
+
+          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
+            currentUser,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: { amount: faker.number.float({ max: task.budget }) },
+          });
+          ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
+
+          const result = await service.createExpense(
+            tokenPayload,
+            task,
+            createExpenseRequestBody,
+          );
+
+          expect(result).toEqual(expense);
+          expect(expenseRepository.aggregate).toHaveBeenCalled();
+          expect(expenseRepository.create).toHaveBeenCalled();
+          expect(collaboratorRepository.findUnique).toHaveBeenCalled();
         });
+        it('should raise ForbiddenException when is not a contributor of the task', async () => {
+          const currentUser = mockUser();
+          const tokenPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const createExpenseRequestBody = mockCreateExpenseRequestBody();
 
-        CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
-          currentUser,
-        );
-        ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
-          _sum: { amount: faker.number.float({ max: task.budget }) },
+          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
+          await expect(
+            service.createExpense(tokenPayload, task, createExpenseRequestBody),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.EXPENSE_PERMISSION_DENIED),
+          );
         });
-        ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
-
-        const result = await service.createExpense(
-          tokenPayload,
-          task,
-          createExpenseRequestBody,
-        );
-
-        expect(result).toEqual(expense);
-        expect(expenseRepository.aggregate).toHaveBeenCalled();
-        expect(expenseRepository.create).toHaveBeenCalled();
-        expect(collaboratorRepository.findUnique).toHaveBeenCalled();
       });
-      it('should raise ForbiddenException when is not a contributor of the task', async () => {
-        const currentUser = mockUser();
-        const tokenPayload = mockTokenPayload(currentUser);
-        const task = generateTask();
-        const createExpenseRequestBody = mockCreateExpenseRequestBody();
+      describe('when user is an admin', () => {
+        it('should create expesne when admin is a creator', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const createExpenseRequestBody = mockCreateExpenseRequestBody();
+          const expense = mockExpense({
+            taskId: task.id,
+            requestBody: createExpenseRequestBody,
+          });
 
-        CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
-        await expect(
-          service.createExpense(tokenPayload, task, createExpenseRequestBody),
-        ).rejects.toThrow(
-          new ForbiddenException(RESPONSE_MESSAGE.EXPENSE_PERMISSION_DENIED),
-        );
-      });
-    });
-    describe('when user is an admin', () => {
-      it('should create expesne when admin is a creator', async () => {
-        const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
-        const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
-        const task = { ...generateTask(), creatorId: currentAdminUser.id };
-        const createExpenseRequestBody = mockCreateExpenseRequestBody();
-        const expense = mockExpense({
-          taskId: task.id,
-          requestBody: createExpenseRequestBody,
-        });
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: { amount: faker.number.float({ max: task.budget }) },
+          });
+          ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
 
-        ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
-          _sum: { amount: faker.number.float({ max: task.budget }) },
-        });
-        ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
-
-        const result = await service.createExpense(
-          adminUserTokenPayload,
-          task,
-          createExpenseRequestBody,
-        );
-
-        expect(result).toEqual(expense);
-        expect(expenseRepository.aggregate).toHaveBeenCalled();
-        expect(expenseRepository.create).toHaveBeenCalled();
-      });
-
-      it('should raise ForbiddenException when nots the creator of the task', async () => {
-        const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
-        const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
-        const task = generateTask();
-        const createExpenseRequestBody = mockCreateExpenseRequestBody();
-
-        await expect(
-          service.createExpense(
+          const result = await service.createExpense(
             adminUserTokenPayload,
             task,
             createExpenseRequestBody,
-          ),
-        ).rejects.toThrow(
-          new ForbiddenException(RESPONSE_MESSAGE.EXPENSE_PERMISSION_DENIED),
-        );
+          );
+
+          expect(result).toEqual(expense);
+          expect(expenseRepository.aggregate).toHaveBeenCalled();
+          expect(expenseRepository.create).toHaveBeenCalled();
+        });
+
+        it('should raise ForbiddenException when nots the creator of the task', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = generateTask();
+          const createExpenseRequestBody = mockCreateExpenseRequestBody();
+
+          await expect(
+            service.createExpense(
+              adminUserTokenPayload,
+              task,
+              createExpenseRequestBody,
+            ),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.EXPENSE_PERMISSION_DENIED),
+          );
+        });
       });
-    });
-    describe('when user is super', () => {
-      it('should create a new expense', async () => {
-        const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
-        const superUserTokenPayload = mockTokenPayload(currentSuperUser);
+      describe('when user is super', () => {
+        it('should create a new expense', async () => {
+          const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+          const superUserTokenPayload = mockTokenPayload(currentSuperUser);
+          const task = generateTask();
+          const createExpenseRequestBody = mockCreateExpenseRequestBody();
+          const expense = mockExpense({
+            taskId: task.id,
+            requestBody: createExpenseRequestBody,
+          });
+
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: { amount: faker.number.float({ max: task.budget }) },
+          });
+          ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
+
+          const result = await service.createExpense(
+            superUserTokenPayload,
+            task,
+            createExpenseRequestBody,
+          );
+
+          expect(result).toEqual(expense);
+          expect(expenseRepository.aggregate).toHaveBeenCalled();
+          expect(expenseRepository.create).toHaveBeenCalled();
+        });
+      });
+      it('should raise BadRequestException when current amount exceeds the total budget', async () => {
+        const currentUser = mockUser();
+        const tokenPayload = mockTokenPayload(currentUser);
         const task = generateTask();
         const createExpenseRequestBody = mockCreateExpenseRequestBody();
         const expense = mockExpense({
@@ -143,69 +170,64 @@ describe('', () => {
           requestBody: createExpenseRequestBody,
         });
 
-        ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
-          _sum: { amount: faker.number.float({ max: task.budget }) },
-        });
-        ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
-
-        const result = await service.createExpense(
-          superUserTokenPayload,
-          task,
-          createExpenseRequestBody,
-        );
-
-        expect(result).toEqual(expense);
-        expect(expenseRepository.aggregate).toHaveBeenCalled();
-        expect(expenseRepository.create).toHaveBeenCalled();
-      });
-    });
-    it('should raise BadRequestException when current amount exceeds the total budget', async () => {
-      const currentUser = mockUser();
-      const tokenPayload = mockTokenPayload(currentUser);
-      const task = generateTask();
-      const createExpenseRequestBody = mockCreateExpenseRequestBody();
-      const expense = mockExpense({
-        taskId: task.id,
-        requestBody: createExpenseRequestBody,
-      });
-
-      CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(currentUser);
-      ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
-        _sum: {
-          amount: faker.number.float({
-            min: task.budget,
-            max: task.budget + 1000,
-          }),
-        },
-      });
-      ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
-
-      await expect(
-        service.createExpense(tokenPayload, task, createExpenseRequestBody),
-      ).rejects.toThrow(
-        new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED),
-      );
-    });
-  });
-  describe('getExpense', () => {
-    describe('when contributor has role user', () => {
-      it('should return the expnese that matches the id', async () => {
-        const currentUser = mockUser();
-        const tokenPayload = mockTokenPayload(currentUser);
-        const task = generateTask();
-        const expense = mockExpense({
-          taskId: task.id,
-        });
-
         CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
           currentUser,
         );
-        ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
-        const result = await service.getExpense(tokenPayload, task, expense.id);
+        ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+          _sum: {
+            amount: faker.number.float({
+              min: task.budget,
+              max: task.budget + 1000,
+            }),
+          },
+        });
+        ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
 
-        expect(result).toMatchObject(expense);
-        expect(collaboratorRepository.findUnique).toHaveBeenCalled();
-        expect(expenseRepository.findUnique).toHaveBeenCalled();
+        await expect(
+          service.createExpense(tokenPayload, task, createExpenseRequestBody),
+        ).rejects.toThrow(
+          new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED),
+        );
+      });
+    });
+    describe('getExpense', () => {
+      describe('when contributor has role user', () => {
+        it('should return the expnese that matches the id', async () => {
+          const currentUser = mockUser();
+          const tokenPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
+            currentUser,
+          );
+          ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
+          const result = await service.getExpense(
+            tokenPayload,
+            task,
+            expense.id,
+          );
+
+          expect(result).toMatchObject(expense);
+          expect(collaboratorRepository.findUnique).toHaveBeenCalled();
+          expect(expenseRepository.findUnique).toHaveBeenCalled();
+        });
+        it('should raise ForbiddenException when is not a contributor of the task', async () => {
+          const currentUser = mockUser();
+          const tokenPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
+          await expect(
+            service.getExpense(tokenPayload, task, expense.id),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+          );
+        });
       });
     });
   });

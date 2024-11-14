@@ -81,9 +81,7 @@ export class ExpensesService {
     const isAuthorized = await this.hasPermission({ user, task });
 
     if (!isAuthorized)
-      throw new ForbiddenException(
-        'User does not have permission to access the info',
-      );
+      throw new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED);
 
     const query = {
       where: { id: expenseId },
