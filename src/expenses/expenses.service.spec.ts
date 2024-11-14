@@ -116,7 +116,7 @@ describe('', () => {
           expect(expenseRepository.create).toHaveBeenCalled();
         });
 
-        it('should raise ForbiddenException when nots the creator of the task', async () => {
+        it('should raise ForbiddenException when not the creator of the task', async () => {
           const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
           const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
           const task = generateTask();
@@ -224,6 +224,40 @@ describe('', () => {
           CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
           await expect(
             service.getExpense(tokenPayload, task, expense.id),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+          );
+        });
+      });
+      describe('when user has role admin', () => {
+        it('should send expesne response', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
+          const result = await service.getExpense(
+            adminUserTokenPayload,
+            task,
+            expense.id,
+          );
+
+          expect(result).toMatchObject(expense);
+          expect(expenseRepository.findUnique).toHaveBeenCalled();
+        });
+
+        it('should raise ForbiddenException when not the creator of the task', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = generateTask();
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+          await expect(
+            service.getExpense(adminUserTokenPayload, task, expense.id),
           ).rejects.toThrow(
             new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
           );
