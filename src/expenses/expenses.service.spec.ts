@@ -263,6 +263,113 @@ describe('', () => {
           );
         });
       });
+      describe('when user has role as super', () => {
+        it('should return expense object', async () => {
+          const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+          const superUserTokenPayload = mockTokenPayload(currentSuperUser);
+          const task = generateTask();
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
+          const result = await service.getExpense(
+            superUserTokenPayload,
+            task,
+            expense.id,
+          );
+
+          expect(result).toMatchObject(expense);
+          expect(expenseRepository.findUnique).toHaveBeenCalled();
+        });
+      });
+    });
+    describe('getExpenses', () => {
+      describe('when contributor has role user', () => {
+        it('should return the expnese that matches the id', async () => {
+          const currentUser = mockUser();
+          const tokenPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+
+          const expenses = Array.from({ length: 2 }, () =>
+            mockExpense({
+              taskId: task.id,
+            }),
+          );
+
+          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
+            currentUser,
+          );
+          ExpenseRepositoryMock.findMany.mockResolvedValueOnce(expenses);
+          const result = await service.getExpenses(tokenPayload, task);
+
+          expect(result).toEqual(expect.arrayContaining(expenses));
+          expect(collaboratorRepository.findUnique).toHaveBeenCalled();
+          expect(expenseRepository.findMany).toHaveBeenCalled();
+        });
+        it('should raise ForbiddenException when is not a contributor of the task', async () => {
+          const currentUser = mockUser();
+          const tokenPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
+          await expect(
+            service.getExpense(tokenPayload, task, expense.id),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+          );
+        });
+      });
+      describe('when user has role admin', () => {
+        it('should send expesne response', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const expenses = Array.from({ length: 2 }, () =>
+            mockExpense({
+              taskId: task.id,
+            }),
+          );
+
+          ExpenseRepositoryMock.findMany.mockResolvedValueOnce(expenses);
+          const result = await service.getExpenses(adminUserTokenPayload, task);
+
+          expect(result).toEqual(expect.arrayContaining(expenses));
+          expect(expenseRepository.findMany).toHaveBeenCalled();
+        });
+
+        it('should raise ForbiddenException when not the creator of the task', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = generateTask();
+          await expect(
+            service.getExpenses(adminUserTokenPayload, task),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+          );
+        });
+      });
+      describe('when user has role as super', () => {
+        it('should return expense object', async () => {
+          const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+          const superUserTokenPayload = mockTokenPayload(currentSuperUser);
+          const task = generateTask();
+          const expenses = Array.from({ length: 2 }, () =>
+            mockExpense({
+              taskId: task.id,
+            }),
+          );
+
+          ExpenseRepositoryMock.findMany.mockResolvedValueOnce(expenses);
+
+          const result = await service.getExpenses(superUserTokenPayload, task);
+
+          expect(result).toEqual(expect.arrayContaining(expenses));
+          expect(expenseRepository.findMany).toHaveBeenCalled();
+        });
+      });
     });
   });
 });
