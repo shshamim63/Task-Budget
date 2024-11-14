@@ -84,6 +84,7 @@ export class ExpensesService {
       throw new ForbiddenException(
         'User does not have permission to access the info',
       );
+
     const query = {
       where: { id: expenseId },
       select: {
