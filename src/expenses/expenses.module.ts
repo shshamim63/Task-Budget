@@ -11,6 +11,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { CollaboratorRepository } from '../collaborators/collaborator.repository';
 import { ExpenseRepository } from './expense.repository';
 import { UserRepository } from '../auth/user.repository';
+import { ExpenseAuthorizationService } from './expense-authorization.service';
 
 @Module({
   imports: [PrismaModule, TokenModule],
@@ -23,6 +24,7 @@ import { UserRepository } from '../auth/user.repository';
     CollaboratorRepository,
     ErrorHandlerService,
     AsyncErrorHandlerService,
+    ExpenseAuthorizationService,
   ],
 })
 export class ExpensesModule {}
