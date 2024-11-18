@@ -158,7 +158,7 @@ export class ExpensesService {
 
     if (!currentExpense)
       throw new NotFoundException(
-        `Expense with id: ${expenseId} does not exist`,
+        `${RESPONSE_MESSAGE.NOTFOUND_RECORD} ${expenseId}`,
       );
 
     const isAuthorized = this.expenseAuthorizationService.canUpdateExpence(
@@ -169,7 +169,7 @@ export class ExpensesService {
     );
 
     if (!isAuthorized)
-      throw new ForbiddenException('User cannot update the expense');
+      throw new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED);
 
     if (updateExpenseDto.amount) {
       const expensesInTotal = await this.totalExpense(taskId);

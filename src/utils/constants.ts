@@ -14,6 +14,7 @@ export const RESPONSE_MESSAGE = {
   USER_MISSING: 'User does not exist',
   EXPENSE_EXCEED: 'Expenses exceeds task budget',
   EXPENSE_PERMISSION_DENIED: 'User cannot initiate expense',
+  NOTFOUND_RECORD: 'Record does not exist with id:',
 };
 
 export const ERROR_NAME = {

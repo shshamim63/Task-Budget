@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { UserType } from '@prisma/client';
 
@@ -19,6 +23,7 @@ import {
   mockExpense,
 } from './__mock__/expense-data.mock';
 import { ExpenseAuthorizationServiceMock } from './__mock__/expenseAuthorizationService.mock';
+import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 describe('', () => {
   let service: ExpensesService;
@@ -439,6 +444,358 @@ describe('', () => {
 
           expect(result).toEqual(expect.arrayContaining(expenses));
           expect(expenseRepository.findMany).toHaveBeenCalled();
+        });
+      });
+    });
+    describe('updateExpense', () => {
+      describe('when current user has role as USER', () => {
+        it('should update expense when user is the expense contributor', async () => {
+          const currentUser = mockUser();
+          const currentUserPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            true,
+          );
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValue(
+            false,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: { amount: faker.number.float({ max: task.budget }) },
+          });
+          ExpenseRepositoryMock.update.mockResolvedValueOnce({
+            ...expense,
+            ...updateExpenseDto,
+          });
+
+          const result = await service.updateExpense(
+            currentUserPayload,
+            task,
+            updateExpenseDto,
+            expense.id,
+          );
+
+          expect(result).toMatchObject(updateExpenseDto);
+        });
+        it('should raise NotFoundException when expense does not exist', async () => {
+          const currentUser = mockUser();
+          const currentUserPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+          const invalidExpenseId = faker.number.int();
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(false);
+
+          await expect(
+            service.updateExpense(
+              currentUserPayload,
+              task,
+              updateExpenseDto,
+              invalidExpenseId,
+            ),
+          ).rejects.toThrow(
+            new NotFoundException(
+              `${RESPONSE_MESSAGE.NOTFOUND_RECORD} ${invalidExpenseId}`,
+            ),
+          );
+        });
+
+        it('should raise ForbiddenException when user does not have permission', async () => {
+          const currentUser = mockUser();
+          const currentUserPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            false,
+          );
+
+          await expect(
+            service.updateExpense(
+              currentUserPayload,
+              task,
+              updateExpenseDto,
+              expense.id,
+            ),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+          );
+        });
+        it('should raise BadRequestException when amount exceeds budget', async () => {
+          const currentUser = mockUser();
+          const currentUserPayload = mockTokenPayload(currentUser);
+          const task = generateTask();
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            true,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: {
+              amount: faker.number.float({
+                min: task.budget,
+                max: task.budget + 1000,
+              }),
+            },
+          });
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+            true,
+          );
+
+          await expect(
+            service.updateExpense(
+              currentUserPayload,
+              task,
+              updateExpenseDto,
+              expense.id,
+            ),
+          ).rejects.toThrow(
+            new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED),
+          );
+        });
+      });
+      describe('when current user has role as ADMIN', () => {
+        it('should update expense when user is the expense creator', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            true,
+          );
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValue(
+            false,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: { amount: faker.number.float({ max: task.budget }) },
+          });
+          ExpenseRepositoryMock.update.mockResolvedValueOnce({
+            ...expense,
+            ...updateExpenseDto,
+          });
+
+          const result = await service.updateExpense(
+            adminUserTokenPayload,
+            task,
+            updateExpenseDto,
+            expense.id,
+          );
+
+          expect(result).toMatchObject(updateExpenseDto);
+        });
+        it('should raise NotFoundException when expense does not exist', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+          const invalidExpenseId = faker.number.int();
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(false);
+
+          await expect(
+            service.updateExpense(
+              adminUserTokenPayload,
+              task,
+              updateExpenseDto,
+              invalidExpenseId,
+            ),
+          ).rejects.toThrow(
+            new NotFoundException(
+              `${RESPONSE_MESSAGE.NOTFOUND_RECORD} ${invalidExpenseId}`,
+            ),
+          );
+        });
+
+        it('should raise ForbiddenException when user is not the creator', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: faker.number.int() };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            false,
+          );
+
+          await expect(
+            service.updateExpense(
+              adminUserTokenPayload,
+              task,
+              updateExpenseDto,
+              expense.id,
+            ),
+          ).rejects.toThrow(
+            new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+          );
+        });
+        it('should raise BadRequestException when amount exceeds budget', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            true,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: {
+              amount: faker.number.float({
+                min: task.budget,
+                max: task.budget + 1000,
+              }),
+            },
+          });
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+            true,
+          );
+
+          await expect(
+            service.updateExpense(
+              adminUserTokenPayload,
+              task,
+              updateExpenseDto,
+              expense.id,
+            ),
+          ).rejects.toThrow(
+            new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED),
+          );
+        });
+      });
+      describe('when current user has role as SUPER', () => {
+        it('should update expense when user is the expense creator', async () => {
+          const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+          const superUserTokenPayload = mockTokenPayload(currentSuperUser);
+          const task = { ...generateTask() };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            true,
+          );
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValue(
+            false,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: { amount: faker.number.float({ max: task.budget }) },
+          });
+          ExpenseRepositoryMock.update.mockResolvedValueOnce({
+            ...expense,
+            ...updateExpenseDto,
+          });
+
+          const result = await service.updateExpense(
+            superUserTokenPayload,
+            task,
+            updateExpenseDto,
+            expense.id,
+          );
+
+          expect(result).toMatchObject(updateExpenseDto);
+        });
+        it('should raise NotFoundException when expense does not exist', async () => {
+          const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+          const superUserTokenPayload = mockTokenPayload(currentSuperUser);
+          const task = { ...generateTask() };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+          const invalidExpenseId = faker.number.int();
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(false);
+
+          await expect(
+            service.updateExpense(
+              superUserTokenPayload,
+              task,
+              updateExpenseDto,
+              invalidExpenseId,
+            ),
+          ).rejects.toThrow(
+            new NotFoundException(
+              `${RESPONSE_MESSAGE.NOTFOUND_RECORD} ${invalidExpenseId}`,
+            ),
+          );
+        });
+        it('should raise BadRequestException when amount exceeds budget', async () => {
+          const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+          const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
+          const task = { ...generateTask(), creatorId: currentAdminUser.id };
+          const updateExpenseDto =
+            mockCreateExpenseRequestBody() as UpdateExpenseDto;
+
+          const expense = mockExpense({
+            taskId: task.id,
+          });
+
+          ExpenseRepositoryMock.findFirst.mockResolvedValueOnce(expense);
+          ExpenseAuthorizationServiceMock.canUpdateExpence.mockReturnValue(
+            true,
+          );
+          ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
+            _sum: {
+              amount: faker.number.float({
+                min: task.budget,
+                max: task.budget + 1000,
+              }),
+            },
+          });
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+            true,
+          );
+
+          await expect(
+            service.updateExpense(
+              adminUserTokenPayload,
+              task,
+              updateExpenseDto,
+              expense.id,
+            ),
+          ).rejects.toThrow(
+            new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED),
+          );
         });
       });
     });
