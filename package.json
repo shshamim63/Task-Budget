@@ -84,7 +84,7 @@
       "lcov",
       "text"
     ],
-    "collectCoverage": true,
+    "collectCoverage": false,
     "testEnvironment": "node",
     "silent": false
   }

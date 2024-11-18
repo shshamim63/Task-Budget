@@ -1,9 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
+
+import { UserType } from '@prisma/client';
+
+import { faker } from '@faker-js/faker/.';
+
 import { ExpensesService } from './expenses.service';
 import { ExpenseRepository } from './expense.repository';
+import { ExpenseAuthorizationService } from './expense-authorization.service';
+import { RESPONSE_MESSAGE } from '../utils/constants';
+
 import { ExpenseRepositoryMock } from './__mock__/expense.repository.mock';
-import { CollaboratorRepository } from '../collaborators/collaborator.repository';
-import { CollaboratorRepositoryMock } from '../collaborators/__mock__/collaborator.repository.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { generateTask } from '../tasks/__mock__/task-data.mock';
@@ -11,15 +18,12 @@ import {
   mockCreateExpenseRequestBody,
   mockExpense,
 } from './__mock__/expense-data.mock';
-import { faker } from '@faker-js/faker/.';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { RESPONSE_MESSAGE } from '../utils/constants';
-import { UserType } from '@prisma/client';
+import { ExpenseAuthorizationServiceMock } from './__mock__/expenseAuthorizationService.mock';
 
 describe('', () => {
   let service: ExpensesService;
   let expenseRepository: ExpenseRepository;
-  let collaboratorRepository: CollaboratorRepository;
+  let expenseAuthorizationService: ExpenseAuthorizationService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,15 +31,15 @@ describe('', () => {
         ExpensesService,
         { provide: ExpenseRepository, useValue: ExpenseRepositoryMock },
         {
-          provide: CollaboratorRepository,
-          useValue: CollaboratorRepositoryMock,
+          provide: ExpenseAuthorizationService,
+          useValue: ExpenseAuthorizationServiceMock,
         },
       ],
     }).compile();
     service = module.get<ExpensesService>(ExpensesService);
     expenseRepository = module.get<ExpenseRepository>(ExpenseRepository);
-    collaboratorRepository = module.get<CollaboratorRepository>(
-      CollaboratorRepository,
+    expenseAuthorizationService = module.get<ExpenseAuthorizationService>(
+      ExpenseAuthorizationService,
     );
   });
 
@@ -56,12 +60,18 @@ describe('', () => {
             requestBody: createExpenseRequestBody,
           });
 
-          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
-            currentUser,
+          ExpenseAuthorizationServiceMock.canCreateExpense.mockResolvedValueOnce(
+            true,
           );
+
           ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
             _sum: { amount: faker.number.float({ max: task.budget }) },
           });
+
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+            false,
+          );
+
           ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
 
           const result = await service.createExpense(
@@ -73,7 +83,9 @@ describe('', () => {
           expect(result).toEqual(expense);
           expect(expenseRepository.aggregate).toHaveBeenCalled();
           expect(expenseRepository.create).toHaveBeenCalled();
-          expect(collaboratorRepository.findUnique).toHaveBeenCalled();
+          expect(
+            expenseAuthorizationService.canCreateExpense,
+          ).toHaveBeenCalled();
         });
         it('should raise ForbiddenException when is not a contributor of the task', async () => {
           const currentUser = mockUser();
@@ -81,7 +93,9 @@ describe('', () => {
           const task = generateTask();
           const createExpenseRequestBody = mockCreateExpenseRequestBody();
 
-          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
+          ExpenseAuthorizationServiceMock.canCreateExpense.mockResolvedValueOnce(
+            false,
+          );
           await expect(
             service.createExpense(tokenPayload, task, createExpenseRequestBody),
           ).rejects.toThrow(
@@ -100,9 +114,18 @@ describe('', () => {
             requestBody: createExpenseRequestBody,
           });
 
+          ExpenseAuthorizationServiceMock.canCreateExpense.mockResolvedValueOnce(
+            true,
+          );
+
           ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
             _sum: { amount: faker.number.float({ max: task.budget }) },
           });
+
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+            false,
+          );
+
           ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
 
           const result = await service.createExpense(
@@ -121,6 +144,9 @@ describe('', () => {
           const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
           const task = generateTask();
           const createExpenseRequestBody = mockCreateExpenseRequestBody();
+          ExpenseAuthorizationServiceMock.canCreateExpense.mockResolvedValueOnce(
+            false,
+          );
 
           await expect(
             service.createExpense(
@@ -144,9 +170,18 @@ describe('', () => {
             requestBody: createExpenseRequestBody,
           });
 
+          ExpenseAuthorizationServiceMock.canCreateExpense.mockResolvedValueOnce(
+            true,
+          );
+
           ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
             _sum: { amount: faker.number.float({ max: task.budget }) },
           });
+
+          ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+            false,
+          );
+
           ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
 
           const result = await service.createExpense(
@@ -165,14 +200,11 @@ describe('', () => {
         const tokenPayload = mockTokenPayload(currentUser);
         const task = generateTask();
         const createExpenseRequestBody = mockCreateExpenseRequestBody();
-        const expense = mockExpense({
-          taskId: task.id,
-          requestBody: createExpenseRequestBody,
-        });
 
-        CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
-          currentUser,
+        ExpenseAuthorizationServiceMock.canCreateExpense.mockResolvedValueOnce(
+          true,
         );
+
         ExpenseRepositoryMock.aggregate.mockResolvedValueOnce({
           _sum: {
             amount: faker.number.float({
@@ -181,7 +213,10 @@ describe('', () => {
             }),
           },
         });
-        ExpenseRepositoryMock.create.mockResolvedValueOnce(expense);
+
+        ExpenseAuthorizationServiceMock.isExpenseExceedingBudget.mockReturnValueOnce(
+          true,
+        );
 
         await expect(
           service.createExpense(tokenPayload, task, createExpenseRequestBody),
@@ -200,10 +235,12 @@ describe('', () => {
             taskId: task.id,
           });
 
-          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
-            currentUser,
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            true,
           );
+
           ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
+
           const result = await service.getExpense(
             tokenPayload,
             task,
@@ -211,7 +248,7 @@ describe('', () => {
           );
 
           expect(result).toMatchObject(expense);
-          expect(collaboratorRepository.findUnique).toHaveBeenCalled();
+          expect(expenseAuthorizationService.canViewExpense).toHaveBeenCalled();
           expect(expenseRepository.findUnique).toHaveBeenCalled();
         });
         it('should raise ForbiddenException when is not a contributor of the task', async () => {
@@ -221,7 +258,11 @@ describe('', () => {
           const expense = mockExpense({
             taskId: task.id,
           });
-          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            false,
+          );
+
           await expect(
             service.getExpense(tokenPayload, task, expense.id),
           ).rejects.toThrow(
@@ -237,6 +278,10 @@ describe('', () => {
           const expense = mockExpense({
             taskId: task.id,
           });
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            true,
+          );
 
           ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
           const result = await service.getExpense(
@@ -256,6 +301,11 @@ describe('', () => {
           const expense = mockExpense({
             taskId: task.id,
           });
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            false,
+          );
+
           await expect(
             service.getExpense(adminUserTokenPayload, task, expense.id),
           ).rejects.toThrow(
@@ -271,6 +321,10 @@ describe('', () => {
           const expense = mockExpense({
             taskId: task.id,
           });
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            true,
+          );
 
           ExpenseRepositoryMock.findUnique.mockResolvedValueOnce(expense);
           const result = await service.getExpense(
@@ -296,15 +350,15 @@ describe('', () => {
               taskId: task.id,
             }),
           );
-
-          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(
-            currentUser,
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            true,
           );
+
           ExpenseRepositoryMock.findMany.mockResolvedValueOnce(expenses);
           const result = await service.getExpenses(tokenPayload, task);
 
           expect(result).toEqual(expect.arrayContaining(expenses));
-          expect(collaboratorRepository.findUnique).toHaveBeenCalled();
+          expect(expenseAuthorizationService.canViewExpense).toHaveBeenCalled();
           expect(expenseRepository.findMany).toHaveBeenCalled();
         });
         it('should raise ForbiddenException when is not a contributor of the task', async () => {
@@ -314,7 +368,11 @@ describe('', () => {
           const expense = mockExpense({
             taskId: task.id,
           });
-          CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            false,
+          );
+
           await expect(
             service.getExpense(tokenPayload, task, expense.id),
           ).rejects.toThrow(
@@ -323,7 +381,7 @@ describe('', () => {
         });
       });
       describe('when user has role admin', () => {
-        it('should send expesne response', async () => {
+        it('should return expesne object', async () => {
           const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
           const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
           const task = { ...generateTask(), creatorId: currentAdminUser.id };
@@ -331,6 +389,10 @@ describe('', () => {
             mockExpense({
               taskId: task.id,
             }),
+          );
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            true,
           );
 
           ExpenseRepositoryMock.findMany.mockResolvedValueOnce(expenses);
@@ -344,6 +406,11 @@ describe('', () => {
           const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
           const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
           const task = generateTask();
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            false,
+          );
+
           await expect(
             service.getExpenses(adminUserTokenPayload, task),
           ).rejects.toThrow(
@@ -360,6 +427,10 @@ describe('', () => {
             mockExpense({
               taskId: task.id,
             }),
+          );
+
+          ExpenseAuthorizationServiceMock.canViewExpense.mockResolvedValueOnce(
+            true,
           );
 
           ExpenseRepositoryMock.findMany.mockResolvedValueOnce(expenses);
