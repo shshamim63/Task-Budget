@@ -12,6 +12,9 @@ export const RESPONSE_MESSAGE = {
   TOKEN_EXPIRED: 'jwt expired',
   UNKNOWN: 'Feel free to inform us about the error',
   USER_MISSING: 'User does not exist',
+  EXPENSE_EXCEED: 'Expenses exceeds task budget',
+  EXPENSE_PERMISSION_DENIED: 'User cannot initiate expense',
+  NOTFOUND_RECORD: 'Record does not exist with id:',
 };
 
 export const ERROR_NAME = {

@@ -17,6 +17,7 @@ export const mockUpdateExpenseRequestBody = (): UpdateExpenseDto => {
     contributorId: faker.number.int(),
   };
 };
+
 export const mockExpense = ({
   taskId = faker.number.int({ min: 1 }),
   requestBody = {} as CreateExpenseDto,
