@@ -637,7 +637,7 @@ describe('', () => {
         it('should raise ForbiddenException when user is not the creator', async () => {
           const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
           const adminUserTokenPayload = mockTokenPayload(currentAdminUser);
-          const task = { ...generateTask(), creatorId: faker.number.int() };
+          const task = generateTask();
           const updateExpenseDto =
             mockCreateExpenseRequestBody() as UpdateExpenseDto;
 

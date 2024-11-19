@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CollaboratorRepository } from '../collaborators/collaborator.repository';
-import { ExpenseRepository } from './expense.repository';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { Expense, UserType } from '@prisma/client';
@@ -10,7 +9,6 @@ import { Decimal } from '@prisma/client/runtime/library';
 @Injectable()
 export class ExpenseAuthorizationService {
   constructor(
-    private readonly expenseRepository: ExpenseRepository,
     private readonly collaboratorRepository: CollaboratorRepository,
   ) {}
 
@@ -26,7 +24,7 @@ export class ExpenseAuthorizationService {
     user: JWTPayload,
     task: TaskResponseDto,
     currentExpense: Expense,
-    updateExpenseDto: UpdateExpenseDto,
+    updateExpenseDto: Partial<UpdateExpenseDto>,
   ) {
     const { id: userId, userType } = user;
     const { creatorId } = task;
@@ -36,10 +34,10 @@ export class ExpenseAuthorizationService {
     const isSuperUser = userType === UserType.SUPER;
     const isTaskCreator = creatorId === userId;
     const isTaskContributor = userId === contributorId;
-    const canUpdateContributorId =
-      modifiedContributorid && (isSuperUser || isTaskCreator);
+    const shouldNotUpdateContributorId =
+      modifiedContributorid && (!isSuperUser || !isTaskCreator);
 
-    if (!canUpdateContributorId) return false;
+    if (shouldNotUpdateContributorId) return false;
 
     return isSuperUser || isTaskCreator || isTaskContributor;
   }
