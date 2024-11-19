@@ -38,7 +38,7 @@ describe('ExpenseAuthorizationService', () => {
     jest.clearAllMocks();
   });
 
-  describe.skip('canCreateExpense', () => {
+  describe('canCreateExpense', () => {
     describe('when user has the role as USER', () => {
       it('should return true when user is a contributor', async () => {
         const currentUser = mockUser();
@@ -100,7 +100,7 @@ describe('ExpenseAuthorizationService', () => {
       });
     });
   });
-  describe.skip('canViewExpense', () => {
+  describe('canViewExpense', () => {
     describe('when user has the role as USER', () => {
       it('should return true when user is a contributor', async () => {
         const currentUser = mockUser();
@@ -162,7 +162,7 @@ describe('ExpenseAuthorizationService', () => {
       });
     });
   });
-  describe.skip('canUpdateExpence', () => {
+  describe('canUpdateExpence', () => {
     describe('when user has the role as USER', () => {
       it('should return true when user is a contributor', () => {
         const currentUser = mockUser();
