@@ -57,4 +57,21 @@ describe('TaskInterceptor', () => {
     const emittedValue = await firstValueFrom(result);
     expect(emittedValue).toBe('nextHandlerResult');
   });
+
+  it('should handle errors gracefully', async () => {
+    const error = new Error('Task not found');
+    TaskRepositoryMock.findUniqueOrThrow.mockRejectedValue(error);
+
+    await expect(
+      interceptor.intercept(
+        mockContext as ExecutionContext,
+        mockNext as CallHandler,
+      ),
+    ).rejects.toThrow(error);
+
+    expect(TaskRepositoryMock.findUniqueOrThrow).toHaveBeenCalledWith({
+      where: { id: 1 },
+    });
+    expect(mockErrorHandlerService.handle).toHaveBeenCalledWith(error);
+  });
 });
