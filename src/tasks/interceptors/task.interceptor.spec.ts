@@ -39,4 +39,22 @@ describe('TaskInterceptor', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  it('should attach the task to the request when successful', async () => {
+    const taskMock = { id: 1, title: 'Sample Task' };
+    TaskRepositoryMock.findUniqueOrThrow.mockResolvedValue(taskMock);
+
+    const result = await interceptor.intercept(
+      mockContext as ExecutionContext,
+      mockNext as CallHandler,
+    );
+
+    const request = mockContext.switchToHttp().getRequest();
+    expect(TaskRepositoryMock.findUniqueOrThrow).toHaveBeenCalledWith({
+      where: { id: 1 },
+    });
+    expect(request.task).toEqual(new TaskResponseDto(taskMock));
+    const emittedValue = await firstValueFrom(result);
+    expect(emittedValue).toBe('nextHandlerResult');
+  });
 });
