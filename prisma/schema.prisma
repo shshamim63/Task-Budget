@@ -30,6 +30,7 @@ model User {
   tasks Task[]
   expenses Expense[]
   contributingTask UserTasks[]
+  companionOf Associate[]
 }
 
 model Enterprise {
@@ -37,16 +38,43 @@ model Enterprise {
   name String @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  associates Associate[]
+  tasks Task[]
 }
 
 model Department {
   id Int @default(autoincrement()) @id
   name String @unique
+  assiciates Associate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Designation {
   id Int @default(autoincrement()) @id
   name String @unique
+  assiciates Associate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Associate {
+  id Int @default(autoincrement()) @id
+  department Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  designation Designation @relation(fields: [designationId], references: [id])
+  designationId Int
+  enterprise Enterprise @relation(fields: [enterpriseId], references: [id])
+  enterpriseId Int
+  affiliate User @relation(fields: [affiliateId], references: [id])
+  affiliateId Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enterpriseId, affiliateId])
 }
 
 enum TaskStatus {
@@ -63,10 +91,13 @@ model Task {
   creatorId Int
   status TaskStatus @default(OPEN)
   budget Decimal @default(0.0) @db.Decimal(10,2)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   expenses Expense[]
   members UserTasks[]
+  enterprise Enterprise @relation(fields: [enterpriseId], references: [id])
+  enterpriseId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserTasks {
