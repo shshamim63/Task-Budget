@@ -21,20 +21,20 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
 import { Roles } from '../decorators/roles.decorator';
 import { UserType } from '@prisma/client';
-import { CollaboratorsService } from './collaborators.service';
+import { CollaboratorService } from './collaborators.service';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('tasks/:taskId/collaborators')
 @UseGuards(AuthGuard, RolesGuard)
 @UseInterceptors(TaskInterceptor)
-export class CollaboratorsController {
-  constructor(private readonly collaboratorsService: CollaboratorsService) {}
+export class CollaboratorController {
+  constructor(private readonly collaboratorService: CollaboratorService) {}
 
   @Get()
   @Roles(UserType.SUPER, UserType.ADMIN)
   getCollaborators(@User() user: JWTPayload, @Task() task: TaskResponseDto) {
-    return this.collaboratorsService.getCollaborators(user, task);
+    return this.collaboratorService.getCollaborators(user, task);
   }
 
   @Post()
@@ -44,7 +44,7 @@ export class CollaboratorsController {
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<string> {
-    return this.collaboratorsService.assignMember(
+    return this.collaboratorService.assignMember(
       createCollaboratorsDto,
       user,
       task,
@@ -58,7 +58,7 @@ export class CollaboratorsController {
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<string> {
-    return this.collaboratorsService.removeCollaborator(
+    return this.collaboratorService.removeCollaborator(
       user,
       task,
       collaboratorId,

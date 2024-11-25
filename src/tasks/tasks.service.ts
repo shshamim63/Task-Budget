@@ -9,11 +9,11 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
-import { TaskRepository } from './task.repository';
+import { TaskRepository } from './tasks.repository';
 import { TaskQuery } from './interface/task-response.interface';
 
 @Injectable()
-export class TasksService {
+export class TaskService {
   constructor(
     private readonly taskPermissionService: TaskPermissionService,
     private readonly taskRepository: TaskRepository,

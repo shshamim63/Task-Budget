@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-import { ExpensesService } from './expenses.service';
+import { ExpenseService } from './expenses.service';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
 
@@ -28,8 +28,8 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 @Controller('tasks/:taskId/expenses')
 @UseGuards(AuthGuard)
 @UseInterceptors(TaskInterceptor)
-export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) {}
+export class ExpenseController {
+  constructor(private readonly expenseService: ExpenseService) {}
 
   @Post()
   createExpense(
@@ -37,7 +37,7 @@ export class ExpensesController {
     @User() user,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
-    return this.expensesService.createExpense(user, task, createExpenseDto);
+    return this.expenseService.createExpense(user, task, createExpenseDto);
   }
 
   @Get('/:expenseId')
@@ -46,7 +46,7 @@ export class ExpensesController {
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
-    return this.expensesService.getExpense(user, task, expenseId);
+    return this.expenseService.getExpense(user, task, expenseId);
   }
 
   @Get()
@@ -54,7 +54,7 @@ export class ExpensesController {
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto[]> {
-    return this.expensesService.getExpenses(user, task);
+    return this.expenseService.getExpenses(user, task);
   }
 
   @Patch('/:expenseId')
@@ -64,7 +64,7 @@ export class ExpensesController {
     @User() user,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
-    return this.expensesService.updateExpense(
+    return this.expenseService.updateExpense(
       user,
       task,
       updateExpenseDto,

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ExpensesService } from './expenses.service';
-import { ExpensesController } from './expenses.controller';
+import { ExpenseService } from './expenses.service';
+import { ExpenseController } from './expenses.controller';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
 import { ExecutionContext } from '@nestjs/common';
-import { ExpensesServiceMock } from './__mock__/expenses.service.mock';
+import { ExpenseServiceMock } from './__mock__/expenses.service.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { generateTask } from '../tasks/__mock__/task-data.mock';
 import {
@@ -15,14 +15,14 @@ import {
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 
-describe('ExpensesController', () => {
-  let controller: ExpensesController;
-  let service: ExpensesService;
+describe('ExpenseController', () => {
+  let controller: ExpenseController;
+  let service: ExpenseService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [ExpensesController],
-      providers: [{ provide: ExpensesService, useValue: ExpensesServiceMock }],
+      controllers: [ExpenseController],
+      providers: [{ provide: ExpenseService, useValue: ExpenseServiceMock }],
     })
       .overrideGuard(AuthGuard)
       .useValue({
@@ -34,19 +34,19 @@ describe('ExpensesController', () => {
       })
       .compile();
 
-    controller = module.get<ExpensesController>(ExpensesController);
-    service = module.get<ExpensesService>(ExpensesService);
+    controller = module.get<ExpenseController>(ExpenseController);
+    service = module.get<ExpenseService>(ExpenseService);
   });
 
   describe('createExpense', () => {
-    it('should call expensesService.craeteExpense with the correct parameters', async () => {
+    it('should call ExpenseService.craeteExpense with the correct parameters', async () => {
       const requestBody = mockCreateExpenseRequestBody();
       const currentUser = mockUser();
       const currentUserPayload = mockTokenPayload(currentUser);
       const task = generateTask();
       const expense = mockExpense({ requestBody, taskId: task.id });
 
-      ExpensesServiceMock.createExpense.mockResolvedValue(expense);
+      ExpenseServiceMock.createExpense.mockResolvedValue(expense);
 
       const result = await controller.createExpense(
         requestBody,
@@ -64,14 +64,14 @@ describe('ExpensesController', () => {
   });
 
   describe('getExpense', () => {
-    it('should call expensesService.getExpense with correct parameters', async () => {
+    it('should call ExpenseService.getExpense with correct parameters', async () => {
       const requestBody = mockCreateExpenseRequestBody();
       const currentUser = mockUser();
       const currentUserPayload = mockTokenPayload(currentUser);
       const task = generateTask();
       const expense = mockExpense({ requestBody, taskId: task.id });
 
-      ExpensesServiceMock.getExpense.mockResolvedValue(expense);
+      ExpenseServiceMock.getExpense.mockResolvedValue(expense);
       const result = await controller.getExpense(
         expense.id,
         currentUserPayload,
@@ -88,14 +88,14 @@ describe('ExpensesController', () => {
   });
 
   describe('getExpenses', () => {
-    it('should call expensesService.getExpense with correct parameters', async () => {
+    it('should call ExpenseService.getExpense with correct parameters', async () => {
       const requestBody = mockCreateExpenseRequestBody();
       const currentUser = mockUser();
       const currentUserPayload = mockTokenPayload(currentUser);
       const task = generateTask();
       const expense = mockExpense({ requestBody, taskId: task.id });
 
-      ExpensesServiceMock.getExpenses.mockResolvedValue([expense]);
+      ExpenseServiceMock.getExpenses.mockResolvedValue([expense]);
       const result = await controller.getExpenses(currentUserPayload, task);
 
       expect(result).toEqual(expect.arrayContaining([expense]));
@@ -106,7 +106,7 @@ describe('ExpensesController', () => {
     });
   });
   describe('updateExpense', () => {
-    it('should call expensesService.updateExpense with correct parameters', async () => {
+    it('should call ExpenseService.updateExpense with correct parameters', async () => {
       const updateExpenseDto: UpdateExpenseDto = mockUpdateExpenseRequestBody();
       const requestBody = mockCreateExpenseRequestBody();
       const currentUser = mockUser();
@@ -116,7 +116,7 @@ describe('ExpensesController', () => {
 
       const updatedExpense = { ...expense, ...updateExpenseDto };
 
-      ExpensesServiceMock.updateExpense.mockResolvedValueOnce(updatedExpense);
+      ExpenseServiceMock.updateExpense.mockResolvedValueOnce(updatedExpense);
 
       const result = await controller.updateExpense(
         expense.id,

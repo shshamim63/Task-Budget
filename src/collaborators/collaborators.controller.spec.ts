@@ -6,8 +6,8 @@ import { UserType } from '@prisma/client';
 
 import { generateTask } from '../tasks/__mock__/task-data.mock';
 
-import { CollaboratorsController } from './collaborators.controller';
-import { CollaboratorsService } from './collaborators.service';
+import { CollaboratorController } from './collaborators.controller';
+import { CollaboratorService } from './collaborators.service';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -21,19 +21,19 @@ import {
   generateCollaboratorList,
   generateTaskWithCollaboratorData,
 } from './__mock__/collaborators-data.mock';
-import { CollaboratorsServiceMock } from './__mock__/collaborators.service.mock';
+import { CollaboratorServiceMock } from './__mock__/collaborators.service.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 
-describe('CollaboratorsController', () => {
-  let controller: CollaboratorsController;
-  let service: CollaboratorsService;
+describe('CollaboratorController', () => {
+  let controller: CollaboratorController;
+  let service: CollaboratorService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [CollaboratorsController],
+      controllers: [CollaboratorController],
       providers: [
-        { provide: CollaboratorsService, useValue: CollaboratorsServiceMock },
+        { provide: CollaboratorService, useValue: CollaboratorServiceMock },
       ],
     })
       .overrideGuard(AuthGuard)
@@ -44,8 +44,8 @@ describe('CollaboratorsController', () => {
       .useValue({ intercept: jest.fn((ctx, next) => next.handle()) })
       .compile();
 
-    controller = module.get<CollaboratorsController>(CollaboratorsController);
-    service = module.get<CollaboratorsService>(CollaboratorsService);
+    controller = module.get<CollaboratorController>(CollaboratorController);
+    service = module.get<CollaboratorService>(CollaboratorService);
   });
 
   afterEach(() => {
@@ -59,9 +59,7 @@ describe('CollaboratorsController', () => {
 
       const task: TaskResponseDto = generateTask();
       const collaborators = generateTaskWithCollaboratorData(2, task);
-      CollaboratorsServiceMock.getCollaborators.mockResolvedValue(
-        collaborators,
-      );
+      CollaboratorServiceMock.getCollaborators.mockResolvedValue(collaborators);
 
       const result = await controller.getCollaborators(
         currentAdminUserPayload,
@@ -120,7 +118,7 @@ describe('CollaboratorsController', () => {
 
       const task: TaskResponseDto = generateTask();
 
-      CollaboratorsServiceMock.assignMember.mockResolvedValue(
+      CollaboratorServiceMock.assignMember.mockResolvedValue(
         `Assigned members to the task with id: ${task.id}`,
       );
       const result = await controller.assignMember(
@@ -142,7 +140,7 @@ describe('CollaboratorsController', () => {
       const task: TaskResponseDto = generateTask();
       const { collaboratorId } = generateCollaboratorId();
 
-      CollaboratorsServiceMock.removeCollaborator.mockResolvedValue(
+      CollaboratorServiceMock.removeCollaborator.mockResolvedValue(
         `Removed member with id: ${collaboratorId} from task with id: ${task.id}`,
       );
 

@@ -1,4 +1,4 @@
-export const TasksServiceMock = {
+export const TaskServiceMock = {
   getTasks: jest.fn(),
   getTaskById: jest.fn(),
   createTask: jest.fn(),

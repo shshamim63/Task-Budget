@@ -9,7 +9,7 @@ import { UserType } from '@prisma/client';
 
 import { faker } from '@faker-js/faker/.';
 
-import { ExpensesService } from './expenses.service';
+import { ExpenseService } from './expenses.service';
 import { ExpenseRepository } from './expense.repository';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
 import { RESPONSE_MESSAGE } from '../utils/constants';
@@ -26,14 +26,14 @@ import { ExpenseAuthorizationServiceMock } from './__mock__/expenseAuthorization
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 describe('', () => {
-  let service: ExpensesService;
+  let service: ExpenseService;
   let expenseRepository: ExpenseRepository;
   let expenseAuthorizationService: ExpenseAuthorizationService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ExpensesService,
+        ExpenseService,
         { provide: ExpenseRepository, useValue: ExpenseRepositoryMock },
         {
           provide: ExpenseAuthorizationService,
@@ -41,7 +41,7 @@ describe('', () => {
         },
       ],
     }).compile();
-    service = module.get<ExpensesService>(ExpensesService);
+    service = module.get<ExpenseService>(ExpenseService);
     expenseRepository = module.get<ExpenseRepository>(ExpenseRepository);
     expenseAuthorizationService = module.get<ExpenseAuthorizationService>(
       ExpenseAuthorizationService,
@@ -52,7 +52,7 @@ describe('', () => {
     jest.clearAllMocks();
   });
 
-  describe('ExpensesService', () => {
+  describe('ExpenseService', () => {
     describe('createExpense', () => {
       describe('when contribuotr has role user', () => {
         it('should create a new expense', async () => {
