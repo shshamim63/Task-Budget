@@ -46,6 +46,7 @@ model Department {
   id Int @default(autoincrement()) @id
   name String @unique
   assiciates Associate[]
+  designations Designation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -54,7 +55,10 @@ model Department {
 model Designation {
   id Int @default(autoincrement()) @id
   name String @unique
+  description String?
   assiciates Associate[]
+  department Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
