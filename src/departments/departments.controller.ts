@@ -7,7 +7,7 @@ import { UserType } from '@prisma/client';
 import { DepartmentService } from './departments.service';
 import { CreateDepartmentDto } from './dto/createDepartment.dto';
 
-@Controller('designations')
+@Controller('departments')
 @UseGuards(AuthGuard, RolesGuard)
 export class DepartmentController {
   constructor(private readonly designationService: DepartmentService) {}
