@@ -12,7 +12,8 @@ export class ErrorHandlerService {
   handle(error: CustomError): never {
     if (error instanceof PrismaClientKnownRequestError) {
       const { response, status } = PRISMA_ERROR_CODE[error.code];
-      throw new HttpException(response, status);
+      const errorInfo = error.meta.cause ?? response;
+      throw new HttpException(errorInfo, status);
     } else if (error instanceof HttpException) {
       throw error;
     } else {

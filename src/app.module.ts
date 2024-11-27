@@ -11,6 +11,8 @@ import { AuthModule } from './auth/auth.module';
 import { ExpenseModule } from './expenses/expenses.module';
 
 import { CollaboratorModule } from './collaborators/collaborators.module';
+import { DesignationModule } from './designations/designations.module';
+import { DepartmentModule } from './departments/departments.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { CollaboratorModule } from './collaborators/collaborators.module';
     AuthModule,
     ExpenseModule,
     CollaboratorModule,
+    DepartmentModule,
+    DesignationModule,
   ],
   controllers: [AppController],
   providers: [
