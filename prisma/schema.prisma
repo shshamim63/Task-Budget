@@ -34,12 +34,19 @@ model User {
 }
 
 model Enterprise {
-  id Int @default(autoincrement()) @id
-  name String @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  associates Associate[]
-  tasks Task[]
+  id                 Int       @id @default(autoincrement())
+  name               String    @unique
+  logo               String?
+  registrationNumber String?   @unique
+  establishedAt      DateTime?
+  phone              String?
+  email              String?
+  website            String?
+  address            String?   
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  associates         Associate[]
+  tasks              Task[]
 }
 
 model Department {

@@ -13,6 +13,7 @@ import { ExpenseModule } from './expenses/expenses.module';
 import { CollaboratorModule } from './collaborators/collaborators.module';
 import { DesignationModule } from './designations/designations.module';
 import { DepartmentModule } from './departments/departments.module';
+import { EnterpriseModule } from './enterprises/enterprises.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DepartmentModule } from './departments/departments.module';
     AuthModule,
     ExpenseModule,
     CollaboratorModule,
+    EnterpriseModule,
     DepartmentModule,
     DesignationModule,
   ],
