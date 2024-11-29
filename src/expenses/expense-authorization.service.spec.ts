@@ -279,12 +279,14 @@ describe('ExpenseAuthorizationService', () => {
         min: minRange,
         max: maxRange,
       });
+
       const totalExpense = new Prisma.Decimal(
         faker.number.float({
           min: 10,
           max: currentTaskBudget,
         }),
       );
+
       const newExpenseAmount = faker.number.float({
         min: minRange,
         max: maxRange,
