@@ -8,7 +8,7 @@ import {
 import { Observable } from 'rxjs';
 import { TaskResponseDto } from '../dto/task.dto';
 import { ErrorHandlerService } from '../../helpers/error.helper.service';
-import { TaskRepository } from '../task.repository';
+import { TaskRepository } from '../tasks.repository';
 import { TaskQuery } from '../interface/task-response.interface';
 
 @Injectable()

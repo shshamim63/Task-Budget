@@ -1,20 +1,20 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { TokenModule } from '../token/token.module';
-import { CollaboratorsController } from './collaborators.controller';
-import { CollaboratorsService } from './collaborators.service';
+import { CollaboratorController } from './collaborators.controller';
+import { CollaboratorService } from './collaborators.service';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { CollaboratorRepository } from './collaborator.repository';
-import { TaskRepository } from '../tasks/task.repository';
+import { TaskRepository } from '../tasks/tasks.repository';
 import { UserRepository } from '../auth/user.repository';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 @Module({
   imports: [PrismaModule, TokenModule],
-  controllers: [CollaboratorsController],
+  controllers: [CollaboratorController],
   providers: [
-    CollaboratorsService,
+    CollaboratorService,
     TaskPermissionService,
     CollaboratorRepository,
     TaskRepository,
@@ -23,4 +23,4 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
     AsyncErrorHandlerService,
   ],
 })
-export class CollaboratorsModule {}
+export class CollaboratorModule {}

@@ -1,6 +1,14 @@
 import * as jwt from 'jsonwebtoken';
 import { Request } from 'express';
 
+import {
+  HttpException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+
+import { User } from '@prisma/client';
+
 import { JWTPayload, TokenPayload } from '../auth/interfaces/auth.interface';
 import {
   AUTHORIZATION_TYPE,
@@ -8,12 +16,6 @@ import {
   RESPONSE_MESSAGE,
   STATUS_CODE,
 } from '../utils/constants';
-import {
-  HttpException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class TokenService {

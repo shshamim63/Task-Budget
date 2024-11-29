@@ -17,7 +17,7 @@ import { RESPONSE_MESSAGE } from '../utils/constants';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
 
 @Injectable()
-export class ExpensesService {
+export class ExpenseService {
   constructor(
     private readonly expenseRepository: ExpenseRepository,
     private readonly expenseAuthorizationService: ExpenseAuthorizationService,

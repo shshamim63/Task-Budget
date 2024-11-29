@@ -14,7 +14,7 @@ import {
 
 import { UserType } from '@prisma/client';
 
-import { TasksService } from './tasks.service';
+import { TaskService } from './tasks.service';
 
 import { TaskStatus } from './task.model';
 
@@ -32,15 +32,15 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Controller('tasks')
 @UseGuards(AuthGuard, RolesGuard)
-export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+export class TaskController {
+  constructor(private readonly taskService: TaskService) {}
 
   @Get()
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
     @User() user,
   ): Promise<TaskResponseDto[]> {
-    return this.tasksService.getTasks(user, filterDto);
+    return this.taskService.getTasks(user, filterDto);
   }
 
   @Get('/:id')
@@ -48,7 +48,7 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.tasksService.getTaskById(id, user);
+    return this.taskService.getTaskById(id, user);
   }
 
   @Post()
@@ -57,7 +57,7 @@ export class TasksController {
     @Body() createTaskDTO: CreateTaskDto,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.tasksService.createTask(createTaskDTO, user.id);
+    return this.taskService.createTask(createTaskDTO, user.id);
   }
 
   @Delete('/:id')
@@ -66,7 +66,7 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
     @User() user,
   ): Promise<string> {
-    return this.tasksService.deleteTask(id, user);
+    return this.taskService.deleteTask(id, user);
   }
 
   @Patch('/:id')
@@ -76,7 +76,7 @@ export class TasksController {
     @Body() updateTaskDto: CreateTaskDto,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.tasksService.updateTask(id, updateTaskDto, user);
+    return this.taskService.updateTask(id, updateTaskDto, user);
   }
 
   @Patch('/:id/status')
@@ -86,6 +86,6 @@ export class TasksController {
     @Body('status', TaskStatusValidationPipe) status: TaskStatus,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.tasksService.updateTaskStatus(id, status, user);
+    return this.taskService.updateTaskStatus(id, status, user);
   }
 }

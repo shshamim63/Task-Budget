@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TasksService } from './tasks.service';
+import { TaskService } from './tasks.service';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { Prisma, UserType } from '@prisma/client';
@@ -20,12 +20,12 @@ import {
 import { faker } from '@faker-js/faker/.';
 import { TaskStatus } from './task.model';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
-import { TaskRepository } from './task.repository';
+import { TaskRepository } from './tasks.repository';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { TaskRepositoryMock } from './__mock__/task.repository.mock';
 
 describe('TaskService', () => {
-  let service: TasksService;
+  let service: TaskService;
   let taskPermissionService: TaskPermissionService;
   let taskRepository: TaskRepository;
 
@@ -40,14 +40,14 @@ describe('TaskService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        TasksService,
+        TaskService,
         { provide: TaskRepository, useValue: TaskRepositoryMock },
         TaskPermissionService,
         ErrorHandlerService,
       ],
     }).compile();
 
-    service = module.get<TasksService>(TasksService);
+    service = module.get<TaskService>(TaskService);
     taskRepository = module.get<TaskRepository>(TaskRepository);
     taskPermissionService = module.get<TaskPermissionService>(
       TaskPermissionService,

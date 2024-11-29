@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CollaboratorsService } from '../../src/collaborators/collaborators.service';
+import { CollaboratorService } from '../../src/collaborators/collaborators.service';
 import { TaskPermissionService } from '../../src/helpers/task-permission.helper.service';
 
-import { TaskRepository } from '../tasks/task.repository';
+import { TaskRepository } from '../tasks/tasks.repository';
 import { CollaboratorRepository } from './collaborator.repository';
 
 import { CollaboratorRepositoryMock } from './__mock__/collaborator.repository.mock';
@@ -21,8 +21,8 @@ import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 import { UserType } from '@prisma/client';
 import { faker } from '@faker-js/faker/.';
 import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
-describe('CollaboratorsService', () => {
-  let service: CollaboratorsService;
+describe('CollaboratorService', () => {
+  let service: CollaboratorService;
   let taskPermissionService: TaskPermissionService;
   let collaboratorRepository: CollaboratorRepository;
   let userRepository: UserRepository;
@@ -32,7 +32,7 @@ describe('CollaboratorsService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CollaboratorsService,
+        CollaboratorService,
         TaskPermissionService,
         {
           provide: CollaboratorRepository,
@@ -49,7 +49,7 @@ describe('CollaboratorsService', () => {
       ],
     }).compile();
 
-    service = module.get<CollaboratorsService>(CollaboratorsService);
+    service = module.get<CollaboratorService>(CollaboratorService);
     taskPermissionService = module.get<TaskPermissionService>(
       TaskPermissionService,
     );

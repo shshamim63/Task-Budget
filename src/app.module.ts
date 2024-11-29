@@ -6,19 +6,25 @@ import { AppController } from './app.controller';
 
 import { AppService } from './app.service';
 
-import { TasksModule } from './tasks/tasks.module';
+import { TaskModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
-import { ExpensesModule } from './expenses/expenses.module';
+import { ExpenseModule } from './expenses/expenses.module';
 
-import { CollaboratorsModule } from './collaborators/collaborators.module';
+import { CollaboratorModule } from './collaborators/collaborators.module';
+import { DesignationModule } from './designations/designations.module';
+import { DepartmentModule } from './departments/departments.module';
+import { EnterpriseModule } from './enterprises/enterprises.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    TasksModule,
+    TaskModule,
     AuthModule,
-    ExpensesModule,
-    CollaboratorsModule,
+    ExpenseModule,
+    CollaboratorModule,
+    EnterpriseModule,
+    DepartmentModule,
+    DesignationModule,
   ],
   controllers: [AppController],
   providers: [

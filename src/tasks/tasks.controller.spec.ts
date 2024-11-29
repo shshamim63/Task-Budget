@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TasksController } from '../../src/tasks/tasks.controller';
-import { TasksService } from '../../src/tasks/tasks.service';
+import { TaskController } from '../../src/tasks/tasks.controller';
+import { TaskService } from '../../src/tasks/tasks.service';
 import { generateTask, generateTasks } from './__mock__/task-data.mock';
 import { AuthGuard } from '../../src/auth/guards/auth.guard';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
@@ -12,18 +12,18 @@ import { CreateTaskDto } from '../../src/tasks/dto/create-task.dto';
 import { TASK_RESPONSE_MESSAGE } from '../../src/utils/constants';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
-import { TasksServiceMock } from './__mock__/tasks.service.mock';
+import { TaskServiceMock } from './__mock__/tasks.service.mock';
 
-describe('TasksController', () => {
-  let controller: TasksController;
-  let service: TasksService;
+describe('TaskController', () => {
+  let controller: TaskController;
+  let service: TaskService;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [TasksController],
+      controllers: [TaskController],
       providers: [
         {
-          provide: TasksService,
-          useValue: TasksServiceMock,
+          provide: TaskService,
+          useValue: TaskServiceMock,
         },
       ],
     })
@@ -37,8 +37,8 @@ describe('TasksController', () => {
       })
       .compile();
 
-    controller = module.get<TasksController>(TasksController);
-    service = module.get<TasksService>(TasksService);
+    controller = module.get<TaskController>(TaskController);
+    service = module.get<TaskService>(TaskService);
   });
 
   describe('getTasks', () => {
@@ -47,7 +47,7 @@ describe('TasksController', () => {
       const currentUserPayload = mockTokenPayload(currentUser);
       const tasks: TaskResponseDto[] = generateTasks(3);
 
-      TasksServiceMock.getTasks.mockResolvedValue(tasks);
+      TaskServiceMock.getTasks.mockResolvedValue(tasks);
       const mockFilterDTO: GetTasksFilterDto = {
         status: TaskStatus.OPEN,
         search: 'hello',
@@ -69,7 +69,7 @@ describe('TasksController', () => {
       const currentUser = mockUser();
       const currentUserPayload = mockTokenPayload(currentUser);
       const task = generateTask();
-      TasksServiceMock.getTaskById.mockResolvedValue(task);
+      TaskServiceMock.getTaskById.mockResolvedValue(task);
       const result = await controller.getTaskById(task.id, currentUserPayload);
       expect(result).toEqual(task);
     });
@@ -86,7 +86,7 @@ describe('TasksController', () => {
         description,
         budget,
       };
-      TasksServiceMock.createTask.mockResolvedValue(task);
+      TaskServiceMock.createTask.mockResolvedValue(task);
       const result = await controller.createTask(body, currentAdminUserPayload);
       expect(result).toEqual(task);
     });
@@ -97,7 +97,7 @@ describe('TasksController', () => {
       const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
       const currentAdminUserPayload = mockTokenPayload(currentAdminUser);
       const task = generateTask();
-      TasksServiceMock.deleteTask.mockResolvedValue(
+      TaskServiceMock.deleteTask.mockResolvedValue(
         TASK_RESPONSE_MESSAGE.DELETE_TASK,
       );
       const result = await controller.deleteTask(
@@ -119,7 +119,7 @@ describe('TasksController', () => {
         description,
         budget,
       };
-      TasksServiceMock.updateTask.mockResolvedValue(task);
+      TaskServiceMock.updateTask.mockResolvedValue(task);
       const result = await controller.updateTask(
         task.id,
         body,
@@ -134,7 +134,7 @@ describe('TasksController', () => {
       const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
       const currentAdminUserPayload = mockTokenPayload(currentAdminUser);
       const task = generateTask();
-      TasksServiceMock.updateTaskStatus.mockResolvedValue(task);
+      TaskServiceMock.updateTaskStatus.mockResolvedValue(task);
       const result = await controller.updateTaskStatus(
         task.id,
         TaskStatus.DONE,

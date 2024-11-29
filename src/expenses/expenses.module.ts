@@ -3,10 +3,10 @@ import { Module } from '@nestjs/common';
 import { TokenModule } from '../token/token.module';
 import { PrismaModule } from '../prisma/prisma.module';
 
-import { ExpensesService } from './expenses.service';
-import { ExpensesController } from './expenses.controller';
+import { ExpenseService } from './expenses.service';
+import { ExpenseController } from './expenses.controller';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
-import { TaskRepository } from '../tasks/task.repository';
+import { TaskRepository } from '../tasks/tasks.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { CollaboratorRepository } from '../collaborators/collaborator.repository';
 import { ExpenseRepository } from './expense.repository';
@@ -15,9 +15,9 @@ import { ExpenseAuthorizationService } from './expense-authorization.service';
 
 @Module({
   imports: [PrismaModule, TokenModule],
-  controllers: [ExpensesController],
+  controllers: [ExpenseController],
   providers: [
-    ExpensesService,
+    ExpenseService,
     ExpenseRepository,
     UserRepository,
     TaskRepository,
@@ -27,4 +27,4 @@ import { ExpenseAuthorizationService } from './expense-authorization.service';
     ExpenseAuthorizationService,
   ],
 })
-export class ExpensesModule {}
+export class ExpenseModule {}
