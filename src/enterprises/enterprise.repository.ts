@@ -9,7 +9,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 export class EnterpriseRepository {
   constructor(
     private readonly prismaService: PrismaService,
-    private asyncErrorHandlerService: AsyncErrorHandlerService,
+    private readonly asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
   async create(data): Promise<Enterprise> {
