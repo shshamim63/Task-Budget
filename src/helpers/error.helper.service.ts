@@ -13,13 +13,8 @@ import { PRISMA_ERROR_CODE } from '../prisma/prisma-error-code';
 export class ErrorHandlerService {
   handle(error: CustomError): never {
     if (error instanceof PrismaClientKnownRequestError) {
-      const { error: currentErrorMessage, status } =
-        PRISMA_ERROR_CODE[error.code];
-      const errorDetails = this.generateDuplicateErrorDetails(
-        currentErrorMessage,
-        error.meta,
-      );
-      throw new HttpException(errorDetails, status);
+      const { errorResponse, status } = this.generatePrismaErrorDetails(error);
+      throw new HttpException(errorResponse, status);
     } else if (error instanceof HttpException) {
       throw error;
     } else {
@@ -27,13 +22,24 @@ export class ErrorHandlerService {
     }
   }
 
-  private generateDuplicateErrorDetails(info, meta) {
-    return {
+  private generatePrismaErrorDetails(error) {
+    const {
       error: info,
-      details: {
-        message: `A duplicate value was found for the following fileds: ${meta.target.join(', ')}`,
-        models: meta.modelName,
+      status,
+      messagePrefix,
+    } = PRISMA_ERROR_CODE[error.code];
+    const { meta } = error;
+    const target = meta.target ? meta.target.join(', ') : meta.cause;
+
+    return {
+      errorResponse: {
+        error: info,
+        details: {
+          message: `${messagePrefix}: ${target}`,
+          models: meta.modelName,
+        },
       },
+      status,
     };
   }
 }
