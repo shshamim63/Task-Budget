@@ -1,11 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
 import { AssociateRepository } from './associate.repository';
+import { AssociateMock } from './__mock__/associate-data.mock';
+
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
-import { AssociateMock } from './__mock__/associate-data.mock';
+
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
-import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
+
+import { ErrorHandlerService } from '../helpers/error.helper.service';
 
 describe('AssociateRepository', () => {
   let repository: AssociateRepository;

@@ -36,7 +36,7 @@ export class ErrorHandlerService {
         error: info,
         details: {
           message: `${messagePrefix}: ${target}`,
-          models: meta.modelName,
+          model: meta.modelName,
         },
       },
       status,

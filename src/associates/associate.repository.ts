@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+import { Associate, Prisma } from '@prisma/client';
+
 import { PrismaService } from '../prisma/prisma.service';
 
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
-import { Associate, Prisma } from '@prisma/client';
 
 @Injectable()
 export class AssociateRepository {

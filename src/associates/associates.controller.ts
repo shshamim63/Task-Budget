@@ -1,10 +1,15 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { CreateAssociateDto } from './dto/create-associate.dto';
+
+import { UserType } from '@prisma/client';
+
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+
 import { Roles } from '../decorators/roles.decorator';
-import { UserType } from '@prisma/client';
+
 import { AssociateService } from './associates.service';
+
+import { CreateAssociateDto } from './dto/create-associate.dto';
 import { AssociateDto } from './dto/associate.dto';
 
 @Controller('associates')

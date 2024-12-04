@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
 import { AssociateService } from './associates.service';
+
 import { AssociateRepository } from './associate.repository';
 import { AssociateRepositoryMock } from './__mock__/associate.repository.mock';
+
 import { AssociateMock } from './__mock__/associate-data.mock';
 
 describe('AssociateService', () => {

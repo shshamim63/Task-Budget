@@ -1,9 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
 import { AssociateController } from './associates.controller';
+
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+
 import { AssociateService } from './associates.service';
 import { AssociateServiceMock } from './__mock__/associates.service.mock';
+
 import { AssociateMock } from './__mock__/associate-data.mock';
 
 describe('AssociateController', () => {
