@@ -22,7 +22,7 @@ export class AssociateRepository {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.associate.create({
         data,
-        ...(query && { select: query }),
+        ...(!!Object.keys(query).length && { select: query }),
       }),
     );
   }
