@@ -85,7 +85,7 @@ model Associate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([enterpriseId, affiliateId])
+  @@unique([departmentId, designationId, enterpriseId, affiliateId])
 }
 
 enum TaskStatus {

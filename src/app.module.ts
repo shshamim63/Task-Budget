@@ -14,6 +14,7 @@ import { CollaboratorModule } from './collaborators/collaborators.module';
 import { DesignationModule } from './designations/designations.module';
 import { DepartmentModule } from './departments/departments.module';
 import { EnterpriseModule } from './enterprises/enterprises.module';
+import { AssociateModule } from './associates/associates.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EnterpriseModule } from './enterprises/enterprises.module';
     EnterpriseModule,
     DepartmentModule,
     DesignationModule,
+    AssociateModule,
   ],
   controllers: [AppController],
   providers: [
