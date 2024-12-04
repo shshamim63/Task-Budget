@@ -5,7 +5,7 @@ import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { AssociateMock } from './__mock__/associate-data.mock';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
-import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.spec';
+import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 
 describe('AssociateRepository', () => {
   let repository: AssociateRepository;
