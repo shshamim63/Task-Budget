@@ -9,7 +9,7 @@ export const AssociateMock = () => {
     },
     designation: {
       id: faker.number.int({ min: 1 }),
-      name: faker.person.jobTitle,
+      name: faker.person.jobTitle(),
     },
     enterprise: {
       id: faker.number.int({ min: 1 }),
@@ -17,7 +17,7 @@ export const AssociateMock = () => {
     },
     affiliate: {
       id: faker.number.int({ min: 1 }),
-      email: faker.internet.email,
+      email: faker.internet.email(),
     },
   };
 };
