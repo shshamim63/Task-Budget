@@ -7,6 +7,7 @@ export class TaskResponseDto {
   creatorId: number;
   status: string;
   budget: number;
+  enterpriseId: number;
 
   constructor(
     partial: Partial<

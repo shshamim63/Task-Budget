@@ -41,8 +41,11 @@ export class TaskService {
 
   async createTask(
     createTaskDTO: CreateTaskDto,
-    userId: number,
+    user: JWTPayload,
   ): Promise<TaskResponseDto> {
+    const { id: userId } = user;
+    const { enterpriseId } = createTaskDTO;
+    this.taskPermissionService.hasTaskCreationPermission(user, enterpriseId);
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create(data);
 
