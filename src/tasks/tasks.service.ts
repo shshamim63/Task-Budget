@@ -149,13 +149,14 @@ export class TaskService {
   }
 
   private prepareTaskCreateData(createTaskDTO, userId) {
-    const { title, description, budget } = createTaskDTO;
+    const { title, description, budget, enterpriseId } = createTaskDTO;
 
     return {
       title,
       description,
       status: TaskStatus.OPEN,
       creatorId: userId,
+      enterpriseId,
       budget: budget ? new Prisma.Decimal(budget) : undefined,
     };
   }

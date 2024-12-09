@@ -21,6 +21,12 @@ export const mockTokenPayload = (user = {} as User) => {
     email: email ?? faker.internet.email(),
     username: username ?? faker.internet.userName(),
     userType: userType ?? UserType.USER,
+    companionOf: Array.from(
+      { length: faker.number.int({ min: 0, max: 4 }) },
+      () => ({
+        id: faker.number.int({ min: 1 }),
+      }),
+    ),
     exp: faker.number.int(),
     iat: faker.number.int(),
   };

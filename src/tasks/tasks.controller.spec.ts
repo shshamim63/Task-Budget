@@ -80,11 +80,12 @@ describe('TaskController', () => {
       const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
       const currentAdminUserPayload = mockTokenPayload(currentAdminUser);
       const task = generateTask();
-      const { title, description, budget } = task;
+      const { title, description, budget, enterpriseId } = task;
       const body: CreateTaskDto = {
         title,
         description,
         budget,
+        enterpriseId,
       };
       TaskServiceMock.createTask.mockResolvedValue(task);
       const result = await controller.createTask(body, currentAdminUserPayload);
@@ -113,11 +114,12 @@ describe('TaskController', () => {
       const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
       const currentAdminUserPayload = mockTokenPayload(currentAdminUser);
       const task = generateTask();
-      const { title, description, budget } = task;
+      const { title, description, budget, enterpriseId } = task;
       const body: CreateTaskDto = {
         title,
         description,
         budget,
+        enterpriseId,
       };
       TaskServiceMock.updateTask.mockResolvedValue(task);
       const result = await controller.updateTask(
