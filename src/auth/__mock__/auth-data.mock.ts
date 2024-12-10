@@ -18,6 +18,12 @@ export const mockUser = (data: Partial<SignUpDto> = {}) => {
     userType: UserType.USER,
     createdAt: new Date(),
     updatedAt: new Date(),
+    companionOf: Array.from(
+      { length: faker.number.int({ min: 0, max: 4 }) },
+      () => ({
+        id: faker.number.int({ min: 1 }),
+      }),
+    ),
   };
 };
 

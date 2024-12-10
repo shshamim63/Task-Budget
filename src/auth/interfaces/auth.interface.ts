@@ -22,12 +22,18 @@ export interface JWTPayload extends TokenPayload {
   iat: number;
 }
 
-export type AuthUser = Prisma.UserGetPayload<{
-  select: {
-    id: true;
-    email: true;
-    username: true;
-    userType: true;
-    companionOf: { select: { id: true } };
-  };
-}>;
+export type AuthUser = Omit<
+  Prisma.UserGetPayload<{
+    select: {
+      id: true;
+      email: true;
+      username: true;
+      userType: true;
+      password_hash: true;
+      companionOf: { select: { id: true } };
+    };
+  }>,
+  'password_hash'
+> & {
+  password_hash?: string;
+};

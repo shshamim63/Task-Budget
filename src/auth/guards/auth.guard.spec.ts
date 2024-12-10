@@ -80,6 +80,17 @@ describe('AuthGuard', () => {
     expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
     expect(userRepository.findUnique).toHaveBeenCalledWith({
       where: { id: tokenPayload.id },
+      select: {
+        companionOf: {
+          select: {
+            id: true,
+          },
+        },
+        id: true,
+        email: true,
+        userType: true,
+        username: true,
+      },
     });
   });
 
@@ -99,6 +110,17 @@ describe('AuthGuard', () => {
     expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
     expect(userRepository.findUnique).toHaveBeenCalledWith({
       where: { id: tokenPayload.id },
+      select: {
+        companionOf: {
+          select: {
+            id: true,
+          },
+        },
+        id: true,
+        email: true,
+        userType: true,
+        username: true,
+      },
     });
 
     expect(result).toBe(true);

@@ -11,7 +11,11 @@ import { TokenService } from '../token/token.service';
 
 import { UserResponseDto } from './dto/user.dto';
 
-import { SignInParams, SignUpParams } from './interfaces/auth.interface';
+import {
+  AuthUser,
+  SignInParams,
+  SignUpParams,
+} from './interfaces/auth.interface';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -44,7 +48,24 @@ export class AuthService {
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
     const data = { email, username, password_hash: hashPassword };
-    const user = await this.userRepository.create(data);
+    const query = {
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        userType: true,
+        companionOf: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    };
+    const user = (await this.userRepository.create({
+      data,
+      ...query,
+    })) as unknown as AuthUser;
+
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
     const token = this.tokenService.generateToken(payload);
     return new UserResponseDto({ ...user, token });
@@ -53,8 +74,22 @@ export class AuthService {
   async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
     const findQuery = {
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        password_hash: true,
+        userType: true,
+        companionOf: {
+          select: {
+            id: true,
+          },
+        },
+      },
     };
-    const user = await this.userRepository.findUnique(findQuery);
+    const user = (await this.userRepository.findUnique(
+      findQuery,
+    )) as unknown as AuthUser;
 
     if (!user) throw new BadRequestException('Invalid credentials');
 
