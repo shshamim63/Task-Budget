@@ -11,6 +11,7 @@ import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 import { generateTask } from '../tasks/__mock__/task-data.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
+import { faker } from '@faker-js/faker/.';
 
 describe('TaskPermissionService', () => {
   let service: TaskPermissionService;
@@ -23,64 +24,112 @@ describe('TaskPermissionService', () => {
     service = module.get<TaskPermissionService>(TaskPermissionService);
   });
 
-  it('should allow super user to perform operation', () => {
-    const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
-    const currentUserPayload = mockTokenPayload(currentSuperUser);
+  describe('hasTaskCreationPermission', () => {
+    it('should return true when user is Super', () => {
+      const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+      const currentUserPayload = mockTokenPayload(currentSuperUser);
 
-    const task: TaskResponseDto = generateTask();
+      const task: TaskResponseDto = generateTask();
 
-    const result = service.hasOperationPermission(currentUserPayload, task);
+      const result = service.hasTaskCreationPermission(
+        currentUserPayload,
+        task.enterpriseId,
+      );
 
-    expect(result).toBe(true);
+      expect(result).toBeTruthy();
+    });
+    it('should allow admin user and the enterprise', () => {
+      const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+      const currentUserPayload = mockTokenPayload(currentAdminUser);
+      const enterperiseId = faker.number.int({ min: 1 });
+
+      const result = service.hasTaskCreationPermission(
+        {
+          ...currentUserPayload,
+          companionOf: [
+            ...currentUserPayload.companionOf,
+            { id: enterperiseId },
+          ],
+        },
+        enterperiseId,
+      );
+
+      expect(result).toBe(true);
+    });
+    it('should raise permission denied error when user does not belong to an enterprise', () => {
+      const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+      const currentUserPayload = mockTokenPayload(currentAdminUser);
+      const enterperiseId = faker.number.int({ min: 1 });
+
+      expect(() =>
+        service.hasTaskCreationPermission(currentUserPayload, enterperiseId),
+      ).toThrow(
+        new ForbiddenException(
+          RESPONSE_MESSAGE.PERMISSION_DENIED,
+          ERROR_NAME.PERMISSION_DENIED,
+        ),
+      );
+    });
   });
 
-  it('should allow ADMIN user who created task to perform operation', () => {
-    const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
-    const currentUserPayload = mockTokenPayload(currentAdminUser);
+  describe('hasOperationPermission', () => {
+    it('should allow super user to perform operation', () => {
+      const currentSuperUser = { ...mockUser(), userType: UserType.SUPER };
+      const currentUserPayload = mockTokenPayload(currentSuperUser);
 
-    const task: TaskResponseDto = generateTask();
+      const task: TaskResponseDto = generateTask();
 
-    const result = service.hasOperationPermission(currentUserPayload, {
-      ...task,
-      creatorId: currentAdminUser.id,
+      const result = service.hasOperationPermission(currentUserPayload, task);
+
+      expect(result).toBe(true);
     });
 
-    expect(result).toBe(true);
-  });
+    it('should allow ADMIN user who created task to perform operation', () => {
+      const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+      const currentUserPayload = mockTokenPayload(currentAdminUser);
 
-  it('should not allow ADMIN user who is not the creator of the task by throwing ForbiddenException', () => {
-    const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
-    const currentUserPayload = mockTokenPayload(currentAdminUser);
+      const task: TaskResponseDto = generateTask();
 
-    const task: TaskResponseDto = generateTask();
-    expect(() =>
-      service.hasOperationPermission(currentUserPayload, task),
-    ).toThrow(ForbiddenException);
-    expect(() =>
-      service.hasOperationPermission(currentUserPayload, task),
-    ).toThrow(
-      new ForbiddenException(
-        RESPONSE_MESSAGE.PERMISSION_DENIED,
-        ERROR_NAME.PERMISSION_DENIED,
-      ),
-    );
-  });
+      const result = service.hasOperationPermission(currentUserPayload, {
+        ...task,
+        creatorId: currentAdminUser.id,
+      });
 
-  it('should deny permission for USER role accessor', () => {
-    const currentUser = mockUser();
-    const currentUserPayload = mockTokenPayload(currentUser);
-    const task: TaskResponseDto = generateTask();
+      expect(result).toBe(true);
+    });
 
-    expect(() =>
-      service.hasOperationPermission(currentUserPayload, task),
-    ).toThrow(ForbiddenException);
-    expect(() =>
-      service.hasOperationPermission(currentUserPayload, task),
-    ).toThrow(
-      new ForbiddenException(
-        RESPONSE_MESSAGE.PERMISSION_DENIED,
-        ERROR_NAME.PERMISSION_DENIED,
-      ),
-    );
+    it('should not allow ADMIN user who is not the creator of the task by throwing ForbiddenException', () => {
+      const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
+      const currentUserPayload = mockTokenPayload(currentAdminUser);
+
+      const task: TaskResponseDto = generateTask();
+
+      expect(() =>
+        service.hasOperationPermission(currentUserPayload, task),
+      ).toThrow(
+        new ForbiddenException(
+          RESPONSE_MESSAGE.PERMISSION_DENIED,
+          ERROR_NAME.PERMISSION_DENIED,
+        ),
+      );
+    });
+
+    it('should deny permission for USER role accessor', () => {
+      const currentUser = mockUser();
+      const currentUserPayload = mockTokenPayload(currentUser);
+      const task: TaskResponseDto = generateTask();
+
+      expect(() =>
+        service.hasOperationPermission(currentUserPayload, task),
+      ).toThrow(ForbiddenException);
+      expect(() =>
+        service.hasOperationPermission(currentUserPayload, task),
+      ).toThrow(
+        new ForbiddenException(
+          RESPONSE_MESSAGE.PERMISSION_DENIED,
+          ERROR_NAME.PERMISSION_DENIED,
+        ),
+      );
+    });
   });
 });

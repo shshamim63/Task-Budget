@@ -7,9 +7,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { User } from '@prisma/client';
-
-import { JWTPayload, TokenPayload } from '../auth/interfaces/auth.interface';
+import {
+  AuthUser,
+  JWTPayload,
+  TokenPayload,
+} from '../auth/interfaces/auth.interface';
 import {
   AUTHORIZATION_TYPE,
   ERROR_NAME,
@@ -62,13 +64,14 @@ export class TokenService {
     return undefined;
   }
 
-  createAuthTokenPayload(data: User): TokenPayload {
-    const { id, email, username, userType } = data;
+  createAuthTokenPayload(data: AuthUser): TokenPayload {
+    const { id, email, username, userType, companionOf } = data;
     return {
       id,
       email,
       username,
       userType,
+      companionOf,
     };
   }
 }

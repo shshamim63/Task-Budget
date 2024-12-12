@@ -12,4 +12,7 @@ export class CreateTaskDto {
   @IsNumber()
   @IsOptional()
   budget: number;
+
+  @IsNumber()
+  enterpriseId: number;
 }

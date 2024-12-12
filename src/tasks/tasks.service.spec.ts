@@ -26,7 +26,6 @@ import { TaskRepositoryMock } from './__mock__/task.repository.mock';
 
 describe('TaskService', () => {
   let service: TaskService;
-  let taskPermissionService: TaskPermissionService;
   let taskRepository: TaskRepository;
 
   const currentUser = mockUser();
@@ -49,9 +48,6 @@ describe('TaskService', () => {
 
     service = module.get<TaskService>(TaskService);
     taskRepository = module.get<TaskRepository>(TaskRepository);
-    taskPermissionService = module.get<TaskPermissionService>(
-      TaskPermissionService,
-    );
   });
 
   afterEach(() => {
@@ -161,7 +157,14 @@ describe('TaskService', () => {
       const mockTaskDto = generateTaskDto();
       const data = generateTask(mockTaskDto);
       TaskRepositoryMock.create.mockResolvedValue(data);
-      await service.createTask(mockTaskDto, adminUserTokenPayload.id);
+      await service.createTask(mockTaskDto, {
+        ...adminUserTokenPayload,
+        companionOf: [
+          ...adminUserTokenPayload.companionOf,
+          { id: mockTaskDto.enterpriseId },
+        ],
+      });
+
       expect(taskRepository.create).toHaveBeenCalledWith({
         ...mockTaskDto,
         creatorId: adminUserTokenPayload.id,

@@ -8,6 +8,7 @@ export const generateTaskDto = (): CreateTaskDto => {
     description: faker.lorem.sentence(),
     title: faker.lorem.words(),
     budget: faker.number.float({ min: 100, max: 400 }),
+    enterpriseId: faker.number.int({ min: 1 }),
   };
 };
 
@@ -20,6 +21,7 @@ export const generateTask = (
     description: taskDto.description ?? faker.lorem.sentence(),
     creatorId: faker.number.int(),
     status: TaskStatus.OPEN,
+    enterpriseId: taskDto.enterpriseId ?? faker.number.int({ min: 1 }),
     budget: new Prisma.Decimal(
       taskDto.budget ?? faker.number.float({ min: 100, max: 10000 }),
     ),

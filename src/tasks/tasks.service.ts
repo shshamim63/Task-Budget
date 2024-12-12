@@ -41,8 +41,11 @@ export class TaskService {
 
   async createTask(
     createTaskDTO: CreateTaskDto,
-    userId: number,
+    user: JWTPayload,
   ): Promise<TaskResponseDto> {
+    const { id: userId } = user;
+    const { enterpriseId } = createTaskDTO;
+    this.taskPermissionService.hasTaskCreationPermission(user, enterpriseId);
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create(data);
 
@@ -146,13 +149,14 @@ export class TaskService {
   }
 
   private prepareTaskCreateData(createTaskDTO, userId) {
-    const { title, description, budget } = createTaskDTO;
+    const { title, description, budget, enterpriseId } = createTaskDTO;
 
     return {
       title,
       description,
       status: TaskStatus.OPEN,
       creatorId: userId,
+      enterpriseId,
       budget: budget ? new Prisma.Decimal(budget) : undefined,
     };
   }

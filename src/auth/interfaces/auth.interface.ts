@@ -1,5 +1,4 @@
-import { UserType } from '@prisma/client';
-import { User } from '../../decorators/user.decorator';
+import { Prisma, UserType } from '@prisma/client';
 
 export interface SignInParams {
   email: string;
@@ -15,6 +14,7 @@ export interface TokenPayload {
   id: number;
   username: string;
   userType: UserType;
+  companionOf: { id: number }[];
 }
 
 export interface JWTPayload extends TokenPayload {
@@ -22,4 +22,18 @@ export interface JWTPayload extends TokenPayload {
   iat: number;
 }
 
-export type AuthUser = typeof User;
+export type AuthUser = Omit<
+  Prisma.UserGetPayload<{
+    select: {
+      id: true;
+      email: true;
+      username: true;
+      userType: true;
+      password_hash: true;
+      companionOf: { select: { id: true } };
+    };
+  }>,
+  'password_hash'
+> & {
+  password_hash?: string;
+};

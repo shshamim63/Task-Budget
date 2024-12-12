@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker/.';
 import { AUTHORIZATION_TYPE } from '../../utils/constants';
 import { Request } from 'express';
-import { User, UserType } from '@prisma/client';
+import { UserType } from '@prisma/client';
+import { AuthUser } from '../../auth/interfaces/auth.interface';
 
 export const mockToken = () => faker.string.alphanumeric({ length: 64 });
 
@@ -13,8 +14,8 @@ export const mockRequest = (token) => {
   } as unknown as Request;
 };
 
-export const mockTokenPayload = (user = {} as User) => {
-  const { id, email, userType, username } = user;
+export const mockTokenPayload = (user = {} as AuthUser) => {
+  const { id, email, userType, username, companionOf } = user;
 
   return {
     id: id ?? faker.number.int({ min: 1 }),
@@ -23,5 +24,6 @@ export const mockTokenPayload = (user = {} as User) => {
     userType: userType ?? UserType.USER,
     exp: faker.number.int(),
     iat: faker.number.int(),
+    companionOf: companionOf ?? [],
   };
 };

@@ -64,9 +64,22 @@ describe('AuthService', () => {
       const result = await service.signup(signUpCredentials);
 
       expect(userRepository.create).toHaveBeenCalledWith({
-        email: signUpCredentials.email,
-        username: signUpCredentials.username,
-        password_hash: newUser.password_hash,
+        data: {
+          email: signUpCredentials.email,
+          username: signUpCredentials.username,
+          password_hash: newUser.password_hash,
+        },
+        select: {
+          companionOf: {
+            select: {
+              id: true,
+            },
+          },
+          email: true,
+          id: true,
+          userType: true,
+          username: true,
+        },
       });
       expect(tokenService.generateToken).toHaveBeenCalledWith(
         expect.objectContaining({
