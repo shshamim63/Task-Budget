@@ -15,6 +15,7 @@ import { DesignationModule } from './designations/designations.module';
 import { DepartmentModule } from './departments/departments.module';
 import { EnterpriseModule } from './enterprises/enterprises.module';
 import { AssociateModule } from './associates/associates.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AssociateModule } from './associates/associates.module';
     DepartmentModule,
     DesignationModule,
     AssociateModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [
