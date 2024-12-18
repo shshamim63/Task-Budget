@@ -12,9 +12,11 @@ import { CollaboratorRepository } from '../collaborators/collaborator.repository
 import { ExpenseRepository } from './expense.repository';
 import { UserRepository } from '../auth/user.repository';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { RedisService } from '../redis/redis.service';
 
 @Module({
-  imports: [PrismaModule, TokenModule],
+  imports: [PrismaModule, TokenModule, RedisModule],
   controllers: [ExpenseController],
   providers: [
     ExpenseService,
@@ -25,6 +27,7 @@ import { ExpenseAuthorizationService } from './expense-authorization.service';
     ErrorHandlerService,
     AsyncErrorHandlerService,
     ExpenseAuthorizationService,
+    RedisService,
   ],
 })
 export class ExpenseModule {}

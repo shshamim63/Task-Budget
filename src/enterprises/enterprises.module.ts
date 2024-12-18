@@ -7,9 +7,11 @@ import { EnterpriseRepository } from './enterprise.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { UserRepository } from '../auth/user.repository';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { RedisService } from '../redis/redis.service';
 
 @Module({
-  imports: [PrismaModule, TokenModule],
+  imports: [PrismaModule, TokenModule, RedisModule],
   controllers: [EnterpriseController],
   providers: [
     EnterpriseService,
@@ -17,6 +19,7 @@ import { UserRepository } from '../auth/user.repository';
     ErrorHandlerService,
     AsyncErrorHandlerService,
     UserRepository,
+    RedisService,
   ],
 })
 export class EnterpriseModule {}

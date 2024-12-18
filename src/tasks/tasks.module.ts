@@ -8,9 +8,11 @@ import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { TaskRepository } from './tasks.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { UserRepository } from '../auth/user.repository';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { RedisService } from '../redis/redis.service';
 
 @Module({
-  imports: [PrismaModule, TokenModule],
+  imports: [PrismaModule, TokenModule, RedisModule],
   controllers: [TaskController],
   providers: [
     TaskService,
@@ -19,6 +21,7 @@ import { UserRepository } from '../auth/user.repository';
     UserRepository,
     AsyncErrorHandlerService,
     ErrorHandlerService,
+    RedisService,
   ],
 })
 export class TaskModule {}
