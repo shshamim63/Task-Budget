@@ -2,7 +2,6 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { TokenService } from '../../token/token.service';
@@ -57,8 +56,8 @@ export class AuthGuard implements CanActivate {
   }
 
   private async getUser(userId: number): Promise<AuthUser> {
-    const redisUser = await this.redisService.get(`user-${userId}`);
-    Logger.log(redisUser);
+    const redisUser = await this.redisService.get(`user:${userId}`);
+
     if (redisUser) return JSON.parse(redisUser);
 
     const user = (await this.userRepository.findUnique({

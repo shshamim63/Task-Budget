@@ -1,5 +1,5 @@
 import { InjectRedis } from '@nestjs-modules/ioredis';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import Redis from 'ioredis';
 
@@ -8,10 +8,14 @@ export class RedisService {
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async set(key: string, value: string, ttl?: number): Promise<void> {
-    if (ttl) {
-      await this.redis.set(key, value, 'EX', ttl);
-    } else {
-      await this.redis.set(key, value);
+    try {
+      if (ttl) {
+        await this.redis.set(key, value, 'EX', ttl);
+      } else {
+        await this.redis.set(key, value);
+      }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to connect redis server');
     }
   }
 

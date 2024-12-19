@@ -87,6 +87,7 @@ export class AuthService {
         },
       },
     };
+
     const user = (await this.userRepository.findUnique(
       findQuery,
     )) as unknown as AuthUser;
