@@ -30,4 +30,8 @@ export const TASK_RESPONSE_MESSAGE = {
   DELETE_TASK: 'Detete task success',
 };
 
+export const REDIS_KEYS = {
+  AUTH_USER: 'auth-user',
+};
+
 export const origins = ['http://localhost:3000'];

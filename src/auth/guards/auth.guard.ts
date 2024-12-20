@@ -6,7 +6,11 @@ import {
 } from '@nestjs/common';
 import { TokenService } from '../../token/token.service';
 import { UserRepository } from '../user.repository';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+import {
+  ERROR_NAME,
+  REDIS_KEYS,
+  RESPONSE_MESSAGE,
+} from '../../utils/constants';
 import { AuthUser } from '../interfaces/auth.interface';
 import { RedisService } from '../../redis/redis.service';
 
@@ -56,7 +60,9 @@ export class AuthGuard implements CanActivate {
   }
 
   private async getUser(userId: number): Promise<AuthUser> {
-    const redisUser = await this.redisService.get(`auth-user:${userId}`);
+    const redisUser = await this.redisService.get(
+      `${REDIS_KEYS.AUTH_USER}:${userId}`,
+    );
 
     if (redisUser) return JSON.parse(redisUser);
 
