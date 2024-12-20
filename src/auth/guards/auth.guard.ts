@@ -56,7 +56,7 @@ export class AuthGuard implements CanActivate {
   }
 
   private async getUser(userId: number): Promise<AuthUser> {
-    const redisUser = await this.redisService.get(`user:${userId}`);
+    const redisUser = await this.redisService.get(`auth-user:${userId}`);
 
     if (redisUser) return JSON.parse(redisUser);
 
@@ -71,7 +71,11 @@ export class AuthGuard implements CanActivate {
       },
     })) as unknown as AuthUser;
 
-    await this.redisService.set(`user:${userId}`, JSON.stringify(user), 900);
+    await this.redisService.set(
+      `auth-user:${userId}`,
+      JSON.stringify(user),
+      900,
+    );
 
     return user;
   }
