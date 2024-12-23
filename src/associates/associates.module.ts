@@ -10,11 +10,10 @@ import { AssociateService } from './associates.service';
 
 import { UserRepository } from '../auth/user.repository';
 import { AssociateRepository } from './associate.repository';
-import { RedisModule } from '@nestjs-modules/ioredis';
+
 import { RedisService } from '../redis/redis.service';
 
 @Module({
-  imports: [RedisModule],
   controllers: [AssociateController],
   providers: [
     AssociateService,

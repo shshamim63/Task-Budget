@@ -15,6 +15,8 @@ import { RedisModule } from './redis/redis.module';
 import { AppController } from './app.controller';
 
 import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { AppService } from './app.service';
     DesignationModule,
     AssociateModule,
     RedisModule,
+    PrismaModule,
+    TokenModule,
   ],
   controllers: [AppController],
   providers: [

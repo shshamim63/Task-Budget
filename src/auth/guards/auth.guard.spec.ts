@@ -17,7 +17,7 @@ import { UserRepositoryMock } from '../__mock__/user.repository.mock';
 import { TokenServiceMock } from '../../token/__mock__/token.service.mock';
 import { mockTokenPayload } from '../../token/__mock__/token-data.mock';
 import { RedisService } from '../../redis/redis.service';
-import { RedisServiceMock } from '../../redis/redis.service.mock';
+import { RedisServiceMock } from '../../redis/__mock__/redis.service.mock';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
