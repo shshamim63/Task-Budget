@@ -15,19 +15,19 @@ export class CollaboratorRepository {
 
   async createMany(data: CreateCollaborator[]) {
     await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.userTasks.createMany({ data }),
+      this.prismaService.userTask.createMany({ data }),
     );
   }
 
   async delete(query) {
     await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.userTasks.delete(query),
+      this.prismaService.userTask.delete(query),
     );
   }
 
   async findUnique(query) {
     return this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.userTasks.delete(query),
+      this.prismaService.userTask.delete(query),
     );
   }
 }

@@ -3,7 +3,11 @@ import { UnauthorizedException } from '@nestjs/common';
 
 import { AuthGuard } from './auth.guard';
 import { TokenService } from '../../token/token.service';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+import {
+  ERROR_NAME,
+  REDIS_KEYS,
+  RESPONSE_MESSAGE,
+} from '../../utils/constants';
 import {
   generateMockEncryptedString,
   mockUser,
@@ -12,11 +16,14 @@ import { UserRepository } from '../user.repository';
 import { UserRepositoryMock } from '../__mock__/user.repository.mock';
 import { TokenServiceMock } from '../../token/__mock__/token.service.mock';
 import { mockTokenPayload } from '../../token/__mock__/token-data.mock';
+import { RedisService } from '../../redis/redis.service';
+import { RedisMock } from '../../redis/__mock__/redis.service.mock';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
   let userRepository: UserRepository;
   let tokenService: TokenService;
+  let redisService: RedisService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,12 +31,14 @@ describe('AuthGuard', () => {
         AuthGuard,
         { provide: UserRepository, useValue: UserRepositoryMock },
         { provide: TokenService, useValue: TokenServiceMock },
+        { provide: RedisService, useValue: RedisMock },
       ],
     }).compile();
 
     authGuard = module.get<AuthGuard>(AuthGuard);
     userRepository = module.get<UserRepository>(UserRepository);
     tokenService = module.get<TokenService>(TokenService);
+    redisService = module.get<RedisService>(RedisService);
   });
 
   const mockExecutionContext = (token?: string) =>
@@ -65,6 +74,7 @@ describe('AuthGuard', () => {
 
     TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
     TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
+    RedisMock.get.mockResolvedValueOnce(null);
     UserRepositoryMock.findUnique.mockReturnValueOnce(null);
 
     await expect(authGuard.canActivate(context)).rejects.toThrow(
@@ -78,6 +88,9 @@ describe('AuthGuard', () => {
       context.switchToHttp().getRequest(),
     );
     expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
+    expect(redisService.get).toHaveBeenCalledWith(
+      `${REDIS_KEYS.AUTH_USER}:${currentUser.id}`,
+    );
     expect(userRepository.findUnique).toHaveBeenCalledWith({
       where: { id: tokenPayload.id },
       select: {
@@ -93,36 +106,50 @@ describe('AuthGuard', () => {
       },
     });
   });
-
-  it('should return true when user is authenticated', async () => {
+  describe('should return true when user is authenticated', () => {
     const authToken = generateMockEncryptedString();
     const context = mockExecutionContext(authToken);
     const currentUser = mockUser();
     const tokenPayload = mockTokenPayload(currentUser);
-
-    TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
-    TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-    UserRepositoryMock.findUnique.mockReturnValueOnce(currentUser);
-
-    const result = await authGuard.canActivate(context);
-
-    expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
-    expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
-    expect(userRepository.findUnique).toHaveBeenCalledWith({
-      where: { id: tokenPayload.id },
-      select: {
-        companionOf: {
-          select: {
-            id: true,
-          },
-        },
-        id: true,
-        email: true,
-        userType: true,
-        username: true,
-      },
+    it('should not call repository service when redis instacne is found', async () => {
+      TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
+      TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
+      RedisMock.get.mockResolvedValueOnce(JSON.stringify(currentUser));
+      const result = await authGuard.canActivate(context);
+      expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
+      expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
+      expect(redisService.get).toHaveBeenCalledWith(
+        `${REDIS_KEYS.AUTH_USER}:${currentUser.id}`,
+      );
+      expect(userRepository.findUnique).toHaveBeenCalledTimes(0);
+      expect(result).toBe(true);
     });
+    it('should call repository service when redis instacne is not found', async () => {
+      TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
+      TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
+      RedisMock.get.mockResolvedValueOnce(null);
+      UserRepositoryMock.findUnique.mockReturnValueOnce(currentUser);
 
-    expect(result).toBe(true);
+      const result = await authGuard.canActivate(context);
+
+      expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
+      expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
+      expect(userRepository.findUnique).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+        select: {
+          companionOf: {
+            select: {
+              id: true,
+            },
+          },
+          id: true,
+          email: true,
+          userType: true,
+          username: true,
+        },
+      });
+
+      expect(result).toBe(true);
+    });
   });
 });

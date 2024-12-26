@@ -2,19 +2,21 @@ import { ClassSerializerInterceptor, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
-import { AppController } from './app.controller';
-
-import { AppService } from './app.service';
-
 import { TaskModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
 import { ExpenseModule } from './expenses/expenses.module';
-
 import { CollaboratorModule } from './collaborators/collaborators.module';
 import { DesignationModule } from './designations/designations.module';
 import { DepartmentModule } from './departments/departments.module';
 import { EnterpriseModule } from './enterprises/enterprises.module';
 import { AssociateModule } from './associates/associates.module';
+import { RedisModule } from './redis/redis.module';
+
+import { AppController } from './app.controller';
+
+import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
@@ -27,6 +29,9 @@ import { AssociateModule } from './associates/associates.module';
     DepartmentModule,
     DesignationModule,
     AssociateModule,
+    RedisModule,
+    PrismaModule,
+    TokenModule,
   ],
   controllers: [AppController],
   providers: [

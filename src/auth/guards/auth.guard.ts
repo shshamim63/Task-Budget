@@ -6,14 +6,20 @@ import {
 } from '@nestjs/common';
 import { TokenService } from '../../token/token.service';
 import { UserRepository } from '../user.repository';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+import {
+  ERROR_NAME,
+  REDIS_KEYS,
+  RESPONSE_MESSAGE,
+} from '../../utils/constants';
 import { AuthUser } from '../interfaces/auth.interface';
+import { RedisService } from '../../redis/redis.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
+    private readonly redisService: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,16 +42,7 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    const user = (await this.userRepository.findUnique({
-      where: { id: payload.id },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        userType: true,
-        companionOf: { select: { id: true } },
-      },
-    })) as unknown as AuthUser;
+    const user = await this.getUser(payload.id);
 
     if (!user) {
       throw new UnauthorizedException(
@@ -57,7 +54,35 @@ export class AuthGuard implements CanActivate {
     const currentPayload = this.tokenService.createAuthTokenPayload({
       ...user,
     });
+
     request.user = currentPayload;
     return true;
+  }
+
+  private async getUser(userId: number): Promise<AuthUser> {
+    const redisUser = await this.redisService.get(
+      `${REDIS_KEYS.AUTH_USER}:${userId}`,
+    );
+
+    if (redisUser) return JSON.parse(redisUser);
+
+    const user = (await this.userRepository.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        userType: true,
+        companionOf: { select: { id: true } },
+      },
+    })) as unknown as AuthUser;
+
+    await this.redisService.set(
+      `auth-user:${userId}`,
+      JSON.stringify(user),
+      900,
+    );
+
+    return user;
   }
 }

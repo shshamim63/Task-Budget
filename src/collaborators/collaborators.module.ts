@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../prisma/prisma.module';
-import { TokenModule } from '../token/token.module';
+
 import { CollaboratorController } from './collaborators.controller';
 import { CollaboratorService } from './collaborators.service';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
@@ -10,8 +9,9 @@ import { UserRepository } from '../auth/user.repository';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
+import { RedisService } from '../redis/redis.service';
+
 @Module({
-  imports: [PrismaModule, TokenModule],
   controllers: [CollaboratorController],
   providers: [
     CollaboratorService,
@@ -21,6 +21,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
     UserRepository,
     ErrorHandlerService,
     AsyncErrorHandlerService,
+    RedisService,
   ],
 })
 export class CollaboratorModule {}

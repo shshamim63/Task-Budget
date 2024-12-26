@@ -22,9 +22,11 @@ This will create a string copy it and use it as the ACCESS_TOKEN in the .env fil
 3. create a .env file with the following property
 ```env
 PORT=3000
-DATABASE_URL= Docker postgresql url
+DATABASE_URL=<YOUR_POSTGRESQL_URL>
 SALTROUND=10
-ACCESS_TOKEN=
+ACCESS_TOKEN=<YOUR_ACCESS_TOKEN>
+REDIS_HOST=<YOUR_REDIS_HOST>
+REDIS_PORT=<YOUR_REDIS_PORT>
 ```
 4. Run the docker container
 ```bash

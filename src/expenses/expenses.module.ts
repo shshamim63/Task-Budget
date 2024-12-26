@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
 
-import { TokenModule } from '../token/token.module';
-import { PrismaModule } from '../prisma/prisma.module';
-
 import { ExpenseService } from './expenses.service';
 import { ExpenseController } from './expenses.controller';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
@@ -12,9 +9,9 @@ import { CollaboratorRepository } from '../collaborators/collaborator.repository
 import { ExpenseRepository } from './expense.repository';
 import { UserRepository } from '../auth/user.repository';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
+import { RedisService } from '../redis/redis.service';
 
 @Module({
-  imports: [PrismaModule, TokenModule],
   controllers: [ExpenseController],
   providers: [
     ExpenseService,
@@ -25,6 +22,7 @@ import { ExpenseAuthorizationService } from './expense-authorization.service';
     ErrorHandlerService,
     AsyncErrorHandlerService,
     ExpenseAuthorizationService,
+    RedisService,
   ],
 })
 export class ExpenseModule {}
