@@ -1,5 +1,7 @@
 FROM node:alpine
 
+RUN addgroupp -S addgroupp && adduser -S appuser -G addgroupp
+
 WORKDIR /app
 
 COPY package.json ./
@@ -9,5 +11,9 @@ COPY prisma ./prisma/
 RUN npm install
 
 COPY . .
+
+RUN chown -R appuser:addgroup /app
+
+USER adduser
 
 CMD [ "npm", "run", "start:dev" ]
