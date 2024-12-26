@@ -2,6 +2,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { Injectable } from '@nestjs/common';
 
 import Redis from 'ioredis';
+
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 @Injectable()
