@@ -10,7 +10,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 import { RedisMock } from './__mock__/redis.service.mock';
 
-jest.mock('ioredis'); // Mock the Redis library
+jest.mock('ioredis');
 
 describe('RedisService', () => {
   let redisService: RedisService;
