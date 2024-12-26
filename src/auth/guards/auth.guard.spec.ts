@@ -17,7 +17,7 @@ import { UserRepositoryMock } from '../__mock__/user.repository.mock';
 import { TokenServiceMock } from '../../token/__mock__/token.service.mock';
 import { mockTokenPayload } from '../../token/__mock__/token-data.mock';
 import { RedisService } from '../../redis/redis.service';
-import { RedisServiceMock } from '../../redis/__mock__/redis.service.mock';
+import { RedisMock } from '../../redis/__mock__/redis.service.mock';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
@@ -31,7 +31,7 @@ describe('AuthGuard', () => {
         AuthGuard,
         { provide: UserRepository, useValue: UserRepositoryMock },
         { provide: TokenService, useValue: TokenServiceMock },
-        { provide: RedisService, useValue: RedisServiceMock },
+        { provide: RedisService, useValue: RedisMock },
       ],
     }).compile();
 
@@ -74,7 +74,7 @@ describe('AuthGuard', () => {
 
     TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
     TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-    RedisServiceMock.get.mockResolvedValueOnce(null);
+    RedisMock.get.mockResolvedValueOnce(null);
     UserRepositoryMock.findUnique.mockReturnValueOnce(null);
 
     await expect(authGuard.canActivate(context)).rejects.toThrow(
@@ -114,7 +114,7 @@ describe('AuthGuard', () => {
     it('should not call repository service when redis instacne is found', async () => {
       TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
       TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-      RedisServiceMock.get.mockResolvedValueOnce(JSON.stringify(currentUser));
+      RedisMock.get.mockResolvedValueOnce(JSON.stringify(currentUser));
       const result = await authGuard.canActivate(context);
       expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
       expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
@@ -127,7 +127,7 @@ describe('AuthGuard', () => {
     it('should call repository service when redis instacne is not found', async () => {
       TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
       TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-      RedisServiceMock.get.mockResolvedValueOnce(null);
+      RedisMock.get.mockResolvedValueOnce(null);
       UserRepositoryMock.findUnique.mockReturnValueOnce(currentUser);
 
       const result = await authGuard.canActivate(context);
