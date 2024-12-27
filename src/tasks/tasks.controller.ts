@@ -9,6 +9,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
   ValidationPipe,
 } from '@nestjs/common';
 
@@ -29,9 +30,11 @@ import { Roles } from '../decorators/roles.decorator';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('tasks')
 @UseGuards(AuthGuard, RolesGuard)
+@UseInterceptors(CacheInterceptor)
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
