@@ -13,6 +13,7 @@ import { TASK_RESPONSE_MESSAGE } from '../../src/utils/constants';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { TaskServiceMock } from './__mock__/tasks.service.mock';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -25,6 +26,13 @@ describe('TaskController', () => {
           provide: TaskService,
           useValue: TaskServiceMock,
         },
+        {
+          provide: CACHE_MANAGER,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+          },
+        },
       ],
     })
       .overrideGuard(AuthGuard)
@@ -35,6 +43,8 @@ describe('TaskController', () => {
       .useValue({
         canActive: jest.fn(() => true),
       })
+      .overrideInterceptor(CacheInterceptor)
+      .useClass(CacheInterceptor)
       .compile();
 
     controller = module.get<TaskController>(TaskController);
