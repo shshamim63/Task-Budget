@@ -31,6 +31,7 @@ import { AppService } from './app.service';
       port: `${process.env.REDIS_PORT || 6379}`,
       store: redisStore as unknown as CacheStore,
       ttl: 3 * 6000,
+      isGlobal: true,
     }),
     TaskModule,
     AuthModule,
