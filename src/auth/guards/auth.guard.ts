@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { TokenService } from '../../token/token.service';
 import { UserRepository } from '../user.repository';
-import {
-  ERROR_NAME,
-  REDIS_KEYS,
-  RESPONSE_MESSAGE,
-} from '../../utils/constants';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 import { AuthUser } from '../interfaces/auth.interface';
 import { RedisService } from '../../redis/redis.service';
+import {
+  REDIS_KEYS_FOR_USER,
+  REDIS_TTL_IN_MILISECONDS,
+} from '../../utils/redis-keys';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -61,7 +61,7 @@ export class AuthGuard implements CanActivate {
 
   private async getUser(userId: number): Promise<AuthUser> {
     const redisUser = await this.redisService.get(
-      `${REDIS_KEYS.AUTH_USER}:${userId}`,
+      `${REDIS_KEYS_FOR_USER.AUTH_USER}:${userId}`,
     );
 
     if (redisUser) return JSON.parse(redisUser);
@@ -73,14 +73,13 @@ export class AuthGuard implements CanActivate {
         email: true,
         username: true,
         userType: true,
-        companionOf: { select: { id: true } },
       },
     })) as unknown as AuthUser;
 
     await this.redisService.set(
       `auth-user:${userId}`,
       JSON.stringify(user),
-      900,
+      REDIS_TTL_IN_MILISECONDS,
     );
 
     return user;

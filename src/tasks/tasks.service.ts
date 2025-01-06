@@ -11,11 +11,13 @@ import { TaskPermissionService } from '../helpers/task-permission.helper.service
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
 import { TaskQuery } from './interface/task-response.interface';
+import { AssociateService } from '../associates/associates.service';
 
 @Injectable()
 export class TaskService {
   constructor(
     private readonly taskPermissionService: TaskPermissionService,
+    private readonly associateService: AssociateService,
     private readonly taskRepository: TaskRepository,
   ) {}
 
@@ -45,7 +47,14 @@ export class TaskService {
   ): Promise<TaskResponseDto> {
     const { id: userId } = user;
     const { enterpriseId } = createTaskDTO;
-    this.taskPermissionService.hasTaskCreationPermission(user, enterpriseId);
+    const userAffiliatesTo =
+      await this.associateService.userAssociatesTo(userId);
+
+    this.taskPermissionService.hasTaskCreationPermission(
+      user,
+      enterpriseId,
+      userAffiliatesTo,
+    );
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create(data);
 

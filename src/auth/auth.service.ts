@@ -54,11 +54,6 @@ export class AuthService {
         email: true,
         username: true,
         userType: true,
-        companionOf: {
-          select: {
-            id: true,
-          },
-        },
       },
     };
     const user = (await this.userRepository.create({
@@ -80,11 +75,6 @@ export class AuthService {
         username: true,
         password_hash: true,
         userType: true,
-        companionOf: {
-          select: {
-            id: true,
-          },
-        },
       },
     };
 

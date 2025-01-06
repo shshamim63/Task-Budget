@@ -14,7 +14,6 @@ export interface TokenPayload {
   id: number;
   username: string;
   userType: UserType;
-  companionOf: { id: number }[];
 }
 
 export interface JWTPayload extends TokenPayload {
@@ -30,7 +29,6 @@ export type AuthUser = Omit<
       username: true;
       userType: true;
       password_hash: true;
-      companionOf: { select: { id: true } };
     };
   }>,
   'password_hash'

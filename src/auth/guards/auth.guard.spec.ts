@@ -94,11 +94,6 @@ describe('AuthGuard', () => {
     expect(userRepository.findUnique).toHaveBeenCalledWith({
       where: { id: tokenPayload.id },
       select: {
-        companionOf: {
-          select: {
-            id: true,
-          },
-        },
         id: true,
         email: true,
         userType: true,

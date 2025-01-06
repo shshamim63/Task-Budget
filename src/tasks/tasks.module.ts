@@ -8,8 +8,10 @@ import { TaskRepository } from './tasks.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { UserRepository } from '../auth/user.repository';
 import { RedisService } from '../redis/redis.service';
+import { AssociateModule } from '../associates/associates.module';
 
 @Module({
+  imports: [AssociateModule],
   controllers: [TaskController],
   providers: [
     TaskService,
