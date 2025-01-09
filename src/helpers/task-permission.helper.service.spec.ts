@@ -12,6 +12,7 @@ import { generateTask } from '../tasks/__mock__/task-data.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { faker } from '@faker-js/faker/.';
+import { generateUserAffiliatedTo } from '../associates/__mock__/associate-data.mock';
 
 describe('TaskPermissionService', () => {
   let service: TaskPermissionService;
@@ -30,28 +31,30 @@ describe('TaskPermissionService', () => {
       const currentUserPayload = mockTokenPayload(currentSuperUser);
 
       const task: TaskResponseDto = generateTask();
-
+      const userAffiliatedTo = generateUserAffiliatedTo({
+        userId: currentSuperUser.id,
+        numOfRecords: 3,
+      });
       const result = service.hasTaskCreationPermission(
         currentUserPayload,
         task.enterpriseId,
+        userAffiliatedTo,
       );
 
       expect(result).toBeTruthy();
     });
-    it('should allow admin user and the enterprise', () => {
+    it('should allow admin user of the enterprise', () => {
       const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
       const currentUserPayload = mockTokenPayload(currentAdminUser);
-      const enterperiseId = faker.number.int({ min: 1 });
-
+      const userAffiliatedTo = generateUserAffiliatedTo({
+        userId: currentAdminUser.id,
+        numOfRecords: 3,
+      });
+      const enterperiseId = userAffiliatedTo[0].enterpriseId;
       const result = service.hasTaskCreationPermission(
-        {
-          ...currentUserPayload,
-          companionOf: [
-            ...currentUserPayload.companionOf,
-            { id: enterperiseId },
-          ],
-        },
+        currentUserPayload,
         enterperiseId,
+        userAffiliatedTo,
       );
 
       expect(result).toBe(true);
@@ -60,9 +63,16 @@ describe('TaskPermissionService', () => {
       const currentAdminUser = { ...mockUser(), userType: UserType.ADMIN };
       const currentUserPayload = mockTokenPayload(currentAdminUser);
       const enterperiseId = faker.number.int({ min: 1 });
-
+      const userAffiliatedTo = generateUserAffiliatedTo({
+        userId: faker.number.int(),
+        numOfRecords: 6,
+      });
       expect(() =>
-        service.hasTaskCreationPermission(currentUserPayload, enterperiseId),
+        service.hasTaskCreationPermission(
+          currentUserPayload,
+          enterperiseId,
+          userAffiliatedTo,
+        ),
       ).toThrow(
         new ForbiddenException(
           RESPONSE_MESSAGE.PERMISSION_DENIED,

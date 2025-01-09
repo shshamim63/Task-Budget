@@ -10,13 +10,13 @@ export class TaskPermissionService {
   hasTaskCreationPermission(
     currentUser: AuthUser,
     enterpriseId: number,
-    userAffiliatesTo: AssociateTo[],
+    userAffiliatedTo: AssociateTo[],
   ): boolean {
     const isSuperUser = currentUser.userType === UserType.SUPER;
 
     if (isSuperUser) return true;
 
-    const userCompanions = userAffiliatesTo.map(
+    const userCompanions = userAffiliatedTo.map(
       (affilite) => affilite.enterpriseId,
     );
 
