@@ -10,9 +10,12 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 
 import { ErrorHandlerService } from '../helpers/error.helper.service';
+import { RedisService } from '../redis/redis.service';
+import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 
 describe('AssociateRepository', () => {
   let repository: AssociateRepository;
+  let redisService: RedisService;
   let prismaService: PrismaService;
   let asyncErrorHandlerService: AsyncErrorHandlerService;
 
@@ -21,6 +24,10 @@ describe('AssociateRepository', () => {
       providers: [
         AssociateRepository,
         { provide: PrismaService, useValue: PrismaServiceMock },
+        {
+          provide: RedisService,
+          useValue: RedisServiceMock,
+        },
         {
           provide: AsyncErrorHandlerService,
           useValue: AsyncErrorHandlerServiceMock,
