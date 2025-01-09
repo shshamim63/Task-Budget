@@ -47,13 +47,13 @@ export class TaskService {
   ): Promise<TaskResponseDto> {
     const { id: userId } = user;
     const { enterpriseId } = createTaskDTO;
-    const userAffiliatesTo =
+    const userAffiliatedTo =
       await this.associateService.userAssociatesTo(userId);
 
     this.taskPermissionService.hasTaskCreationPermission(
       user,
       enterpriseId,
-      userAffiliatesTo,
+      userAffiliatedTo,
     );
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create(data);
