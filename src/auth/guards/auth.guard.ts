@@ -4,15 +4,19 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { TokenService } from '../../token/token.service';
+
 import { UserRepository } from '../user.repository';
-import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
+
 import { AuthUser } from '../interfaces/auth.interface';
+
+import { TokenService } from '../../token/token.service';
 import { RedisService } from '../../redis/redis.service';
+
 import {
   REDIS_KEYS_FOR_USER,
   REDIS_TTL_IN_MILISECONDS,
 } from '../../utils/redis-keys';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
