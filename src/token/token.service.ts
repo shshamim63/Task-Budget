@@ -65,13 +65,12 @@ export class TokenService {
   }
 
   createAuthTokenPayload(data: AuthUser): TokenPayload {
-    const { id, email, username, userType, companionOf } = data;
+    const { id, email, username, userType } = data;
     return {
       id,
       email,
       username,
       userType,
-      companionOf,
     };
   }
 }

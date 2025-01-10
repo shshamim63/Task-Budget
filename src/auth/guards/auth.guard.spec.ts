@@ -3,11 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 
 import { AuthGuard } from './auth.guard';
 import { TokenService } from '../../token/token.service';
-import {
-  ERROR_NAME,
-  REDIS_KEYS,
-  RESPONSE_MESSAGE,
-} from '../../utils/constants';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../../utils/constants';
 import {
   generateMockEncryptedString,
   mockUser,
@@ -17,7 +13,8 @@ import { UserRepositoryMock } from '../__mock__/user.repository.mock';
 import { TokenServiceMock } from '../../token/__mock__/token.service.mock';
 import { mockTokenPayload } from '../../token/__mock__/token-data.mock';
 import { RedisService } from '../../redis/redis.service';
-import { RedisMock } from '../../redis/__mock__/redis.service.mock';
+import { RedisServiceMock } from '../../redis/__mock__/redis.service.mock';
+import { REDIS_KEYS_FOR_USER } from '../../utils/redis-keys';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
@@ -31,7 +28,7 @@ describe('AuthGuard', () => {
         AuthGuard,
         { provide: UserRepository, useValue: UserRepositoryMock },
         { provide: TokenService, useValue: TokenServiceMock },
-        { provide: RedisService, useValue: RedisMock },
+        { provide: RedisService, useValue: RedisServiceMock },
       ],
     }).compile();
 
@@ -74,7 +71,7 @@ describe('AuthGuard', () => {
 
     TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
     TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-    RedisMock.get.mockResolvedValueOnce(null);
+    RedisServiceMock.get.mockResolvedValueOnce(null);
     UserRepositoryMock.findUnique.mockReturnValueOnce(null);
 
     await expect(authGuard.canActivate(context)).rejects.toThrow(
@@ -89,16 +86,11 @@ describe('AuthGuard', () => {
     );
     expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
     expect(redisService.get).toHaveBeenCalledWith(
-      `${REDIS_KEYS.AUTH_USER}:${currentUser.id}`,
+      `${REDIS_KEYS_FOR_USER.AUTH_USER}:${currentUser.id}`,
     );
     expect(userRepository.findUnique).toHaveBeenCalledWith({
       where: { id: tokenPayload.id },
       select: {
-        companionOf: {
-          select: {
-            id: true,
-          },
-        },
         id: true,
         email: true,
         userType: true,
@@ -114,12 +106,12 @@ describe('AuthGuard', () => {
     it('should not call repository service when redis instacne is found', async () => {
       TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
       TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-      RedisMock.get.mockResolvedValueOnce(JSON.stringify(currentUser));
+      RedisServiceMock.get.mockResolvedValueOnce(JSON.stringify(currentUser));
       const result = await authGuard.canActivate(context);
       expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
       expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
       expect(redisService.get).toHaveBeenCalledWith(
-        `${REDIS_KEYS.AUTH_USER}:${currentUser.id}`,
+        `${REDIS_KEYS_FOR_USER.AUTH_USER}:${currentUser.id}`,
       );
       expect(userRepository.findUnique).toHaveBeenCalledTimes(0);
       expect(result).toBe(true);
@@ -127,7 +119,7 @@ describe('AuthGuard', () => {
     it('should call repository service when redis instacne is not found', async () => {
       TokenServiceMock.getTokenFromHeader.mockReturnValueOnce(authToken);
       TokenServiceMock.verifyToken.mockReturnValueOnce(tokenPayload);
-      RedisMock.get.mockResolvedValueOnce(null);
+      RedisServiceMock.get.mockResolvedValueOnce(null);
       UserRepositoryMock.findUnique.mockReturnValueOnce(currentUser);
 
       const result = await authGuard.canActivate(context);
@@ -137,11 +129,6 @@ describe('AuthGuard', () => {
       expect(userRepository.findUnique).toHaveBeenCalledWith({
         where: { id: tokenPayload.id },
         select: {
-          companionOf: {
-            select: {
-              id: true,
-            },
-          },
           id: true,
           email: true,
           userType: true,

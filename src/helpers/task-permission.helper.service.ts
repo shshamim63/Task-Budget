@@ -3,19 +3,21 @@ import { AuthUser, JWTPayload } from '../auth/interfaces/auth.interface';
 import { Task, UserType } from '@prisma/client';
 import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
+import { AssociateTo } from '../associates/dto/associate-to.dto';
 
 @Injectable()
 export class TaskPermissionService {
   hasTaskCreationPermission(
     currentUser: AuthUser,
     enterpriseId: number,
+    userAffiliatedTo: AssociateTo[],
   ): boolean {
     const isSuperUser = currentUser.userType === UserType.SUPER;
 
     if (isSuperUser) return true;
 
-    const userCompanions = currentUser.companionOf.map(
-      (companion) => companion.id,
+    const userCompanions = userAffiliatedTo.map(
+      (affilite) => affilite.enterpriseId,
     );
 
     const adminIsACompanion = userCompanions.includes(enterpriseId);

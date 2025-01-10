@@ -70,11 +70,6 @@ describe('AuthService', () => {
           password_hash: newUser.password_hash,
         },
         select: {
-          companionOf: {
-            select: {
-              id: true,
-            },
-          },
           email: true,
           id: true,
           userType: true,

@@ -8,7 +8,7 @@ import { RedisService } from './redis.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
-import { RedisMock } from './__mock__/redis.service.mock';
+import { RedisServiceMock } from './__mock__/redis.service.mock';
 
 jest.mock('ioredis');
 
@@ -22,7 +22,7 @@ describe('RedisService', () => {
         RedisService,
         {
           provide: 'default_IORedisModuleConnectionToken',
-          useValue: RedisMock,
+          useValue: RedisServiceMock,
         },
         {
           provide: AsyncErrorHandlerService,
@@ -42,7 +42,7 @@ describe('RedisService', () => {
   });
 
   it('should set a key with TTL in Redis', async () => {
-    RedisMock.set.mockResolvedValue('OK');
+    RedisServiceMock.set.mockResolvedValue('OK');
     const key = faker.word.noun();
     const value = faker.string.hexadecimal();
     const ttl = faker.number.int({ min: 10, max: 100 });
@@ -52,46 +52,46 @@ describe('RedisService', () => {
     expect(asyncErrorHandlerService.execute).toHaveBeenCalledWith(
       expect.any(Function),
     );
-    expect(RedisMock.set).toHaveBeenCalledWith(key, value, 'EX', ttl);
+    expect(RedisServiceMock.set).toHaveBeenCalledWith(key, value, 'EX', ttl);
   });
 
   it('should get a value with key in Redis', async () => {
     const key = faker.word.noun();
     const value = faker.string.hexadecimal();
 
-    RedisMock.get.mockResolvedValue(value);
+    RedisServiceMock.get.mockResolvedValue(value);
 
     await redisService.get(key);
 
     expect(asyncErrorHandlerService.execute).toHaveBeenCalledWith(
       expect.any(Function),
     );
-    expect(RedisMock.get).toHaveBeenCalledWith(key);
+    expect(RedisServiceMock.get).toHaveBeenCalledWith(key);
   });
 
   it('should del a field-value pair in Redis', async () => {
     const key = faker.word.noun();
 
-    RedisMock.del.mockResolvedValue(1);
+    RedisServiceMock.del.mockResolvedValue(1);
 
     await redisService.del(key);
 
     expect(asyncErrorHandlerService.execute).toHaveBeenCalledWith(
       expect.any(Function),
     );
-    expect(RedisMock.del).toHaveBeenCalledWith(key);
+    expect(RedisServiceMock.del).toHaveBeenCalledWith(key);
   });
 
   it('should return boolean value when a field-value pair exists in Redis', async () => {
     const key = faker.word.noun();
 
-    RedisMock.exists.mockResolvedValue(true);
+    RedisServiceMock.exists.mockResolvedValue(true);
 
     await redisService.exists(key);
 
     expect(asyncErrorHandlerService.execute).toHaveBeenCalledWith(
       expect.any(Function),
     );
-    expect(RedisMock.exists).toHaveBeenCalledWith(key);
+    expect(RedisServiceMock.exists).toHaveBeenCalledWith(key);
   });
 });

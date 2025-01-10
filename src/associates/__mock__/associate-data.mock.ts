@@ -21,3 +21,23 @@ export const AssociateMock = () => {
     },
   };
 };
+
+export const generateUserAffiliatedTo = ({
+  userId,
+  numOfRecords = 0,
+}: {
+  userId: number;
+  numOfRecords: number;
+}) => {
+  return Array(numOfRecords)
+    .fill(null)
+    .map(() => ({
+      id: faker.number.int(),
+      departmentId: faker.number.int(),
+      designationId: faker.number.int(),
+      enterpriseId: faker.number.int(),
+      affiliateId: userId,
+      createdAt: faker.date.anytime(),
+      updatedAt: faker.date.anytime(),
+    }));
+};

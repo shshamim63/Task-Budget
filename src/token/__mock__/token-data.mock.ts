@@ -15,7 +15,7 @@ export const mockRequest = (token) => {
 };
 
 export const mockTokenPayload = (user = {} as AuthUser) => {
-  const { id, email, userType, username, companionOf } = user;
+  const { id, email, userType, username } = user;
 
   return {
     id: id ?? faker.number.int({ min: 1 }),
@@ -24,6 +24,5 @@ export const mockTokenPayload = (user = {} as AuthUser) => {
     userType: userType ?? UserType.USER,
     exp: faker.number.int(),
     iat: faker.number.int(),
-    companionOf: companionOf ?? [],
   };
 };

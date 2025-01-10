@@ -25,5 +25,6 @@ import { RedisService } from '../redis/redis.service';
     TokenService,
     RedisService,
   ],
+  exports: [AssociateService],
 })
 export class AssociateModule {}
