@@ -56,9 +56,10 @@ export class AssociateService {
   async userAssociatesTo(userId: number): Promise<AssociateTo[]> {
     const userAssociateToQuery = { affiliateId: userId };
     const { PREFIX, SUFFIX } = REDIS_KEYS_FOR_ASSOCIATE.AFFILIATE_TO;
+    const redisKey = `${PREFIX}-${userId}-${SUFFIX}`;
 
     const associatesTo = await this.associateRepository.findMany({
-      redisKey: `${PREFIX}-${userId}-${SUFFIX}`,
+      redisKey,
       query: userAssociateToQuery,
     });
 

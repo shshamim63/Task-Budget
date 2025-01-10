@@ -35,7 +35,7 @@ export class AssociateRepository {
     redisKey = '',
     query,
   }: {
-    redisKey: string;
+    redisKey?: string;
     query: Prisma.AssociateWhereInput;
   }) {
     const redisAssociate = redisKey
