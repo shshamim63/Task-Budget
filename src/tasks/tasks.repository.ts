@@ -4,10 +4,13 @@ import { Task } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponse } from './interface/task-response.interface';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+import { RedisService } from '../redis/redis.service';
+import { REDIS_TTL_IN_MILISECONDS } from '../utils/redis-keys';
 
 @Injectable()
 export class TaskRepository {
   constructor(
+    private readonly redisService: RedisService,
     private readonly prismaService: PrismaService,
     private asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
@@ -24,10 +27,25 @@ export class TaskRepository {
     );
   }
 
-  async findUniqueOrThrow(query): Promise<Task> {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findUniqueOrThrow({ redisKey = '', query }): Promise<Task> {
+    const redisTaskData = redisKey
+      ? await this.redisService.get(redisKey)
+      : null;
+
+    if (redisKey) return JSON.parse(redisTaskData);
+
+    const currentTask = this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findUniqueOrThrow(query),
     );
+
+    if (redisKey)
+      await this.redisService.set(
+        redisKey,
+        JSON.stringify(currentTask),
+        REDIS_TTL_IN_MILISECONDS,
+      );
+
+    return currentTask;
   }
 
   async findMany(query): Promise<TaskResponse[]> {
@@ -42,18 +60,31 @@ export class TaskRepository {
     );
   }
 
-  async delete(query): Promise<void> {
+  async delete({ redisKey = '', query }): Promise<void> {
+    if (redisKey) this.redisService.del(redisKey);
+
     await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.delete(query),
     );
   }
 
-  async update(query, data): Promise<Task> {
-    return this.asyncErrorHandlerService.execute(() =>
+  async update({ redisKey = '', query, data }): Promise<Task> {
+    if (redisKey) this.redisService.del(redisKey);
+
+    const currentTask = this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.update({
         ...query,
         data,
       }),
     );
+
+    if (redisKey)
+      await this.redisService.set(
+        redisKey,
+        JSON.stringify(currentTask),
+        REDIS_TTL_IN_MILISECONDS,
+      );
+
+    return currentTask;
   }
 }

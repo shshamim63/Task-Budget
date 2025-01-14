@@ -24,6 +24,7 @@ import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { TaskRepositoryMock } from './__mock__/task.repository.mock';
 import { AssociateServiceMock } from '../associates/__mock__/associates.service.mock';
 import {
+  generateRedisMockKey,
   generateTask,
   generateTaskDto,
   generateTasks,
@@ -244,6 +245,7 @@ describe('TaskService', () => {
     it('should update task successfully', async () => {
       const { id: validTaskId } = mockTaskData;
       const query = { where: { id: validTaskId } };
+      const redisKey = generateRedisMockKey(validTaskId);
       TaskRepositoryMock.findUniqueOrThrow.mockResolvedValue(mockTaskData);
       const updatedTask = { ...mockTaskData, ...updateTaskDto };
       TaskRepositoryMock.update.mockResolvedValue(updatedTask);
@@ -252,7 +254,11 @@ describe('TaskService', () => {
         updateTaskDto,
         superUserTokenPayload,
       );
-      expect(taskRepository.update).toHaveBeenCalledWith(query, updateTaskDto);
+      expect(taskRepository.update).toHaveBeenCalledWith({
+        redisKey,
+        query,
+        data: updateTaskDto,
+      });
       expect(result).toEqual(updatedTask);
     });
   });

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
 import { TaskController } from '../../src/tasks/tasks.controller';
 import { TaskService } from '../../src/tasks/tasks.service';
 import { generateTask, generateTasks } from './__mock__/task-data.mock';
@@ -7,13 +8,13 @@ import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { UserType } from '@prisma/client';
 import { TaskResponseDto } from '../../src/tasks/dto/task.dto';
 import { GetTasksFilterDto } from '../../src/tasks/dto/get-tasks-filter.dto';
-import { TaskStatus } from '../../src/tasks/task.model';
 import { CreateTaskDto } from '../../src/tasks/dto/create-task.dto';
+import { TaskStatus } from '../../src/tasks/task.model';
 import { TASK_RESPONSE_MESSAGE } from '../../src/utils/constants';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { TaskServiceMock } from './__mock__/tasks.service.mock';
-import { CACHE_MANAGER, CacheInterceptor } from '@nestjs/cache-manager';
+import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 
 describe('TaskController', () => {
   let controller: TaskController;
@@ -28,10 +29,7 @@ describe('TaskController', () => {
         },
         {
           provide: CACHE_MANAGER,
-          useValue: {
-            get: jest.fn(),
-            set: jest.fn(),
-          },
+          useValue: RedisServiceMock,
         },
       ],
     })
