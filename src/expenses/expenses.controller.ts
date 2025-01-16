@@ -24,8 +24,10 @@ import { TaskResponseDto } from '../tasks/dto/task.dto';
 
 import { TaskInterceptor } from '../tasks/interceptors/task.interceptor';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('tasks/:taskId/expenses')
+@UseInterceptors(CacheInterceptor)
 @UseGuards(AuthGuard)
 @UseInterceptors(TaskInterceptor)
 export class ExpenseController {

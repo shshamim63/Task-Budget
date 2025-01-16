@@ -12,6 +12,7 @@ import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
 import { TaskQuery } from './interface/task-response.interface';
 import { AssociateService } from '../associates/associates.service';
+import { REDIS_KEYS_FOR_TASK } from '../utils/redis-keys';
 
 @Injectable()
 export class TaskService {
@@ -64,11 +65,13 @@ export class TaskService {
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
     const query: TaskQuery = this.buildGetTaskByIdQuery(id);
 
-    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
+    const currentTask = await this.taskRepository.findUniqueOrThrow({ query });
 
     this.checkPermission(user, currentTask);
 
-    await this.taskRepository.delete(query);
+    const redisKey = this.generateRedisKey(id);
+
+    await this.taskRepository.delete({ redisKey, query });
 
     return TASK_RESPONSE_MESSAGE.DELETE_TASK;
   }
@@ -79,9 +82,17 @@ export class TaskService {
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
     const query: TaskQuery = this.buildGetTaskByIdQuery(id);
-    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
+    const redisKey = this.generateRedisKey(id);
+    const currentTask = await this.taskRepository.findUniqueOrThrow({
+      redisKey,
+      query,
+    });
     this.checkPermission(user, currentTask);
-    const updatedTask = await this.taskRepository.update(query, updateTaskDto);
+    const updatedTask = await this.taskRepository.update({
+      redisKey,
+      query,
+      data: updateTaskDto,
+    });
 
     return new TaskResponseDto(updatedTask);
   }
@@ -92,12 +103,21 @@ export class TaskService {
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
     const query: TaskQuery = this.buildGetTaskByIdQuery(id);
-    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
+    const redisKey = this.generateRedisKey(id);
+
+    const currentTask = await this.taskRepository.findUniqueOrThrow({
+      redisKey,
+      query,
+    });
 
     this.checkPermission(user, currentTask);
 
     const data = { status: status };
-    const updatedTask = await this.taskRepository.update(query, data);
+    const updatedTask = await this.taskRepository.update({
+      redisKey,
+      query,
+      data,
+    });
 
     return new TaskResponseDto(updatedTask);
   }
@@ -172,5 +192,9 @@ export class TaskService {
 
   private checkPermission(user: JWTPayload, task: Task) {
     this.taskPermissionService.hasOperationPermission(user, task);
+  }
+
+  private generateRedisKey(id: number): string {
+    return `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${id}`;
   }
 }

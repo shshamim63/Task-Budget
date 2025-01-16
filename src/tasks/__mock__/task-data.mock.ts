@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker/.';
 import { Prisma, TaskStatus } from '@prisma/client';
 import { TaskResponseDto } from '../dto/task.dto';
 import { CreateTaskDto } from '../dto/create-task.dto';
+import { REDIS_KEYS_FOR_TASK } from '../../utils/redis-keys';
 
 export const generateTaskDto = (): CreateTaskDto => {
   return {
@@ -31,4 +32,8 @@ export const generateTask = (
 
 export const generateTasks = (numOfTasks: number = 1): TaskResponseDto[] => {
   return Array.from({ length: numOfTasks }, generateTask);
+};
+
+export const generateRedisMockKey = (id: number): string => {
+  return `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${id}`;
 };

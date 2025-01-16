@@ -14,6 +14,8 @@ import {
 } from './__mock__/expense-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 
 describe('ExpenseController', () => {
   let controller: ExpenseController;
@@ -22,7 +24,13 @@ describe('ExpenseController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ExpenseController],
-      providers: [{ provide: ExpenseService, useValue: ExpenseServiceMock }],
+      providers: [
+        { provide: ExpenseService, useValue: ExpenseServiceMock },
+        {
+          provide: CACHE_MANAGER,
+          useValue: RedisServiceMock,
+        },
+      ],
     })
       .overrideGuard(AuthGuard)
       .useValue({

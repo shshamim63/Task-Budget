@@ -9,4 +9,8 @@ export const REDIS_KEYS_FOR_ASSOCIATE = {
   },
 };
 
+export const REDIS_KEYS_FOR_TASK = {
+  TASK_WITH_ID: 'task-with-id',
+};
+
 export const REDIS_TTL_IN_MILISECONDS = 15 * 60 * 1000;

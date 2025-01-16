@@ -4,12 +4,15 @@ import { TaskInterceptor } from './task.interceptor';
 import { TaskRepositoryMock } from '../__mock__/task.repository.mock';
 import { ErrorHandlerService } from '../../helpers/error.helper.service';
 import { TaskResponseDto } from '../dto/task.dto';
+import { faker } from '@faker-js/faker/.';
+import { generateRedisMockKey } from '../__mock__/task-data.mock';
 
 describe('TaskInterceptor', () => {
   let interceptor: TaskInterceptor;
   let mockErrorHandlerService: Partial<ErrorHandlerService>;
   let mockContext: Partial<ExecutionContext>;
   let mockNext: Partial<CallHandler>;
+  const mockTaskId = faker.number.int({ min: 1, max: 10 });
 
   beforeEach(() => {
     mockErrorHandlerService = {
@@ -21,7 +24,7 @@ describe('TaskInterceptor', () => {
     mockContext = {
       switchToHttp: jest.fn().mockReturnValue({
         getRequest: jest.fn().mockReturnValue({
-          params: { taskId: '1' },
+          params: { taskId: mockTaskId.toString() },
         }),
       }),
     };
@@ -41,7 +44,13 @@ describe('TaskInterceptor', () => {
   });
 
   it('should attach the task to the request when successful', async () => {
-    const taskMock = { id: 1, title: 'Sample Task' };
+    const taskMock = {
+      id: mockTaskId,
+      title: 'Sample Task',
+    };
+
+    const redisTaskKey = generateRedisMockKey(mockTaskId);
+
     TaskRepositoryMock.findUniqueOrThrow.mockResolvedValue(taskMock);
 
     const result = await interceptor.intercept(
@@ -50,8 +59,12 @@ describe('TaskInterceptor', () => {
     );
 
     const request = mockContext.switchToHttp().getRequest();
+
     expect(TaskRepositoryMock.findUniqueOrThrow).toHaveBeenCalledWith({
-      where: { id: 1 },
+      redisKey: redisTaskKey,
+      query: {
+        where: { id: mockTaskId },
+      },
     });
     expect(request.task).toEqual(new TaskResponseDto(taskMock));
     const emittedValue = await firstValueFrom(result);
@@ -61,7 +74,7 @@ describe('TaskInterceptor', () => {
   it('should handle errors gracefully', async () => {
     const error = new Error('Task not found');
     TaskRepositoryMock.findUniqueOrThrow.mockRejectedValue(error);
-
+    const redisTaskKey = generateRedisMockKey(mockTaskId);
     await expect(
       interceptor.intercept(
         mockContext as ExecutionContext,
@@ -70,7 +83,10 @@ describe('TaskInterceptor', () => {
     ).rejects.toThrow(error);
 
     expect(TaskRepositoryMock.findUniqueOrThrow).toHaveBeenCalledWith({
-      where: { id: 1 },
+      redisKey: redisTaskKey,
+      query: {
+        where: { id: mockTaskId },
+      },
     });
     expect(mockErrorHandlerService.handle).toHaveBeenCalledWith(error);
   });

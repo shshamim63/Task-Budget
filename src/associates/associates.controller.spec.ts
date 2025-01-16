@@ -8,7 +8,11 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { AssociateService } from './associates.service';
 import { AssociateServiceMock } from './__mock__/associates.service.mock';
 
-import { AssociateMock } from './__mock__/associate-data.mock';
+import {
+  AssociateMock,
+  generateUserAffiliatedTo,
+} from './__mock__/associate-data.mock';
+import { faker } from '@faker-js/faker/.';
 
 describe('AssociateController', () => {
   let controller: AssociateController;
@@ -63,6 +67,23 @@ describe('AssociateController', () => {
 
       expect(result).toMatchObject(associate);
       expect(associateService.createAssociate).toHaveBeenCalledWith(payload);
+    });
+  });
+
+  describe('getUserAssociatedTo', () => {
+    it('should return the user associated to the enterprise', async () => {
+      const userId = faker.number.int({ min: 1 });
+      const numOfRecords = faker.number.int({ min: 1, max: 5 });
+      const userAffiliatedTo = generateUserAffiliatedTo({
+        userId,
+        numOfRecords,
+      });
+      AssociateServiceMock.userAssociatesTo.mockResolvedValueOnce(
+        userAffiliatedTo,
+      );
+      const result = await controller.getUserAssociatedTo(userId);
+      expect(associateService.userAssociatesTo).toHaveBeenCalledWith(userId);
+      expect(result.length).toEqual(numOfRecords);
     });
   });
 });
