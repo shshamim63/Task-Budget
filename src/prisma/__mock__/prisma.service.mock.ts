@@ -6,5 +6,7 @@ export const PrismaServiceMock = {
   user: {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
   },
 };

@@ -45,7 +45,7 @@ describe('UserRepository', () => {
     });
   });
 
-  describe('findUnique', async () => {
+  describe('findUnique', () => {
     it('should call asyncErrorHandlerService and prisma user findUnique method', async () => {
       PrismaServiceMock.user.findUnique.mockResolvedValue(true);
       await repository.findUnique(query);
@@ -54,11 +54,20 @@ describe('UserRepository', () => {
     });
   });
 
-  describe('findMany', async () => {
+  describe('findMany', () => {
     it('should call asyncErrorHandlerService and prisma user findMany method', async () => {
       PrismaServiceMock.user.findUnique.mockResolvedValue(true);
       await repository.findMany(query);
       expect(prismaService.user.findMany).toHaveBeenCalled();
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('create', () => {
+    it('should call asyncErrorHandlerService and prisma user create method', async () => {
+      PrismaServiceMock.user.create.mockResolvedValue(true);
+      await repository.create(query);
+      expect(prismaService.user.create).toHaveBeenCalled();
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
     });
   });
