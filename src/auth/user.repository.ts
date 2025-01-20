@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -9,19 +10,19 @@ export class UserRepository {
     private asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
-  async findFirst(query) {
+  async findFirst(query: Prisma.UserFindFirstArgs) {
     return this.asyncErrorHandlerService.execute(() =>
       this.prismaService.user.findFirst(query),
     );
   }
 
-  async findUnique(query) {
+  async findUnique(query: Prisma.UserFindUniqueArgs) {
     return this.asyncErrorHandlerService.execute(() =>
       this.prismaService.user.findUnique(query),
     );
   }
 
-  async findMany(query) {
+  async findMany(query: Prisma.UserFindManyArgs) {
     return this.asyncErrorHandlerService.execute(() =>
       this.prismaService.user.findMany(query),
     );
