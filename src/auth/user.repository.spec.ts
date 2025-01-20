@@ -34,12 +34,22 @@ describe('UserRepository', () => {
     jest.clearAllMocks();
   });
 
+  const query = UserMockQuery();
+
   describe('findFirst', () => {
     it('should call asyncErrorHandlerService and prisma user findFirst method', async () => {
-      const query = UserMockQuery();
       PrismaServiceMock.user.findFirst.mockResolvedValue(true);
       await repository.findFirst(query);
       expect(prismaService.user.findFirst).toHaveBeenCalled();
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('findUnique', async () => {
+    it('hould call asyncErrorHandlerService and prisma user findUnique method', async () => {
+      PrismaServiceMock.user.findUnique.mockResolvedValue(true);
+      await repository.findUnique(query);
+      expect(prismaService.user.findUnique).toHaveBeenCalled();
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
     });
   });
