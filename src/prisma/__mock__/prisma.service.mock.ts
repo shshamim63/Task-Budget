@@ -9,4 +9,7 @@ export const PrismaServiceMock = {
     findMany: jest.fn(),
     create: jest.fn(),
   },
+  userTask: {
+    createMany: jest.fn(),
+  },
 };

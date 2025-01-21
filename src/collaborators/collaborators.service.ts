@@ -55,8 +55,8 @@ export class CollaboratorService {
     const slelector = { select: { id: true } };
 
     const existingCollaborators = await this.userRepository.findMany({
-      whereClause,
-      slelector,
+      ...whereClause,
+      ...slelector,
     });
 
     this.validAssignableContributors(existingCollaborators, collaborators);
