@@ -33,7 +33,7 @@ describe('', () => {
   });
 
   describe('createMany', () => {
-    it('it should call asyncErrorHandlerService and userTask.createMany method', async () => {
+    it('should call asyncErrorHandlerService and userTask.createMany method', async () => {
       const data = [
         {
           taskId: faker.number.int(),
@@ -44,7 +44,27 @@ describe('', () => {
       ];
       PrismaServiceMock.userTask.createMany.mockResolvedValue(true);
       await repository.createMany(data);
-      expect(prismaService.userTask.createMany).toHaveBeenCalled();
+      expect(prismaService.userTask.createMany).toHaveBeenCalledWith({ data });
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('delete', () => {
+    it('should call asyncErrorHandlerService and userTask.delete method', async () => {
+      const query = { where: { id: faker.number.int() } };
+      PrismaServiceMock.userTask.delete.mockResolvedValue(true);
+      await repository.delete(query);
+      expect(prismaService.userTask.delete).toHaveBeenCalledWith(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('findUnique', () => {
+    it('should call asyncErrorHandlerService and userTask.findUnique method', async () => {
+      const query = { where: { id: faker.number.int() } };
+      PrismaServiceMock.userTask.findUnique.mockResolvedValue(true);
+      await repository.findUnique(query);
+      expect(prismaService.userTask.findUnique).toHaveBeenCalledWith(query);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
     });
   });
