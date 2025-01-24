@@ -17,4 +17,7 @@ export const PrismaServiceMock = {
   department: {
     create: jest.fn(),
   },
+  enterprise: {
+    create: jest.fn(),
+  },
 };

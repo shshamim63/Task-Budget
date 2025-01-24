@@ -27,10 +27,12 @@ export class TaskInterceptor implements NestInterceptor {
     const taskId = request.params.taskId;
 
     try {
+      const redisKey = `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${taskId}`;
+
       const query: TaskQuery = {
         where: { id: Number(taskId) },
       };
-      const redisKey = `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${taskId}`;
+
       const task = await this.taskRepository.findUniqueOrThrow({
         redisKey,
         query,

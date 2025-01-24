@@ -16,13 +16,13 @@ export class TaskRepository {
   ) {}
 
   async findFirst(query): Promise<Task> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findFirst(query),
     );
   }
 
   async findUnique(query): Promise<TaskResponse> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findUnique(query),
     );
   }
@@ -32,7 +32,8 @@ export class TaskRepository {
       ? await this.redisService.get(redisKey)
       : null;
 
-    if (redisKey) return JSON.parse(redisTaskData);
+    if (redisTaskData && Object.keys(JSON.parse(redisTaskData)).length)
+      return JSON.parse(redisTaskData);
 
     const currentTask = this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findUniqueOrThrow(query),
@@ -49,13 +50,13 @@ export class TaskRepository {
   }
 
   async findMany(query): Promise<TaskResponse[]> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findMany(query),
     );
   }
 
   async create(data): Promise<Task> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.create({ data }),
     );
   }
@@ -71,7 +72,7 @@ export class TaskRepository {
   async update({ redisKey = '', query, data }): Promise<Task> {
     if (redisKey) this.redisService.del(redisKey);
 
-    const currentTask = this.asyncErrorHandlerService.execute(() =>
+    const currentTask = await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.update({
         ...query,
         data,
