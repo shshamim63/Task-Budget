@@ -30,6 +30,10 @@ describe('DepartmentRepository', () => {
     );
   });
 
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   describe('create', () => {
     it('should call asyncErrorHandlerService and department.create method', async () => {
       PrismaServiceMock.department.create.mockResolvedValue(true);
