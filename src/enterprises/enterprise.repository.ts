@@ -13,7 +13,7 @@ export class EnterpriseRepository {
   ) {}
 
   async create(data): Promise<Enterprise> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.enterprise.create({ data }),
     );
   }
