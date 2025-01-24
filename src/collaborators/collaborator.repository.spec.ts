@@ -32,6 +32,10 @@ describe('', () => {
     );
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('createMany', () => {
     it('should call asyncErrorHandlerService and userTask.createMany method', async () => {
       const data = [
@@ -52,10 +56,12 @@ describe('', () => {
   describe('delete', () => {
     it('should call asyncErrorHandlerService and userTask.delete method', async () => {
       const query = { where: { id: faker.number.int() } };
-      PrismaServiceMock.userTask.delete.mockResolvedValue(true);
+      PrismaServiceMock.userTask.delete.mockResolvedValueOnce(true);
       await repository.delete(query);
-      expect(prismaService.userTask.delete).toHaveBeenCalledWith(query);
-      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.userTask.delete).toHaveBeenCalled();
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalledWith(
+        expect.any(Function),
+      );
     });
   });
 

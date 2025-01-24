@@ -26,7 +26,7 @@ export class CollaboratorRepository {
   }
 
   async findUnique(query) {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.userTask.findUnique(query),
     );
   }

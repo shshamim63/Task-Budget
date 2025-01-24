@@ -51,7 +51,7 @@ export class CollaboratorController {
     );
   }
 
-  @Delete('/collaboratorId')
+  @Delete('/:collaboratorId')
   @Roles(UserType.SUPER, UserType.ADMIN)
   removeCollaborator(
     @Param('collaboratorId', ParseIntPipe) collaboratorId: number,
