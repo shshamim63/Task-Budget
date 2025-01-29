@@ -188,10 +188,8 @@ export class ExpenseService {
         throw new BadRequestException(RESPONSE_MESSAGE.EXPENSE_EXCEED);
     }
 
-    const updatedExpense = await this.expenseRepository.update(
-      query,
-      updateExpenseDto,
-    );
+    const payload = { ...query, data: updateExpenseDto };
+    const updatedExpense = await this.expenseRepository.update(payload);
 
     return new ExpenseResponseDto(updatedExpense);
   }

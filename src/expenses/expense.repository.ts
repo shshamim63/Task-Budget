@@ -33,9 +33,9 @@ export class ExpenseRepository {
     );
   }
 
-  async update(query, data) {
+  async update(payload: Prisma.ExpenseUpdateArgs) {
     return await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.expense.update({ ...query, data }),
+      this.prismaService.expense.update(payload),
     );
   }
 

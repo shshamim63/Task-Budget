@@ -80,4 +80,17 @@ describe('ExpenseRepository', () => {
       expect(prismaService.expense.findMany).toHaveBeenCalledWith(query);
     });
   });
+
+  describe('update', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.expense.update callback method', async () => {
+      const payload = {
+        where: { id: faker.number.int() },
+        data: { description: faker.word.noun() },
+      };
+      PrismaServiceMock.expense.update(true);
+      await repository.update(payload);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.expense.update).toHaveBeenCalledWith(payload);
+    });
+  });
 });
