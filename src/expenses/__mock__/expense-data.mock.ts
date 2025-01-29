@@ -66,3 +66,22 @@ export const createExpensePayload = () => {
     },
   };
 };
+
+export const findExpenseQueryMock = () => {
+  return {
+    where: { id: faker.number.int() },
+    select: {
+      id: true,
+      description: true,
+      amount: true,
+      createdAt: true,
+      updatedAt: true,
+      contributor: {
+        select: {
+          username: true,
+          email: true,
+        },
+      },
+    },
+  };
+};

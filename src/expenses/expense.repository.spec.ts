@@ -8,6 +8,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 import { createExpensePayload } from './__mock__/expense-data.mock';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
+import { faker } from '@faker-js/faker/.';
 
 describe('ExpenseRepository', () => {
   let repository: ExpenseRepository;
@@ -44,6 +45,16 @@ describe('ExpenseRepository', () => {
       await repository.create(createArg);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.expense.create).toHaveBeenCalledWith(createArg);
+    });
+  });
+
+  describe('findFirst', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.expense.findFirst callback method', async () => {
+      const query = { where: { id: faker.number.int() } };
+      PrismaServiceMock.expense.findFirst(true);
+      await repository.findFirst(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.expense.findFirst).toHaveBeenCalledWith(query);
     });
   });
 });
