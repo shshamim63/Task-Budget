@@ -12,6 +12,7 @@ import {
 } from './__mock__/expense-data.mock';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { faker } from '@faker-js/faker/.';
+import { Prisma } from '@prisma/client';
 
 describe('ExpenseRepository', () => {
   let repository: ExpenseRepository;
@@ -91,6 +92,23 @@ describe('ExpenseRepository', () => {
       await repository.update(payload);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.expense.update).toHaveBeenCalledWith(payload);
+    });
+  });
+
+  describe('aggregate', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.expense.aggregate callback method', async () => {
+      const query = { where: { taskId: faker.number.int() } };
+      const aggregateArg = {
+        _sum: { amount: true },
+      };
+      const payload = {
+        ...query,
+        ...aggregateArg,
+      } as Prisma.ExpenseAggregateArgs;
+      PrismaServiceMock.expense.aggregate(true);
+      await repository.aggregate(payload);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.expense.aggregate).toHaveBeenCalledWith(payload);
     });
   });
 });

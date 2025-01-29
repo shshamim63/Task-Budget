@@ -15,6 +15,7 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { ExpenseRepository } from './expense.repository';
 import { RESPONSE_MESSAGE } from '../utils/constants';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ExpenseService {
@@ -199,9 +200,13 @@ export class ExpenseService {
     const aggregateArg = {
       _sum: { amount: true },
     };
+    const payload = {
+      ...query,
+      ...aggregateArg,
+    } as Prisma.ExpenseAggregateArgs;
     const {
       _sum: { amount: totalExpense },
-    } = await this.expenseRepository.aggregate(query, aggregateArg);
+    } = await this.expenseRepository.aggregate(payload);
 
     return totalExpense;
   }

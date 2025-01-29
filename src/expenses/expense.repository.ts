@@ -39,9 +39,9 @@ export class ExpenseRepository {
     );
   }
 
-  async aggregate(query, aggregateArg) {
+  async aggregate(payload: Prisma.ExpenseAggregateArgs) {
     return await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.expense.aggregate({ ...query, ...aggregateArg }),
+      this.prismaService.expense.aggregate(payload),
     );
   }
 }
