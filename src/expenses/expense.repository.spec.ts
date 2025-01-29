@@ -6,7 +6,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
-import { createExpensePayload } from './__mock__/expense-data.mock';
+import {
+  createExpensePayload,
+  findExpenseQueryMock,
+} from './__mock__/expense-data.mock';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { faker } from '@faker-js/faker/.';
 
@@ -60,11 +63,21 @@ describe('ExpenseRepository', () => {
 
   describe('findUnique', () => {
     it('should call asyncErrorHandlerService.execute and prismaService.expense.findUnique callback method', async () => {
-      const query = { where: { id: faker.number.int() } };
+      const query = findExpenseQueryMock();
       PrismaServiceMock.expense.findUnique(true);
       await repository.findUnique(query);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.expense.findUnique).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('findMany', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.expense.findMany callback method', async () => {
+      const query = { where: { taskId: faker.number.int() } };
+      PrismaServiceMock.expense.findMany(true);
+      await repository.findMany(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.expense.findMany).toHaveBeenCalledWith(query);
     });
   });
 });

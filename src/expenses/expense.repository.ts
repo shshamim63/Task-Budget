@@ -27,7 +27,7 @@ export class ExpenseRepository {
     );
   }
 
-  async findMany(findManyArg) {
+  async findMany(findManyArg: Prisma.ExpenseFindManyArgs) {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.expense.findMany(findManyArg),
     );
