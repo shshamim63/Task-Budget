@@ -21,7 +21,7 @@ export class ExpenseRepository {
     );
   }
 
-  async findUnique(findArg) {
+  async findUnique(findArg: Prisma.ExpenseFindUniqueArgs) {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.expense.findUnique(findArg),
     );

@@ -57,4 +57,14 @@ describe('ExpenseRepository', () => {
       expect(prismaService.expense.findFirst).toHaveBeenCalledWith(query);
     });
   });
+
+  describe('findUnique', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.expense.findUnique callback method', async () => {
+      const query = { where: { id: faker.number.int() } };
+      PrismaServiceMock.expense.findUnique(true);
+      await repository.findUnique(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.expense.findUnique).toHaveBeenCalledWith(query);
+    });
+  });
 });

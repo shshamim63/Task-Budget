@@ -23,5 +23,6 @@ export const PrismaServiceMock = {
   expense: {
     create: jest.fn(),
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
 };
