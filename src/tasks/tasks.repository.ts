@@ -21,7 +21,7 @@ export class TaskRepository {
     );
   }
 
-  async findUnique(query): Promise<TaskResponse> {
+  async findUnique(query: Prisma.TaskFindUniqueArgs): Promise<TaskResponse> {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findUnique(query),
     );

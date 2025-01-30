@@ -7,7 +7,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 import { faker } from '@faker-js/faker/.';
-import { Prisma } from '@prisma/client';
 
 describe('TaskRepository', () => {
   let repository: TaskRepository;
@@ -43,6 +42,18 @@ describe('TaskRepository', () => {
       await repository.findFirst(query);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.findFirst).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('findUnique', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.task.findUnique method', async () => {
+      const query = {
+        where: { id: faker.number.int() },
+      };
+      PrismaServiceMock.task.findUnique.mockResolvedValue(true);
+      await repository.findUnique(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.findUnique).toHaveBeenCalledWith(query);
     });
   });
 });
