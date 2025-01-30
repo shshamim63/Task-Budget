@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Task } from '@prisma/client';
+import { Prisma, Task } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponse } from './interface/task-response.interface';
@@ -12,10 +12,10 @@ export class TaskRepository {
   constructor(
     private readonly redisService: RedisService,
     private readonly prismaService: PrismaService,
-    private asyncErrorHandlerService: AsyncErrorHandlerService,
+    private readonly asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
-  async findFirst(query): Promise<Task> {
+  async findFirst(query: Prisma.TaskFindFirstArgs): Promise<Task> {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findFirst(query),
     );
