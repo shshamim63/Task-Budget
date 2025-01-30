@@ -55,7 +55,7 @@ export class TaskRepository {
     return currentTask;
   }
 
-  async findMany(query): Promise<TaskResponse[]> {
+  async findMany(query: Prisma.TaskFindManyArgs): Promise<TaskResponse[]> {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findMany(query),
     );

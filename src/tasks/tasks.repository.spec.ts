@@ -90,4 +90,17 @@ describe('TaskRepository', () => {
       expect(prismaService.task.findUniqueOrThrow).toHaveBeenCalledWith(query);
     });
   });
+
+  describe('findMany', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.task.findMany method', async () => {
+      const query = {
+        where: { id: faker.number.int() },
+      } as Prisma.TaskFindManyArgs;
+
+      PrismaServiceMock.task.findUniqueOrThrow.mockResolvedValue(true);
+      await repository.findMany(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.findMany).toHaveBeenCalledWith(query);
+    });
+  });
 });
