@@ -61,9 +61,9 @@ export class TaskRepository {
     );
   }
 
-  async create(data): Promise<Task> {
+  async create(payload: Prisma.TaskCreateArgs): Promise<Task> {
     return await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.task.create({ data }),
+      this.prismaService.task.create(payload),
     );
   }
 

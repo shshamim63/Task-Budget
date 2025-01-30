@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 import { faker } from '@faker-js/faker/.';
-import { Prisma } from '@prisma/client';
+import { Prisma, TaskStatus } from '@prisma/client';
 import { generateTask } from './__mock__/task-data.mock';
 
 describe('TaskRepository', () => {
@@ -97,10 +97,30 @@ describe('TaskRepository', () => {
         where: { id: faker.number.int() },
       } as Prisma.TaskFindManyArgs;
 
-      PrismaServiceMock.task.findUniqueOrThrow.mockResolvedValue(true);
+      PrismaServiceMock.task.findMany.mockResolvedValue(true);
       await repository.findMany(query);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.findMany).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('create', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.task.create method', async () => {
+      const payload = {
+        title: faker.lorem.sentence(),
+        description: faker.lorem.sentence(),
+        status: TaskStatus.OPEN,
+        creatorId: faker.number.int(),
+        enterpriseId: faker.number.int(),
+        budget: new Prisma.Decimal(
+          faker.number.float({ min: 10, fractionDigits: 2, max: 30 }),
+        ),
+      };
+
+      PrismaServiceMock.task.create.mockResolvedValue(true);
+      await repository.create({ data: payload });
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.create).toHaveBeenCalledWith({ data: payload });
     });
   });
 });

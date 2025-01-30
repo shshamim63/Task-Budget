@@ -61,7 +61,7 @@ export class TaskService {
       userAffiliatedTo,
     );
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
-    const task = await this.taskRepository.create(data);
+    const task = await this.taskRepository.create({ data });
 
     return new TaskResponseDto(task);
   }
