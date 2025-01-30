@@ -33,7 +33,11 @@ export class TaskService {
   }
 
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
-    const query = this.buildGetTaskByIdQuery(id, user);
+    const query = this.buildGetTaskByIdQuery<Prisma.TaskFindFirstArgs>(
+      id,
+      user,
+    );
+
     const task = await this.taskRepository.findFirst(query);
 
     if (!task)
@@ -63,7 +67,7 @@ export class TaskService {
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
-    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
+    const query = { where: { id } } as Prisma.TaskFindUniqueOrThrowArgs;
 
     const currentTask = await this.taskRepository.findUniqueOrThrow({ query });
 
@@ -81,17 +85,19 @@ export class TaskService {
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
+    const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
+
     const redisKey = this.generateRedisKey(id);
     const currentTask = await this.taskRepository.findUniqueOrThrow({
       redisKey,
       query,
     });
+
     this.checkPermission(user, currentTask);
+    const payload = { ...query, data: updateTaskDto };
     const updatedTask = await this.taskRepository.update({
       redisKey,
-      query,
-      data: updateTaskDto,
+      payload,
     });
 
     return new TaskResponseDto(updatedTask);
@@ -102,7 +108,7 @@ export class TaskService {
     status: TaskStatus,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
+    const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
     const redisKey = this.generateRedisKey(id);
 
     const currentTask = await this.taskRepository.findUniqueOrThrow({
@@ -113,10 +119,13 @@ export class TaskService {
     this.checkPermission(user, currentTask);
 
     const data = { status: status };
+    const payload = {
+      ...query,
+      data,
+    };
     const updatedTask = await this.taskRepository.update({
       redisKey,
-      query,
-      data,
+      payload,
     });
 
     return new TaskResponseDto(updatedTask);
@@ -161,20 +170,21 @@ export class TaskService {
     };
   }
 
-  private buildGetTaskByIdQuery(id: number, user?: JWTPayload): TaskQuery {
-    const baseQuery: TaskQuery = { where: { id } };
-
-    if (!user) return baseQuery;
-
+  private buildGetTaskByIdQuery<T>(id: number, user?: JWTPayload): T {
     const isSuperUser = user.userType === UserType.SUPER;
 
     if (!isSuperUser) {
-      baseQuery.where.OR = [
-        { creatorId: user.id },
-        { members: { some: { memberId: user.id } } },
-      ];
+      return {
+        where: {
+          OR: [
+            { creatorId: user.id },
+            { members: { some: { memberId: user.id } } },
+          ],
+        },
+      } as T;
+    } else {
+      return { where: { id } } as T;
     }
-    return baseQuery;
   }
 
   private prepareTaskCreateData(createTaskDTO, userId) {

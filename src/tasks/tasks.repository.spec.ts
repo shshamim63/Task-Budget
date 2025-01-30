@@ -7,6 +7,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 import { faker } from '@faker-js/faker/.';
+import { Prisma } from '@prisma/client';
+import { generateTask } from './__mock__/task-data.mock';
 
 describe('TaskRepository', () => {
   let repository: TaskRepository;
@@ -33,6 +35,11 @@ describe('TaskRepository', () => {
       AsyncErrorHandlerService,
     );
   });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('findFirst', () => {
     it('should call asyncErrorHandlerService.execute and prismaService.task.findUnique method', async () => {
       const query = {
@@ -54,6 +61,33 @@ describe('TaskRepository', () => {
       await repository.findUnique(query);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.findUnique).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('findUniqueOrThrow', () => {
+    it('should call redisService.get method should not call asyncErrorHandlerService.execute and prismaService.task.findUniqueOrThrow method', async () => {
+      const query = {
+        where: { id: faker.number.int() },
+      } as Prisma.TaskFindUniqueOrThrowArgs;
+      const redisKey = faker.word.adverb();
+      const task = JSON.stringify(generateTask());
+      RedisServiceMock.get.mockResolvedValue(task);
+
+      await repository.findUniqueOrThrow({ redisKey, query });
+
+      expect(redisService.get).toHaveBeenCalledWith(redisKey);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalledTimes(0);
+      expect(prismaService.task.findUniqueOrThrow).toHaveBeenCalledTimes(0);
+    });
+    it('should call asyncErrorHandlerService.execute and prismaService.task.findUniqueOrThrow method', async () => {
+      const query = {
+        where: { id: faker.number.int() },
+      } as Prisma.TaskFindUniqueOrThrowArgs;
+
+      PrismaServiceMock.task.findUniqueOrThrow.mockResolvedValue(true);
+      await repository.findUniqueOrThrow({ query });
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.findUniqueOrThrow).toHaveBeenCalledWith(query);
     });
   });
 });

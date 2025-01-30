@@ -27,7 +27,13 @@ export class TaskRepository {
     );
   }
 
-  async findUniqueOrThrow({ redisKey = '', query }): Promise<Task> {
+  async findUniqueOrThrow({
+    redisKey = '',
+    query,
+  }: {
+    redisKey?: string;
+    query: Prisma.TaskFindUniqueOrThrowArgs;
+  }): Promise<Task> {
     const redisTaskData = redisKey
       ? await this.redisService.get(redisKey)
       : null;
@@ -69,14 +75,11 @@ export class TaskRepository {
     );
   }
 
-  async update({ redisKey = '', query, data }): Promise<Task> {
+  async update({ redisKey = '', payload }): Promise<Task> {
     if (redisKey) this.redisService.del(redisKey);
 
     const currentTask = await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.task.update({
-        ...query,
-        data,
-      }),
+      this.prismaService.task.update(payload),
     );
 
     if (redisKey)

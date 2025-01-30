@@ -31,5 +31,6 @@ export const PrismaServiceMock = {
   task: {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
+    findUniqueOrThrow: jest.fn(),
   },
 };
