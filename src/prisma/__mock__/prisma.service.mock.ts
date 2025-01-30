@@ -28,4 +28,7 @@ export const PrismaServiceMock = {
     update: jest.fn(),
     aggregate: jest.fn(),
   },
+  task: {
+    findFirst: jest.fn(),
+  },
 };

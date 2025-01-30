@@ -6,6 +6,8 @@ import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
+import { faker } from '@faker-js/faker/.';
+import { Prisma } from '@prisma/client';
 
 describe('TaskRepository', () => {
   let repository: TaskRepository;
@@ -31,5 +33,16 @@ describe('TaskRepository', () => {
     asyncErrorHandlerService = module.get<AsyncErrorHandlerService>(
       AsyncErrorHandlerService,
     );
+  });
+  describe('findFirst', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.task.findUnique method', async () => {
+      const query = {
+        where: { id: faker.number.int() },
+      };
+      PrismaServiceMock.task.findFirst.mockResolvedValue(true);
+      await repository.findFirst(query);
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.findFirst).toHaveBeenCalledWith(query);
+    });
   });
 });
