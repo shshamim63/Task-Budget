@@ -35,5 +35,6 @@ export const PrismaServiceMock = {
     findUniqueOrThrow: jest.fn(),
     findMany: jest.fn(),
     delete: jest.fn(),
+    update: jest.fn(),
   },
 };

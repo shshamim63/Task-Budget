@@ -133,6 +133,42 @@ describe('TaskRepository', () => {
       await repository.delete({ redisKey, query });
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.delete).toHaveBeenCalledWith(query);
+      expect(redisService.del).toHaveBeenCalled();
+    });
+  });
+
+  describe('update', () => {
+    it('should call asyncErrorHandlerService.execute, prismaService.task.delete and residService.set method', async () => {
+      const redisKey = faker.word.adverb();
+      const query = { where: { id: faker.number.int() } };
+      const data = { status: TaskStatus.IN_PROGRESS };
+      const payload = {
+        ...query,
+        data,
+      };
+
+      PrismaServiceMock.task.update.mockResolvedValue(true);
+
+      await repository.update({ redisKey, payload });
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.update).toHaveBeenCalledWith(payload);
+      expect(redisService.set).toHaveBeenCalled();
+    });
+
+    it('should call asyncErrorHandlerService.execute, prismaService.task.delete but not residService.set method', async () => {
+      const query = { where: { id: faker.number.int() } };
+      const data = { status: TaskStatus.IN_PROGRESS };
+      const payload = {
+        ...query,
+        data,
+      };
+
+      PrismaServiceMock.task.update.mockResolvedValue(true);
+
+      await repository.update({ payload });
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.update).toHaveBeenCalledWith(payload);
+      expect(redisService.set).toHaveBeenCalledTimes(0);
     });
   });
 });
