@@ -123,4 +123,16 @@ describe('TaskRepository', () => {
       expect(prismaService.task.create).toHaveBeenCalledWith({ data: payload });
     });
   });
+
+  describe('delete', () => {
+    it('should call asyncErrorHandlerService.execute and prismaService.task.delete method', async () => {
+      const redisKey = faker.word.adverb();
+      const query = { where: { id: faker.number.int() } };
+
+      PrismaServiceMock.task.delete.mockResolvedValue(true);
+      await repository.delete({ redisKey, query });
+      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
+      expect(prismaService.task.delete).toHaveBeenCalledWith(query);
+    });
+  });
 });
