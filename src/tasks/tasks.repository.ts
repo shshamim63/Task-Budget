@@ -75,7 +75,13 @@ export class TaskRepository {
     );
   }
 
-  async update({ redisKey = '', payload }): Promise<Task> {
+  async update({
+    redisKey = '',
+    payload,
+  }: {
+    redisKey?: string;
+    payload: Prisma.TaskUpdateArgs;
+  }): Promise<Task> {
     if (redisKey) this.redisService.del(redisKey);
 
     const currentTask = await this.asyncErrorHandlerService.execute(() =>

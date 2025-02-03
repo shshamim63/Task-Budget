@@ -10,7 +10,6 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
-import { TaskQuery } from './interface/task-response.interface';
 import { AssociateService } from '../associates/associates.service';
 import { REDIS_KEYS_FOR_TASK } from '../utils/redis-keys';
 
@@ -26,7 +25,11 @@ export class TaskService {
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
   ): Promise<TaskResponseDto[]> {
-    const query = this.buildGetTasksWhere(user, filterDto);
+    const query = this.buildGetTasksWhere<Prisma.TaskFindManyArgs>(
+      user,
+      filterDto,
+    );
+
     const tasks = await this.taskRepository.findMany(query);
 
     return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
@@ -131,10 +134,10 @@ export class TaskService {
     return new TaskResponseDto(updatedTask);
   }
 
-  private buildGetTasksWhere(
+  private buildGetTasksWhere<T>(
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
-  ): TaskQuery {
+  ): T {
     const { status, search } = filterDto || {};
     const isSuperUser = user.userType === UserType.SUPER;
     const isAdminUser = user.userType === UserType.ADMIN;
@@ -167,24 +170,25 @@ export class TaskService {
 
     return {
       where: whereCondition,
-    };
+    } as T;
   }
 
   private buildGetTaskByIdQuery<T>(id: number, user?: JWTPayload): T {
     const isSuperUser = user.userType === UserType.SUPER;
 
-    if (!isSuperUser) {
-      return {
-        where: {
-          OR: [
-            { creatorId: user.id },
-            { members: { some: { memberId: user.id } } },
-          ],
-        },
-      } as T;
-    } else {
-      return { where: { id } } as T;
-    }
+    return {
+      where: {
+        id,
+        ...(isSuperUser
+          ? {}
+          : {
+              OR: [
+                { creatorId: user.id },
+                { members: { some: { memberId: user.id } } },
+              ],
+            }),
+      },
+    } as T;
   }
 
   private prepareTaskCreateData(createTaskDTO, userId) {
