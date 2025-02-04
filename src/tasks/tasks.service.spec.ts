@@ -182,11 +182,15 @@ describe('TaskService', () => {
 
       await service.createTask(mockTaskDto, adminUserTokenPayload);
 
-      expect(taskRepository.create).toHaveBeenCalledWith({
+      const payload = {
         ...mockTaskDto,
         creatorId: adminUserTokenPayload.id,
         status: TaskStatus.OPEN,
         budget: new Prisma.Decimal(mockTaskDto.budget),
+      };
+
+      expect(taskRepository.create).toHaveBeenCalledWith({
+        data: payload,
       });
       expect(associateService.userAssociatesTo).toHaveBeenCalledWith(
         adminUserTokenPayload.id,
@@ -256,8 +260,7 @@ describe('TaskService', () => {
       );
       expect(taskRepository.update).toHaveBeenCalledWith({
         redisKey,
-        query,
-        data: updateTaskDto,
+        payload: { ...query, data: updateTaskDto },
       });
       expect(result).toEqual(updatedTask);
     });

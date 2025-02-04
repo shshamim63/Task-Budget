@@ -9,8 +9,9 @@ import { Observable } from 'rxjs';
 import { TaskResponseDto } from '../dto/task.dto';
 import { ErrorHandlerService } from '../../helpers/error.helper.service';
 import { TaskRepository } from '../tasks.repository';
-import { TaskQuery } from '../interface/task-response.interface';
+
 import { REDIS_KEYS_FOR_TASK } from '../../utils/redis-keys';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TaskInterceptor implements NestInterceptor {
@@ -27,10 +28,12 @@ export class TaskInterceptor implements NestInterceptor {
     const taskId = request.params.taskId;
 
     try {
-      const query: TaskQuery = {
+      const redisKey = `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${taskId}`;
+
+      const query: Prisma.TaskFindUniqueOrThrowArgs = {
         where: { id: Number(taskId) },
       };
-      const redisKey = `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${taskId}`;
+
       const task = await this.taskRepository.findUniqueOrThrow({
         redisKey,
         query,

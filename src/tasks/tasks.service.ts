@@ -10,7 +10,6 @@ import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
-import { TaskQuery } from './interface/task-response.interface';
 import { AssociateService } from '../associates/associates.service';
 import { REDIS_KEYS_FOR_TASK } from '../utils/redis-keys';
 
@@ -26,14 +25,22 @@ export class TaskService {
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
   ): Promise<TaskResponseDto[]> {
-    const query = this.buildGetTasksWhere(user, filterDto);
+    const query = this.buildGetTasksWhere<Prisma.TaskFindManyArgs>(
+      user,
+      filterDto,
+    );
+
     const tasks = await this.taskRepository.findMany(query);
 
     return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
   }
 
   async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
-    const query = this.buildGetTaskByIdQuery(id, user);
+    const query = this.buildGetTaskByIdQuery<Prisma.TaskFindFirstArgs>(
+      id,
+      user,
+    );
+
     const task = await this.taskRepository.findFirst(query);
 
     if (!task)
@@ -57,13 +64,13 @@ export class TaskService {
       userAffiliatedTo,
     );
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
-    const task = await this.taskRepository.create(data);
+    const task = await this.taskRepository.create({ data });
 
     return new TaskResponseDto(task);
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
-    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
+    const query = { where: { id } } as Prisma.TaskFindUniqueOrThrowArgs;
 
     const currentTask = await this.taskRepository.findUniqueOrThrow({ query });
 
@@ -81,17 +88,19 @@ export class TaskService {
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
+    const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
+
     const redisKey = this.generateRedisKey(id);
     const currentTask = await this.taskRepository.findUniqueOrThrow({
       redisKey,
       query,
     });
+
     this.checkPermission(user, currentTask);
+    const payload = { ...query, data: updateTaskDto };
     const updatedTask = await this.taskRepository.update({
       redisKey,
-      query,
-      data: updateTaskDto,
+      payload,
     });
 
     return new TaskResponseDto(updatedTask);
@@ -102,7 +111,7 @@ export class TaskService {
     status: TaskStatus,
     user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const query: TaskQuery = this.buildGetTaskByIdQuery(id);
+    const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
     const redisKey = this.generateRedisKey(id);
 
     const currentTask = await this.taskRepository.findUniqueOrThrow({
@@ -113,19 +122,22 @@ export class TaskService {
     this.checkPermission(user, currentTask);
 
     const data = { status: status };
+    const payload = {
+      ...query,
+      data,
+    };
     const updatedTask = await this.taskRepository.update({
       redisKey,
-      query,
-      data,
+      payload,
     });
 
     return new TaskResponseDto(updatedTask);
   }
 
-  private buildGetTasksWhere(
+  private buildGetTasksWhere<T>(
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
-  ): TaskQuery {
+  ): T {
     const { status, search } = filterDto || {};
     const isSuperUser = user.userType === UserType.SUPER;
     const isAdminUser = user.userType === UserType.ADMIN;
@@ -158,23 +170,25 @@ export class TaskService {
 
     return {
       where: whereCondition,
-    };
+    } as T;
   }
 
-  private buildGetTaskByIdQuery(id: number, user?: JWTPayload): TaskQuery {
-    const baseQuery: TaskQuery = { where: { id } };
-
-    if (!user) return baseQuery;
-
+  private buildGetTaskByIdQuery<T>(id: number, user?: JWTPayload): T {
     const isSuperUser = user.userType === UserType.SUPER;
 
-    if (!isSuperUser) {
-      baseQuery.where.OR = [
-        { creatorId: user.id },
-        { members: { some: { memberId: user.id } } },
-      ];
-    }
-    return baseQuery;
+    return {
+      where: {
+        id,
+        ...(isSuperUser
+          ? {}
+          : {
+              OR: [
+                { creatorId: user.id },
+                { members: { some: { memberId: user.id } } },
+              ],
+            }),
+      },
+    } as T;
   }
 
   private prepareTaskCreateData(createTaskDTO, userId) {

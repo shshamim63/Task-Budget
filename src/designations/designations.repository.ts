@@ -17,7 +17,7 @@ export class DesignationRepository {
     data: Prisma.DesignationCreateInput;
     query?: Prisma.DesignationSelect;
   }): Promise<Designation> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.designation.create({
         data,
         ...(query && { select: query }),

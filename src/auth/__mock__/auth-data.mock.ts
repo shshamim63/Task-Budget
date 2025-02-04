@@ -62,3 +62,9 @@ export const mockSignUpRequestBody = (): SignUpDto => {
     confirmPassword: password,
   };
 };
+
+export const UserMockQuery = () => {
+  return {
+    where: { id: faker.number.int() },
+  };
+};

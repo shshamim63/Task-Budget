@@ -16,7 +16,7 @@ export class DepartmentRepository {
     data: Prisma.DepartmentCreateInput;
     query?: Prisma.DepartmentSelect;
   }): Promise<Department> {
-    return this.asyncErrorHandlerService.execute(() =>
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.department.create({
         data,
       }),

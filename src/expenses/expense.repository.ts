@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ExpenseRepository {
@@ -9,38 +10,38 @@ export class ExpenseRepository {
     private asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
-  async create(createArg) {
-    return this.asyncErrorHandlerService.execute(() =>
+  async create(createArg: Prisma.ExpenseCreateArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.expense.create(createArg),
     );
   }
-  async findFirst(findFirstArg) {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findFirst(findFirstArg: Prisma.ExpenseFindFirstArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.expense.findFirst(findFirstArg),
     );
   }
 
-  async findUnique(findArg) {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findUnique(findArg: Prisma.ExpenseFindUniqueArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.expense.findUnique(findArg),
     );
   }
 
-  async findMany(findManyArg) {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findMany(findManyArg: Prisma.ExpenseFindManyArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.expense.findMany(findManyArg),
     );
   }
 
-  async update(query, data) {
-    return this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.expense.update({ ...query, data }),
+  async update(payload: Prisma.ExpenseUpdateArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.expense.update(payload),
     );
   }
 
-  async aggregate(query, aggregateArg) {
-    return this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.expense.aggregate({ ...query, ...aggregateArg }),
+  async aggregate(payload: Prisma.ExpenseAggregateArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.expense.aggregate(payload),
     );
   }
 }

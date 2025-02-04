@@ -26,8 +26,8 @@ export class CollaboratorRepository {
   }
 
   async findUnique(query) {
-    return this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.userTask.delete(query),
+    return await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.userTask.findUnique(query),
     );
   }
 }

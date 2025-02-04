@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Task } from '@prisma/client';
+import { Prisma, Task } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { TaskResponse } from './interface/task-response.interface';
@@ -12,27 +12,34 @@ export class TaskRepository {
   constructor(
     private readonly redisService: RedisService,
     private readonly prismaService: PrismaService,
-    private asyncErrorHandlerService: AsyncErrorHandlerService,
+    private readonly asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
-  async findFirst(query): Promise<Task> {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findFirst(query: Prisma.TaskFindFirstArgs): Promise<Task> {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findFirst(query),
     );
   }
 
-  async findUnique(query): Promise<TaskResponse> {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findUnique(query: Prisma.TaskFindUniqueArgs): Promise<TaskResponse> {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findUnique(query),
     );
   }
 
-  async findUniqueOrThrow({ redisKey = '', query }): Promise<Task> {
+  async findUniqueOrThrow({
+    redisKey = '',
+    query,
+  }: {
+    redisKey?: string;
+    query: Prisma.TaskFindUniqueOrThrowArgs;
+  }): Promise<Task> {
     const redisTaskData = redisKey
       ? await this.redisService.get(redisKey)
       : null;
 
-    if (redisKey) return JSON.parse(redisTaskData);
+    if (redisTaskData && Object.keys(JSON.parse(redisTaskData)).length)
+      return JSON.parse(redisTaskData);
 
     const currentTask = this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findUniqueOrThrow(query),
@@ -48,15 +55,15 @@ export class TaskRepository {
     return currentTask;
   }
 
-  async findMany(query): Promise<TaskResponse[]> {
-    return this.asyncErrorHandlerService.execute(() =>
+  async findMany(query: Prisma.TaskFindManyArgs): Promise<TaskResponse[]> {
+    return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.task.findMany(query),
     );
   }
 
-  async create(data): Promise<Task> {
-    return this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.task.create({ data }),
+  async create(payload: Prisma.TaskCreateArgs): Promise<Task> {
+    return await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.create(payload),
     );
   }
 
@@ -68,14 +75,17 @@ export class TaskRepository {
     );
   }
 
-  async update({ redisKey = '', query, data }): Promise<Task> {
+  async update({
+    redisKey = '',
+    payload,
+  }: {
+    redisKey?: string;
+    payload: Prisma.TaskUpdateArgs;
+  }): Promise<Task> {
     if (redisKey) this.redisService.del(redisKey);
 
-    const currentTask = this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.task.update({
-        ...query,
-        data,
-      }),
+    const currentTask = await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.task.update(payload),
     );
 
     if (redisKey)

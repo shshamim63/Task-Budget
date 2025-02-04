@@ -40,3 +40,48 @@ export const mockExpense = ({
     updatedAt: faker.date.anytime(),
   };
 };
+
+export const createExpensePayload = () => {
+  const data = {
+    description: faker.lorem.sentence(),
+    amount: faker.number.int(),
+    taskId: faker.number.int(),
+    contributorId: faker.number.int(),
+  };
+
+  return {
+    data,
+    select: {
+      id: true,
+      description: true,
+      amount: true,
+      createdAt: true,
+      updatedAt: true,
+      contributor: {
+        select: {
+          username: true,
+          email: true,
+        },
+      },
+    },
+  };
+};
+
+export const findExpenseQueryMock = () => {
+  return {
+    where: { id: faker.number.int() },
+    select: {
+      id: true,
+      description: true,
+      amount: true,
+      createdAt: true,
+      updatedAt: true,
+      contributor: {
+        select: {
+          username: true,
+          email: true,
+        },
+      },
+    },
+  };
+};
