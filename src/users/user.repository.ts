@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 export class UserRepository {
   constructor(
     private readonly prismaService: PrismaService,
-    private asyncErrorHandlerService: AsyncErrorHandlerService,
+    private readonly asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
   async findFirst(query: Prisma.UserFindFirstArgs) {
