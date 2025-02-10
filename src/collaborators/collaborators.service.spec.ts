@@ -7,8 +7,7 @@ import { CollaboratorRepository } from './collaborator.repository';
 
 import { CollaboratorRepositoryMock } from './__mock__/collaborator.repository.mock';
 import { TaskRepositoryMock } from '../tasks/__mock__/task.repository.mock';
-import { UserRepositoryMock } from '../auth/__mock__/user.repository.mock';
-import { UserRepository } from '../auth/user.repository';
+
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { generateTask } from '../tasks/__mock__/task-data.mock';
 import {
@@ -21,6 +20,8 @@ import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 import { UserType } from '@prisma/client';
 import { faker } from '@faker-js/faker/.';
 import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
+import { UserRepository } from '../users/user.repository';
+import { UserRepositoryMock } from '../users/__mock__/user.repository.mock';
 describe('CollaboratorService', () => {
   let service: CollaboratorService;
   let taskPermissionService: TaskPermissionService;

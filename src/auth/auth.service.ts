@@ -16,7 +16,7 @@ import {
   SignInParams,
   SignUpParams,
 } from './interfaces/auth.interface';
-import { UserRepository } from './user.repository';
+import { UserRepository } from '../users/user.repository';
 
 @Injectable()
 export class AuthService {

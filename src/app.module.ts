@@ -22,6 +22,7 @@ import { TokenModule } from './token/token.module';
 import { AppController } from './app.controller';
 
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AppService } from './app.service';
     }),
     TaskModule,
     AuthModule,
+    UsersModule,
     ExpenseModule,
     CollaboratorModule,
     EnterpriseModule,

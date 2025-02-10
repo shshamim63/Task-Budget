@@ -31,6 +31,7 @@ import { Roles } from '../decorators/roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 @Controller('tasks')
 @UseGuards(AuthGuard, RolesGuard)
@@ -41,7 +42,7 @@ export class TaskController {
   @Get()
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
-    @User() user,
+    @User() user: JWTPayload,
   ): Promise<TaskResponseDto[]> {
     return this.taskService.getTasks(user, filterDto);
   }

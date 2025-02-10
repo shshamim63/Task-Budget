@@ -3,7 +3,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { UserRepository } from './user.repository';
-import { UserMockQuery } from './__mock__/auth-data.mock';
+import { UserMockQuery } from '../auth/__mock__/auth-data.mock';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 
 describe('UserRepository', () => {
