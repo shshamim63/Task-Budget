@@ -8,18 +8,18 @@ import { TokenService } from '../token/token.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { AssociateService } from './associates.service';
 
-import { UserRepository } from '../auth/user.repository';
 import { AssociateRepository } from './associate.repository';
 
 import { RedisService } from '../redis/redis.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
+  imports: [UsersModule],
   controllers: [AssociateController],
   providers: [
     AssociateService,
     AssociateRepository,
     PrismaService,
-    UserRepository,
     AsyncErrorHandlerService,
     ErrorHandlerService,
     TokenService,

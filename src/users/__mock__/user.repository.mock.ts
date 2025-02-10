@@ -1,4 +1,4 @@
-import { mockUser } from './auth-data.mock';
+import { mockUser } from '../../auth/__mock__/auth-data.mock';
 
 export const UserRepositoryMock = {
   findFirst: jest.fn().mockImplementation(async () => {

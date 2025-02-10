@@ -2,18 +2,13 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
-import { UserRepository } from './user.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
+  imports: [UsersModule],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    UserRepository,
-    AsyncErrorHandlerService,
-    ErrorHandlerService,
-  ],
-  exports: [UserRepository],
+  providers: [AuthService, AsyncErrorHandlerService, ErrorHandlerService],
 })
 export class AuthModule {}

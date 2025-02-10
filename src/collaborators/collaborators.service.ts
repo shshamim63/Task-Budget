@@ -11,7 +11,7 @@ import { TaskPermissionService } from '../helpers/task-permission.helper.service
 
 import { CollaboratorRepository } from './collaborator.repository';
 import { TaskRepository } from '../tasks/tasks.repository';
-import { UserRepository } from '../auth/user.repository';
+import { UserRepository } from '../users/user.repository';
 
 @Injectable()
 export class CollaboratorService {

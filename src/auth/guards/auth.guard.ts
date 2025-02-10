@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { UserRepository } from '../user.repository';
+import { UserRepository } from '../../users/user.repository';
 
 import { AuthUser } from '../interfaces/auth.interface';
 

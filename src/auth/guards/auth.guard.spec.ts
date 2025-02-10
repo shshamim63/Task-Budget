@@ -8,13 +8,14 @@ import {
   generateMockEncryptedString,
   mockUser,
 } from '../__mock__/auth-data.mock';
-import { UserRepository } from '../user.repository';
-import { UserRepositoryMock } from '../__mock__/user.repository.mock';
+
 import { TokenServiceMock } from '../../token/__mock__/token.service.mock';
 import { mockTokenPayload } from '../../token/__mock__/token-data.mock';
 import { RedisService } from '../../redis/redis.service';
 import { RedisServiceMock } from '../../redis/__mock__/redis.service.mock';
 import { REDIS_KEYS_FOR_USER } from '../../utils/redis-keys';
+import { UserRepository } from '../../users/user.repository';
+import { UserRepositoryMock } from '../../users/__mock__/user.repository.mock';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;

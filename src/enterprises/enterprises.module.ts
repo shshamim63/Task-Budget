@@ -5,17 +5,18 @@ import { EnterpriseService } from './exterprises.service';
 import { EnterpriseRepository } from './enterprise.repository';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
-import { UserRepository } from '../auth/user.repository';
+
 import { RedisService } from '../redis/redis.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
+  imports: [UsersModule],
   controllers: [EnterpriseController],
   providers: [
     EnterpriseService,
     EnterpriseRepository,
     ErrorHandlerService,
     AsyncErrorHandlerService,
-    UserRepository,
     RedisService,
   ],
 })

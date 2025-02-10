@@ -10,16 +10,17 @@ import { faker } from '@faker-js/faker/.';
 
 import { AuthService } from './auth.service';
 import { TokenService } from '../token/token.service';
-import { UserRepository } from './user.repository';
+import { UserRepository } from '../users/user.repository';
 
 import { TokenServiceMock } from '../token/__mock__/token.service.mock';
-import { UserRepositoryMock } from './__mock__/user.repository.mock';
+
 import {
   generateMockEncryptedString,
   mockSignInRequestBody,
   mockSignUpRequestBody,
   mockUser,
 } from './__mock__/auth-data.mock';
+import { UserRepositoryMock } from '../users/__mock__/user.repository.mock';
 
 describe('AuthService', () => {
   let service: AuthService;
