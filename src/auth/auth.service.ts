@@ -21,6 +21,8 @@ import { UserRepository } from '../users/user.repository';
 @Injectable()
 export class AuthService {
   private readonly saltRound = process.env.SALTROUND;
+  private readonly accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+  private readonly refresTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 
   constructor(
     private readonly tokenService: TokenService,
@@ -62,8 +64,19 @@ export class AuthService {
     })) as unknown as AuthUser;
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
-    const token = this.tokenService.generateToken(payload);
-    return new UserResponseDto({ ...user, token });
+    const accessToken = this.tokenService.generateToken(
+      payload,
+      this.accessTokenSecret,
+      '25m',
+    );
+
+    const refreshToken = this.tokenService.generateToken(
+      payload,
+      this.refresTokenSecret,
+      '2hr',
+    );
+
+    return new UserResponseDto({ ...user, accessToken, refreshToken });
   }
 
   async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
@@ -92,8 +105,18 @@ export class AuthService {
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
 
-    const token = this.tokenService.generateToken(payload);
+    const accessToken = this.tokenService.generateToken(
+      payload,
+      this.accessTokenSecret,
+      '25m',
+    );
 
-    return new UserResponseDto({ ...user, token });
+    const refreshToken = this.tokenService.generateToken(
+      payload,
+      this.refresTokenSecret,
+      '2hr',
+    );
+
+    return new UserResponseDto({ ...user, accessToken, refreshToken });
   }
 }

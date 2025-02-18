@@ -21,19 +21,21 @@ import {
 
 @Injectable()
 export class TokenService {
-  private readonly accessToken = process.env.ACCESS_TOKEN;
-
-  generateToken(payload: TokenPayload): string {
-    const token = jwt.sign(payload, this.accessToken, {
-      expiresIn: '15m',
+  generateToken(
+    payload: TokenPayload,
+    secret: string,
+    duration: string,
+  ): string {
+    const token = jwt.sign(payload, secret, {
+      expiresIn: duration,
     });
 
     return token;
   }
 
-  verifyToken(token: string): JWTPayload {
+  verifyToken(token: string, secret: string): JWTPayload {
     try {
-      return jwt.verify(token, this.accessToken) as JWTPayload;
+      return jwt.verify(token, secret) as JWTPayload;
     } catch (error) {
       let errorResponse: string;
       let errorName: string;
