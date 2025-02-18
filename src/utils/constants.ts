@@ -30,4 +30,4 @@ export const TASK_RESPONSE_MESSAGE = {
   DELETE_TASK: 'Detete task success',
 };
 
-export const origins = ['http://localhost:3000'];
+export const origins = ['http://localhost:5173'];
