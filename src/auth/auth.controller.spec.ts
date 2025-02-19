@@ -40,7 +40,8 @@ describe('AuthController', () => {
         id: expect.any(Number),
         email: expect.any(String),
         username: expect.any(String),
-        token: expect.any(String),
+        accessToken: expect.any(String),
+        refreshToken: expect.any(String),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
@@ -60,7 +61,8 @@ describe('AuthController', () => {
         id: expect.any(Number),
         email: expect.any(String),
         username: expect.any(String),
-        token: expect.any(String),
+        accessToken: expect.any(String),
+        refreshToken: expect.any(String),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });

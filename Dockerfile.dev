@@ -1,6 +1,6 @@
 FROM node:alpine
 
-RUN addgroupp -S addgroupp && adduser -S appuser -G addgroupp
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
@@ -12,8 +12,9 @@ RUN npm install
 
 COPY . .
 
-RUN chown -R appuser:addgroup /app
+RUN chown -R appuser:appgroup /app
 
-USER adduser
 
-CMD [ "npm", "run", "start:dev" ]
+USER appuser
+
+CMD ["npm", "run", "start:dev"]

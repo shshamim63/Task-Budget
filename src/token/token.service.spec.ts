@@ -7,6 +7,7 @@ import {
   ERROR_NAME,
   RESPONSE_MESSAGE,
   STATUS_CODE,
+  TOKENS,
 } from '../../src/utils/constants';
 import {
   mockRequest,
@@ -14,6 +15,7 @@ import {
   mockTokenPayload,
 } from './__mock__/token-data.mock';
 import { Request } from 'express';
+import { TokenType } from '../auth/interfaces/auth.interface';
 
 describe('TokenService', () => {
   let tokenService: TokenService;
@@ -41,14 +43,17 @@ describe('TokenService', () => {
     it('should generate a token when called', () => {
       const payload = mockTokenPayload();
 
-      const token = tokenService.generateToken(payload);
+      const accessToken = tokenService.generateToken(
+        payload,
+        TokenType.AccessToken,
+      );
 
-      expect(token).toBe('mock-token');
+      expect(accessToken).toBe('mock-token');
       expect(jwtSignSpy).toHaveBeenCalledWith(
         payload,
-        process.env.ACCESS_TOKEN,
+        TOKENS[TokenType.AccessToken].secret,
         {
-          expiresIn: '15m',
+          expiresIn: TOKENS[TokenType.AccessToken].duration,
         },
       );
     });
@@ -62,12 +67,15 @@ describe('TokenService', () => {
 
       jwtVerifySpy.mockReturnValue(payload);
 
-      const result = tokenService.verifyToken(validToken);
+      const result = tokenService.verifyToken(
+        validToken,
+        TokenType.AccessToken,
+      );
 
       expect(result).toEqual(payload);
       expect(jwtVerifySpy).toHaveBeenCalledWith(
         validToken,
-        process.env.ACCESS_TOKEN,
+        TOKENS[TokenType.AccessToken].secret,
       );
     });
 
@@ -79,7 +87,9 @@ describe('TokenService', () => {
         throw error;
       });
 
-      expect(() => tokenService.verifyToken(invalidToken)).toThrow(
+      expect(() =>
+        tokenService.verifyToken(invalidToken, TokenType.AccessToken),
+      ).toThrow(
         new UnauthorizedException(
           RESPONSE_MESSAGE.TOKEN_EXPIRED,
           ERROR_NAME.TOKEN_EXPIRED,
@@ -95,7 +105,9 @@ describe('TokenService', () => {
         throw error;
       });
 
-      expect(() => tokenService.verifyToken(invalidToken)).toThrow(
+      expect(() =>
+        tokenService.verifyToken(invalidToken, TokenType.AccessToken),
+      ).toThrow(
         new UnauthorizedException(
           RESPONSE_MESSAGE.INVALID_TOKEN,
           ERROR_NAME.INVALID_TOKEN,
@@ -111,9 +123,9 @@ describe('TokenService', () => {
         throw error;
       });
 
-      expect(() => tokenService.verifyToken(invalidToken)).toThrowError(
-        new HttpException(ERROR_NAME.UNKNOWN, STATUS_CODE.UNKNOWN),
-      );
+      expect(() =>
+        tokenService.verifyToken(invalidToken, TokenType.AccessToken),
+      ).toThrow(new HttpException(ERROR_NAME.UNKNOWN, STATUS_CODE.UNKNOWN));
     });
   });
 

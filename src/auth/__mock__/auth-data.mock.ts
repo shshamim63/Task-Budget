@@ -30,7 +30,8 @@ export const mockUser = (data: Partial<SignUpDto> = {}) => {
 export const generateAuthenticatedUser = () => {
   return {
     id: faker.number.int(),
-    token: generateMockEncryptedString(64),
+    accessToken: generateMockEncryptedString(64),
+    refreshToken: generateMockEncryptedString(64),
     createdAt: faker.date.anytime(),
     updatedAt: faker.date.anytime(),
     email: faker.internet.email(),
@@ -41,7 +42,8 @@ export const generateAuthenticatedUser = () => {
 export const mockAuthenticatedUser = (data) => {
   return {
     ...mockUser(data),
-    token: generateMockEncryptedString(64),
+    accessToken: generateMockEncryptedString(64),
+    refreshToken: generateMockEncryptedString(64),
   };
 };
 

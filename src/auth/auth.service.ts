@@ -15,22 +15,26 @@ import {
   AuthUser,
   SignInParams,
   SignUpParams,
+  TokenType,
 } from './interfaces/auth.interface';
+
 import { UserRepository } from '../users/user.repository';
+import { RedisService } from '../redis/redis.service';
+import { TOKENS } from '../utils/constants';
 
 @Injectable()
 export class AuthService {
   private readonly saltRound = process.env.SALTROUND;
-  private readonly accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
-  private readonly refresTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 
   constructor(
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
+    private readonly redisService: RedisService,
   ) {}
 
   async signup(signUpCredentials: SignUpParams): Promise<UserResponseDto> {
     const { email, password, username } = signUpCredentials;
+
     const findQuery = {
       where: {
         OR: [{ email: email }, { username: username }],
@@ -64,19 +68,8 @@ export class AuthService {
     })) as unknown as AuthUser;
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
-    const accessToken = this.tokenService.generateToken(
-      payload,
-      this.accessTokenSecret,
-      '25m',
-    );
 
-    const refreshToken = this.tokenService.generateToken(
-      payload,
-      this.refresTokenSecret,
-      '2hr',
-    );
-
-    return new UserResponseDto({ ...user, accessToken, refreshToken });
+    return this.generateUserResponse(user, payload);
   }
 
   async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
@@ -105,16 +98,25 @@ export class AuthService {
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
 
+    return this.generateUserResponse(user, payload);
+  }
+
+  private async generateUserResponse(user, payload) {
     const accessToken = this.tokenService.generateToken(
       payload,
-      this.accessTokenSecret,
-      '25m',
+      TokenType.AccessToken,
     );
 
     const refreshToken = this.tokenService.generateToken(
       payload,
-      this.refresTokenSecret,
-      '2hr',
+      TokenType.RefreshToken,
+    );
+    const { duration } = TOKENS[TokenType.RefreshToken];
+
+    await this.redisService.set(
+      `token-user-${user.id}`,
+      refreshToken,
+      duration,
     );
 
     return new UserResponseDto({ ...user, accessToken, refreshToken });

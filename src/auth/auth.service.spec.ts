@@ -21,6 +21,7 @@ import {
   mockUser,
 } from './__mock__/auth-data.mock';
 import { UserRepositoryMock } from '../users/__mock__/user.repository.mock';
+import { TokenType } from './interfaces/auth.interface';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -77,13 +78,25 @@ describe('AuthService', () => {
           username: true,
         },
       });
-      expect(tokenService.generateToken).toHaveBeenCalledWith(
+      expect(tokenService.generateToken).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
           id: newUser.id,
           email: signUpCredentials.email,
           username: signUpCredentials.username,
           userType: newUser.userType,
         }),
+        TokenType.AccessToken,
+      );
+      expect(tokenService.generateToken).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          id: newUser.id,
+          email: signUpCredentials.email,
+          username: signUpCredentials.username,
+          userType: newUser.userType,
+        }),
+        TokenType.RefreshToken,
       );
       expect(result).toMatchObject(newUser);
     });
@@ -143,6 +156,7 @@ describe('AuthService', () => {
           username: currentUser.username,
           userType: currentUser.userType,
         }),
+        TokenType.AccessToken,
       );
     });
     it('should raise BadRequestException when used with email does not exist', async () => {

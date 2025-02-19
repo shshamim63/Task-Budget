@@ -17,15 +17,18 @@ import {
   ERROR_NAME,
   RESPONSE_MESSAGE,
   STATUS_CODE,
+  TOKENS,
 } from '../utils/constants';
 
 @Injectable()
 export class TokenService {
-  generateToken(
-    payload: TokenPayload,
-    secret: string,
-    duration: string,
-  ): string {
+  private readonly;
+
+  constructor() {}
+
+  generateToken(payload: TokenPayload, secretType: string): string {
+    const { secret, duration } = TOKENS[secretType];
+
     const token = jwt.sign(payload, secret, {
       expiresIn: duration,
     });
@@ -33,7 +36,9 @@ export class TokenService {
     return token;
   }
 
-  verifyToken(token: string, secret: string): JWTPayload {
+  verifyToken(token: string, secretType: string): JWTPayload {
+    const { secret } = TOKENS[secretType];
+
     try {
       return jwt.verify(token, secret) as JWTPayload;
     } catch (error) {
