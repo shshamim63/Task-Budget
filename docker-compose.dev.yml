@@ -1,5 +1,6 @@
 services:
   api:
+    user: root
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -8,7 +9,7 @@ services:
       - 3000:3000
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
     depends_on:
       - postgres
       - redis
@@ -68,5 +69,6 @@ networks:
   lookup:
 
 volumes:
+  node_modules:
   postgres:
     driver: local
