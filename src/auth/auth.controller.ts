@@ -19,7 +19,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return singupInfo;
+    res.status(201).json(singupInfo);
   }
 
   @Post('/login')
@@ -33,6 +33,6 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return loginInfo;
+    res.status(200).json(loginInfo);
   }
 }

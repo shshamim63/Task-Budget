@@ -13,7 +13,7 @@ export const mockUser = (data: Partial<SignUpDto> = {}) => {
   return {
     id: faker.number.int(),
     email: email ?? faker.internet.email(),
-    username: username ?? faker.internet.userName(),
+    username: username ?? faker.internet.username(),
     password_hash: generateMockEncryptedString(72),
     userType: UserType.USER,
     createdAt: new Date(),
@@ -35,7 +35,7 @@ export const generateAuthenticatedUser = () => {
     createdAt: faker.date.anytime(),
     updatedAt: faker.date.anytime(),
     email: faker.internet.email(),
-    username: faker.internet.userName(),
+    username: faker.internet.username(),
   };
 };
 
@@ -59,7 +59,7 @@ export const mockSignUpRequestBody = (): SignUpDto => {
 
   return {
     email: email,
-    username: faker.internet.userName(),
+    username: faker.internet.username(),
     password: password,
     confirmPassword: password,
   };

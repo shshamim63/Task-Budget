@@ -17,7 +17,7 @@ export const generateCollaboratorList = (numOfCollaborators) => {
 const generateMember = () => {
   return {
     id: faker.number.int({ min: 1 }),
-    username: faker.internet.userName(),
+    username: faker.internet.username(),
     email: faker.internet.email(),
   };
 };
@@ -31,7 +31,7 @@ export const generateTaskWithCollaboratorData = (numOfMembers, task) => {
     budget: faker.number.float({ min: 100, max: 400 }),
     creator: {
       id: task.creatorId,
-      username: faker.internet.userName(),
+      username: faker.internet.username(),
       email: faker.internet.email(),
       userType: UserType.ADMIN,
     },

@@ -33,7 +33,7 @@ export const mockExpense = ({
     amount: requestBody.amount ?? faker.number.float(),
     taskId: taskId,
     contributor: {
-      username: creator.username ?? faker.internet.userName(),
+      username: creator.username ?? faker.internet.username(),
       email: creator.email ?? faker.internet.email(),
     },
     createdAt: faker.date.anytime(),

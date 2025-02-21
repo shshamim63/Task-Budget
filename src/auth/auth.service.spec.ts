@@ -22,6 +22,8 @@ import {
 } from './__mock__/auth-data.mock';
 import { UserRepositoryMock } from '../users/__mock__/user.repository.mock';
 import { TokenType } from './interfaces/auth.interface';
+import { RedisService } from '../redis/redis.service';
+import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -35,6 +37,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        { provide: RedisService, useValue: RedisServiceMock },
         { provide: TokenService, useValue: TokenServiceMock },
         { provide: UserRepository, useValue: UserRepositoryMock },
       ],
@@ -53,6 +56,8 @@ describe('AuthService', () => {
   });
 
   describe('signup', () => {
+    RedisServiceMock.set.mockResolvedValue(true);
+
     it('should singup a user when signup credentials are valid', async () => {
       const signUpCredentials = mockSignUpRequestBody();
       const newUser = mockUser(signUpCredentials);
@@ -104,7 +109,7 @@ describe('AuthService', () => {
       const signUpCredentials = mockSignUpRequestBody();
       const existingUser = mockUser({
         ...signUpCredentials,
-        username: faker.internet.userName(),
+        username: faker.internet.username(),
       });
 
       UserRepositoryMock.findFirst.mockResolvedValueOnce(existingUser);

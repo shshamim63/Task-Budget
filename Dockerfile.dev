@@ -1,6 +1,5 @@
-FROM node:alpine
+FROM node:lts
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
@@ -12,8 +11,5 @@ RUN npm install
 
 COPY . .
 
-RUN mkdir -p /app/dist && chown -R appuser:appgroup /app/dist
-
-USER appuser
 
 CMD ["npm", "run", "start:dev"]

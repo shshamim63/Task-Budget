@@ -1,7 +1,12 @@
-import { UserResponseDto } from '../dto/user.dto';
-import { mockAuthenticatedUser } from './auth-data.mock';
+import { Response } from 'express';
 
 export const AuthServiceMock = {
-  signup: jest.fn((data) => new UserResponseDto(mockAuthenticatedUser(data))),
-  signin: jest.fn((data) => new UserResponseDto(mockAuthenticatedUser(data))),
+  signup: jest.fn(),
+  signin: jest.fn(),
 };
+
+export const ResponseMock = {
+  cookie: jest.fn(),
+  status: jest.fn().mockReturnThis(),
+  json: jest.fn(),
+} as Partial<Response>;
