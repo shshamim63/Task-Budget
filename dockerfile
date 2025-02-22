@@ -2,7 +2,7 @@ FROM node:lts
 
 WORKDIR /app
 
-ADD package.json ./
+ADD package*.json ./
 
 COPY prisma ./prisma/
 
