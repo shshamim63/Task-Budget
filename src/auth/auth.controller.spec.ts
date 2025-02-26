@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -12,7 +12,11 @@ import {
   mockSignInRequestBody,
   mockSignUpRequestBody,
 } from './__mock__/auth-data.mock';
-import { AuthServiceMock, ResponseMock } from './__mock__/auth.service.mock';
+import {
+  AuthServiceMock,
+  RequestMock,
+  ResponseMock,
+} from './__mock__/auth.service.mock';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -65,6 +69,31 @@ describe('AuthController', () => {
 
       AuthServiceMock.signin.mockResolvedValue(userResponse);
       await authController.signin(signinCredential, ResponseMock as Response);
+
+      expect(ResponseMock.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        userResponse.refreshToken,
+        expect.objectContaining({
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        }),
+      );
+      expect(ResponseMock.status).toHaveBeenCalledWith(200);
+      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
+    });
+  });
+
+  describe('refreshToken', () => {
+    it('should create a refreshtoken info instance with e a new access token', async () => {
+      const signinCredential: SignInDto = mockSignInRequestBody();
+      const userResponse = mockAuthenticatedUser(signinCredential);
+      AuthServiceMock.refreshToken.mockResolvedValue(userResponse);
+      await authController.refreshToken(
+        RequestMock as Request,
+        ResponseMock as Response,
+      );
 
       expect(ResponseMock.cookie).toHaveBeenCalledWith(
         'refreshToken',

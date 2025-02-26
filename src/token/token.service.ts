@@ -22,8 +22,6 @@ import {
 
 @Injectable()
 export class TokenService {
-  private readonly;
-
   constructor() {}
 
   generateToken(payload: TokenPayload, secretType: string): string {

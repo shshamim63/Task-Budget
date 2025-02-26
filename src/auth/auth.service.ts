@@ -105,7 +105,10 @@ export class AuthService {
   }
 
   async refreshToken(request: Request): Promise<UserResponseDto> {
-    const currentRefreshToken = this.tokenService.getTokenFromHeader(request);
+    let currentRefreshToken = request.cookies.refreshToken;
+
+    if (!currentRefreshToken)
+      currentRefreshToken = this.tokenService.getTokenFromHeader(request);
 
     if (!currentRefreshToken)
       throw new UnauthorizedException(
@@ -113,10 +116,18 @@ export class AuthService {
         ERROR_NAME.INVALID_TOKEN,
       );
 
-    const { email } = this.tokenService.verifyToken(
+    const { email, id } = this.tokenService.verifyToken(
       currentRefreshToken,
       TokenType.RefreshToken,
     );
+
+    const redisToken = await this.redisService.get(`token-user-${id}`);
+
+    if (redisToken !== currentRefreshToken)
+      throw new UnauthorizedException(
+        RESPONSE_MESSAGE.INVALID_TOKEN,
+        ERROR_NAME.INVALID_TOKEN,
+      );
 
     const findQuery = {
       where: { email },
