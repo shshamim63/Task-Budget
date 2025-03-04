@@ -85,11 +85,12 @@ describe('AuthController', () => {
     });
   });
 
-  describe('refreshToken', () => {
+  describe('tokenRefresh', () => {
     it('should create a refreshtoken info instance with e a new access token', async () => {
       const signinCredential: SignInDto = mockSignInRequestBody();
       const userResponse = mockAuthenticatedUser(signinCredential);
-      AuthServiceMock.refreshToken.mockResolvedValue(userResponse);
+      AuthServiceMock.tokenRefresh.mockResolvedValue(userResponse);
+
       await authController.refreshToken(
         RequestMock as Request,
         ResponseMock as Response,

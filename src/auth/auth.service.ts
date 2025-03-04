@@ -17,13 +17,11 @@ import {
   AuthUser,
   SignInParams,
   SignUpParams,
-  TokenPayload,
   TokenType,
 } from './interfaces/auth.interface';
 
 import { UserRepository } from '../users/user.repository';
-import { RedisService } from '../redis/redis.service';
-import { ERROR_NAME, RESPONSE_MESSAGE, TOKENS } from '../utils/constants';
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +30,6 @@ export class AuthService {
   constructor(
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
-    private readonly redisService: RedisService,
   ) {}
 
   async signup(signUpCredentials: SignUpParams): Promise<UserResponseDto> {
@@ -72,7 +69,22 @@ export class AuthService {
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
 
-    return await this.generateUserResponse(user, payload, true);
+    const accessToken = this.tokenService.generateToken(
+      payload,
+      TokenType.AccessToken,
+    );
+    const refreshToken = this.tokenService.generateToken(
+      payload,
+      TokenType.RefreshToken,
+    );
+
+    await this.tokenService.saveRefreshToken(user.id, refreshToken);
+
+    return new UserResponseDto({
+      ...user,
+      accessToken,
+      refreshToken,
+    });
   }
 
   async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
@@ -100,11 +112,25 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
+    const accessToken = this.tokenService.generateToken(
+      payload,
+      TokenType.AccessToken,
+    );
+    const refreshToken = this.tokenService.generateToken(
+      payload,
+      TokenType.RefreshToken,
+    );
 
-    return await this.generateUserResponse(user, payload, true);
+    await this.tokenService.saveRefreshToken(user.id, refreshToken);
+
+    return new UserResponseDto({
+      ...user,
+      accessToken,
+      refreshToken,
+    });
   }
 
-  async refreshToken(request: Request): Promise<UserResponseDto> {
+  async tokenRefresh(request: Request): Promise<UserResponseDto> {
     let currentRefreshToken = request.cookies.refreshToken;
 
     if (!currentRefreshToken)
@@ -116,14 +142,17 @@ export class AuthService {
         ERROR_NAME.INVALID_TOKEN,
       );
 
-    const { email, id } = this.tokenService.verifyToken(
+    const { email, id: userId } = this.tokenService.verifyToken(
       currentRefreshToken,
       TokenType.RefreshToken,
     );
 
-    const redisToken = await this.redisService.get(`token-user-${id}`);
+    const currentSystemToken = this.tokenService.getRefreshToken(
+      userId,
+      currentRefreshToken,
+    );
 
-    if (redisToken !== currentRefreshToken)
+    if (!currentSystemToken && currentSystemToken !== currentRefreshToken)
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.INVALID_TOKEN,
         ERROR_NAME.INVALID_TOKEN,
@@ -147,44 +176,17 @@ export class AuthService {
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
 
-    const userInfoWithTokens = await this.generateUserResponse(
-      user,
-      payload,
-      false,
-    );
-
-    return { ...userInfoWithTokens, refreshToken: currentRefreshToken };
-  }
-
-  private async generateUserResponse(
-    user: AuthUser,
-    payload: TokenPayload,
-    newInstance: boolean,
-  ) {
     const accessToken = this.tokenService.generateToken(
       payload,
       TokenType.AccessToken,
     );
-    let refreshToken: string;
 
-    if (newInstance) {
-      refreshToken = this.tokenService.generateToken(
-        payload,
-        TokenType.RefreshToken,
-      );
-      const { duration } = TOKENS[TokenType.RefreshToken];
-
-      await this.redisService.set(
-        `token-user-${user.id}`,
-        refreshToken,
-        duration,
-      );
-    }
-
-    return new UserResponseDto({
+    const authData = {
       ...user,
       accessToken,
-      ...(newInstance ? { refreshToken } : {}),
-    });
+      refreshToken: currentRefreshToken,
+    };
+
+    return new UserResponseDto(authData);
   }
 }

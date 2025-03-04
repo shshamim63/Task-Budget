@@ -50,7 +50,6 @@ export class ExpenseAuthorizationService {
     const isExceedingBudget = new Decimal(newExpenseAmount)
       .plus(totalExpense)
       .greaterThan(new Decimal(currentTaskBudget));
-
     return isExceedingBudget;
   }
 

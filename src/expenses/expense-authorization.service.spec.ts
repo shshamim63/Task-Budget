@@ -272,21 +272,45 @@ describe('ExpenseAuthorizationService', () => {
     });
   });
   describe('isExpenseExceedingBudget', () => {
-    it('should return true when current expense and new expense exceeds task budget', () => {
+    it('should return true when new projected expense does not exceeds current budget', () => {
+      const currentTaskBudget = faker.number.float({
+        min: 100,
+        max: 200,
+      });
+
+      const newExpenseAmount = faker.number.float({
+        min: 10,
+        max: 20,
+      });
+
+      const totalExpense = new Prisma.Decimal(
+        faker.number.float({
+          min: 10,
+          max: 60,
+        }),
+      );
+
+      const result = service.isExpenseExceedingBudget(
+        currentTaskBudget,
+        totalExpense,
+        newExpenseAmount,
+      );
+      expect(result).toBe(false);
+    });
+    it('should return false when projected expense exceeds exceeds current budget', () => {
       const minRange = 100;
       const maxRange = 200;
+
       const currentTaskBudget = faker.number.float({
         min: minRange,
         max: maxRange,
       });
-
       const totalExpense = new Prisma.Decimal(
         faker.number.float({
-          min: 10,
-          max: currentTaskBudget,
+          min: minRange,
+          max: maxRange,
         }),
       );
-
       const newExpenseAmount = faker.number.float({
         min: minRange,
         max: maxRange,
@@ -297,33 +321,8 @@ describe('ExpenseAuthorizationService', () => {
         totalExpense,
         newExpenseAmount,
       );
+
       expect(result).toBe(true);
-    });
-    it('should return false when current expense and new expense does not exceed task budget', () => {
-      const minRange = 10;
-      const maxRange = 200;
-      const currentTaskBudget = faker.number.float({
-        min: minRange,
-        max: maxRange,
-      });
-      const totalExpense = new Prisma.Decimal(
-        faker.number.float({
-          min: 10,
-          max: minRange,
-        }),
-      );
-      const newExpenseAmount = faker.number.float({
-        min: minRange,
-        max: minRange + 20,
-      });
-
-      const result = service.isExpenseExceedingBudget(
-        currentTaskBudget,
-        totalExpense,
-        newExpenseAmount,
-      );
-
-      expect(result).toBe(false);
     });
   });
 });

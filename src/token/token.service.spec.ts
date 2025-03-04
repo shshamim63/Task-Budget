@@ -16,6 +16,10 @@ import {
 } from './__mock__/token-data.mock';
 import { Request } from 'express';
 import { TokenType } from '../auth/interfaces/auth.interface';
+import { TokenRepositoryMock } from './__mock__/token.repository.mock';
+import { TokenRepository } from './token.repository';
+import { RedisService } from '../redis/redis.service';
+import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 
 describe('TokenService', () => {
   let tokenService: TokenService;
@@ -24,7 +28,11 @@ describe('TokenService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TokenService],
+      providers: [
+        TokenService,
+        { provide: TokenRepository, useValue: TokenRepositoryMock },
+        { provide: RedisService, useValue: RedisServiceMock },
+      ],
     }).compile();
 
     tokenService = module.get<TokenService>(TokenService);
@@ -35,8 +43,6 @@ describe('TokenService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    jwtSignSpy.mockClear();
-    jwtVerifySpy.mockClear();
   });
 
   describe('generateToken', () => {

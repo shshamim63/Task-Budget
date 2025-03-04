@@ -11,15 +11,15 @@ export class TokenRepository {
     private asyncErrorHandlerService: AsyncErrorHandlerService,
   ) {}
 
-  async create(createArg: Prisma.ExpenseCreateArgs) {
-    await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.expense.create(createArg),
+  async findFirst(query: Prisma.RefreshTokenFindFirstArgs) {
+    return await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.refreshToken.findFirst(query),
     );
   }
 
-  async delete(createArg: Prisma.ExpenseCreateArgs) {
-    return await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.expense.create(createArg),
+  async create(createArg: Prisma.RefreshTokenCreateArgs) {
+    await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.refreshToken.create(createArg),
     );
   }
 }

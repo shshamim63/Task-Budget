@@ -4,7 +4,6 @@ import { AssociateController } from './associates.controller';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
-import { TokenService } from '../token/token.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { AssociateService } from './associates.service';
 
@@ -22,7 +21,6 @@ import { UsersModule } from '../users/users.module';
     PrismaService,
     AsyncErrorHandlerService,
     ErrorHandlerService,
-    TokenService,
     RedisService,
   ],
   exports: [AssociateService],

@@ -4,7 +4,7 @@ import { generateMockEncryptedString } from './auth-data.mock';
 export const AuthServiceMock = {
   signup: jest.fn(),
   signin: jest.fn(),
-  refreshToken: jest.fn(),
+  tokenRefresh: jest.fn(),
 };
 
 export const ResponseMock = {

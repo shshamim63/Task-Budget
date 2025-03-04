@@ -67,6 +67,7 @@ describe('AuthService', () => {
       UserRepositoryMock.findFirst.mockResolvedValueOnce(null);
       UserRepositoryMock.create.mockResolvedValueOnce(newUser);
       TokenServiceMock.generateToken.mockResolvedValueOnce(token);
+      TokenServiceMock.saveRefreshToken.mockResolvedValueOnce(true);
 
       const result = await service.signup(signUpCredentials);
 
@@ -150,6 +151,7 @@ describe('AuthService', () => {
       UserRepositoryMock.findUnique.mockResolvedValueOnce(currentUser);
       compareSpy.mockResolvedValueOnce(true);
       TokenServiceMock.generateToken.mockResolvedValueOnce(token);
+      TokenServiceMock.saveRefreshToken.mockResolvedValueOnce(true);
 
       const result = await service.signin(singinCredentials);
 
