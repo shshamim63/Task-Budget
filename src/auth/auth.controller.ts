@@ -16,6 +16,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      path: '/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -30,6 +31,7 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      path: '/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -39,11 +41,11 @@ export class AuthController {
   @Post('/refresh')
   async refreshToken(@Req() request: Request, @Res() res: Response) {
     const refresTokenInfo = await this.authService.tokenRefresh(request);
-
     res.cookie('refreshToken', refresTokenInfo.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      path: '/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res.status(200).json(refresTokenInfo);
