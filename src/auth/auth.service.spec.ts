@@ -76,12 +76,17 @@ describe('AuthService', () => {
           email: signUpCredentials.email,
           username: signUpCredentials.username,
           password_hash: newUser.password_hash,
+          firstName: signUpCredentials.firstName,
+          lastName: signUpCredentials.lastName,
         },
         select: {
           email: true,
           id: true,
           userType: true,
           username: true,
+          firstName: true,
+          lastName: true,
+          active: true,
         },
       });
       expect(tokenService.generateToken).toHaveBeenNthCalledWith(
