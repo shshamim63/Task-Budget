@@ -1,15 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { Request, Response } from 'express';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 import { SignInDto, SignUpDto } from './dto/auth-credentials.dto';
 
 import {
+  mockAuthenticatedUser,
   mockSignInRequestBody,
   mockSignUpRequestBody,
 } from './__mock__/auth-data.mock';
-import { AuthServiceMock } from './__mock__/auth.service.mock';
+import {
+  AuthServiceMock,
+  RequestMock,
+  ResponseMock,
+} from './__mock__/auth.service.mock';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -32,39 +39,75 @@ describe('AuthController', () => {
   describe('signup', () => {
     it('should successfully sign up a user and serialize the response', async () => {
       const signupCredentials: SignUpDto = mockSignUpRequestBody();
+      const userResponse = mockAuthenticatedUser(signupCredentials);
 
-      const result = await authController.signup(signupCredentials);
+      AuthServiceMock.signup.mockResolvedValue(userResponse);
+
+      await authController.signup(signupCredentials, ResponseMock as Response);
 
       expect(authService.signup).toHaveBeenCalledWith(signupCredentials);
-      expect(result).toMatchObject({
-        id: expect.any(Number),
-        email: expect.any(String),
-        username: expect.any(String),
-        token: expect.any(String),
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
-      expect(result).toMatchObject({
-        email: signupCredentials.email,
-        username: signupCredentials.username,
-      });
+
+      expect(ResponseMock.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        userResponse.refreshToken,
+        expect.objectContaining({
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        }),
+      );
+      expect(ResponseMock.status).toHaveBeenCalledWith(201);
+      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
     });
   });
 
   describe('signin', () => {
     it('should successfully login the user', async () => {
       const signinCredential: SignInDto = mockSignInRequestBody();
-      const result = await authController.signin(signinCredential);
+      const userResponse = mockAuthenticatedUser(signinCredential);
 
-      expect(result).toMatchObject({
-        id: expect.any(Number),
-        email: expect.any(String),
-        username: expect.any(String),
-        token: expect.any(String),
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
-      expect(result.email).toEqual(signinCredential.email);
+      AuthServiceMock.signin.mockResolvedValue(userResponse);
+      await authController.signin(signinCredential, ResponseMock as Response);
+
+      expect(ResponseMock.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        userResponse.refreshToken,
+        expect.objectContaining({
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        }),
+      );
+      expect(ResponseMock.status).toHaveBeenCalledWith(200);
+      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
+    });
+  });
+
+  describe('tokenRefresh', () => {
+    it('should create a refreshtoken info instance with e a new access token', async () => {
+      const signinCredential: SignInDto = mockSignInRequestBody();
+      const userResponse = mockAuthenticatedUser(signinCredential);
+      AuthServiceMock.tokenRefresh.mockResolvedValue(userResponse);
+
+      await authController.refreshToken(
+        RequestMock as Request,
+        ResponseMock as Response,
+      );
+
+      expect(ResponseMock.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        userResponse.refreshToken,
+        expect.objectContaining({
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        }),
+      );
+      expect(ResponseMock.status).toHaveBeenCalledWith(200);
+      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
     });
   });
 });

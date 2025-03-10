@@ -17,23 +17,34 @@ import {
   ERROR_NAME,
   RESPONSE_MESSAGE,
   STATUS_CODE,
+  TOKENS,
 } from '../utils/constants';
+import { TokenRepository } from './token.repository';
+import { RedisService } from '../redis/redis.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TokenService {
-  private readonly accessToken = process.env.ACCESS_TOKEN;
+  constructor(
+    private readonly tokenRepository: TokenRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
-  generateToken(payload: TokenPayload): string {
-    const token = jwt.sign(payload, this.accessToken, {
-      expiresIn: '15m',
+  generateToken(payload: TokenPayload, secretType: string): string {
+    const { secret, duration } = TOKENS[secretType];
+
+    const token = jwt.sign(payload, secret, {
+      expiresIn: duration,
     });
 
     return token;
   }
 
-  verifyToken(token: string): JWTPayload {
+  verifyToken(token: string, secretType: string): JWTPayload {
+    const { secret } = TOKENS[secretType];
+
     try {
-      return jwt.verify(token, this.accessToken) as JWTPayload;
+      return jwt.verify(token, secret) as JWTPayload;
     } catch (error) {
       let errorResponse: string;
       let errorName: string;
@@ -62,6 +73,35 @@ export class TokenService {
     }
 
     return undefined;
+  }
+
+  async saveRefreshToken(id: number, token: string): Promise<void> {
+    const data = { userId: id, token };
+    await this.tokenRepository.create({ data });
+  }
+
+  async getRefreshToken(userId: number, token: string) {
+    const redisRefreshToken = await this.redisService.get(
+      `token-user-${userId}`,
+    );
+
+    if (redisRefreshToken) return redisRefreshToken;
+
+    const oneHourAgo = new Date(Date.now() - TOKENS.refresTokenSecret.duration);
+
+    const query = {
+      where: {
+        id: userId,
+        token,
+        createdAt: {
+          gte: oneHourAgo,
+        },
+      },
+    } as Prisma.RefreshTokenFindFirstArgs;
+
+    const savedRefreshToken = this.tokenRepository.findFirst(query);
+
+    return savedRefreshToken;
   }
 
   createAuthTokenPayload(data: AuthUser): TokenPayload {

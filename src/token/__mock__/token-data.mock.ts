@@ -20,7 +20,7 @@ export const mockTokenPayload = (user = {} as AuthUser) => {
   return {
     id: id ?? faker.number.int({ min: 1 }),
     email: email ?? faker.internet.email(),
-    username: username ?? faker.internet.userName(),
+    username: username ?? faker.internet.username(),
     userType: userType ?? UserType.USER,
     exp: faker.number.int(),
     iat: faker.number.int(),

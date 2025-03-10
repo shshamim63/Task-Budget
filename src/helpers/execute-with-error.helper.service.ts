@@ -9,7 +9,6 @@ export class AsyncErrorHandlerService {
     try {
       return await callback();
     } catch (error) {
-      console.log(error);
       this.errorHandlerService.handle(error);
     }
   }

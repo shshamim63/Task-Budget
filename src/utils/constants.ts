@@ -1,6 +1,17 @@
 export const ROLES_KEY = 'roles';
 export const AUTHORIZATION_TYPE = 'Bearer';
 
+export const TOKENS = {
+  accessTokenSecret: {
+    secret: process.env.ACCESS_TOKEN_SECRET,
+    duration: 900,
+  },
+  refresTokenSecret: {
+    secret: process.env.REFRESH_TOKEN_SECRET,
+    duration: 3600,
+  },
+};
+
 export const STATUS_CODE = {
   UNKNOWN: 520,
 };

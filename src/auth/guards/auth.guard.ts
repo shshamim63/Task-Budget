@@ -7,7 +7,7 @@ import {
 
 import { UserRepository } from '../../users/user.repository';
 
-import { AuthUser } from '../interfaces/auth.interface';
+import { AuthUser, TokenType } from '../interfaces/auth.interface';
 
 import { TokenService } from '../../token/token.service';
 import { RedisService } from '../../redis/redis.service';
@@ -37,7 +37,7 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    const payload = this.tokenService.verifyToken(token);
+    const payload = this.tokenService.verifyToken(token, TokenType.AccessToken);
 
     if (!payload) {
       throw new UnauthorizedException(

@@ -30,7 +30,7 @@ export class UserRepository {
 
   async create(data) {
     return await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.user.create({ data }),
+      this.prismaService.user.create(data),
     );
   }
 }

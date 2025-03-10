@@ -16,6 +16,7 @@ import { RedisServiceMock } from '../../redis/__mock__/redis.service.mock';
 import { REDIS_KEYS_FOR_USER } from '../../utils/redis-keys';
 import { UserRepository } from '../../users/user.repository';
 import { UserRepositoryMock } from '../../users/__mock__/user.repository.mock';
+import { TokenType } from '../interfaces/auth.interface';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
@@ -85,7 +86,10 @@ describe('AuthGuard', () => {
     expect(tokenService.getTokenFromHeader).toHaveBeenCalledWith(
       context.switchToHttp().getRequest(),
     );
-    expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
+    expect(tokenService.verifyToken).toHaveBeenCalledWith(
+      authToken,
+      TokenType.AccessToken,
+    );
     expect(redisService.get).toHaveBeenCalledWith(
       `${REDIS_KEYS_FOR_USER.AUTH_USER}:${currentUser.id}`,
     );
@@ -110,7 +114,10 @@ describe('AuthGuard', () => {
       RedisServiceMock.get.mockResolvedValueOnce(JSON.stringify(currentUser));
       const result = await authGuard.canActivate(context);
       expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
-      expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
+      expect(tokenService.verifyToken).toHaveBeenCalledWith(
+        authToken,
+        TokenType.AccessToken,
+      );
       expect(redisService.get).toHaveBeenCalledWith(
         `${REDIS_KEYS_FOR_USER.AUTH_USER}:${currentUser.id}`,
       );
@@ -126,7 +133,10 @@ describe('AuthGuard', () => {
       const result = await authGuard.canActivate(context);
 
       expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
-      expect(tokenService.verifyToken).toHaveBeenCalledWith(authToken);
+      expect(tokenService.verifyToken).toHaveBeenCalledWith(
+        authToken,
+        TokenType.AccessToken,
+      );
       expect(userRepository.findUnique).toHaveBeenCalledWith({
         where: { id: tokenPayload.id },
         select: {

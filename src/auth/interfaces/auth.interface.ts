@@ -7,6 +7,8 @@ export interface SignInParams {
 
 export interface SignUpParams extends SignInParams {
   username: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface TokenPayload {
@@ -35,3 +37,8 @@ export type AuthUser = Omit<
 > & {
   password_hash?: string;
 };
+
+export enum TokenType {
+  AccessToken = 'accessTokenSecret',
+  RefreshToken = 'refresTokenSecret',
+}

@@ -23,7 +23,7 @@ async function main() {
   const regularUser1 = await prisma.user.create({
     data: {
       email: faker.internet.email(),
-      username: faker.internet.userName(),
+      username: faker.internet.username(),
       password_hash: await bcrypt.hash('demouser', SALTROUND),
       userType: UserType.USER,
     },
@@ -31,7 +31,7 @@ async function main() {
   const regularUser2 = await prisma.user.create({
     data: {
       email: faker.internet.email(),
-      username: faker.internet.userName(),
+      username: faker.internet.username(),
       password_hash: await bcrypt.hash('demouser', SALTROUND),
       userType: UserType.USER,
     },
@@ -40,7 +40,7 @@ async function main() {
   const regularUser3 = await prisma.user.create({
     data: {
       email: faker.internet.email(),
-      username: faker.internet.userName(),
+      username: faker.internet.username(),
       password_hash: await bcrypt.hash('demouser', SALTROUND),
       userType: UserType.USER,
     },
