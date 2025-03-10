@@ -11,7 +11,6 @@ export class AuthController {
   @Post('/signup')
   async signup(@Body() singUpcredentials: SignUpDto, @Res() res: Response) {
     const singupInfo = await this.authService.signup(singUpcredentials);
-
     res.cookie('refreshToken', singupInfo.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

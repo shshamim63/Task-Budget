@@ -5,8 +5,11 @@ export class UserResponseDto {
   id: number;
   username: string;
   email: string;
+  firstName: string;
+  lastName: string;
   accessToken: string;
   refreshToken: string;
+  active: boolean;
   userType: UserType;
   createdAt: Date;
   updatedAt: Date;

@@ -33,7 +33,8 @@ export class AuthService {
   ) {}
 
   async signup(signUpCredentials: SignUpParams): Promise<UserResponseDto> {
-    const { email, password, username } = signUpCredentials;
+    const { email, password, username, lastName, firstName } =
+      signUpCredentials;
 
     const findQuery = {
       where: {
@@ -53,13 +54,23 @@ export class AuthService {
 
     const hashPassword = await bcrypt.hash(password, Number(this.saltRound));
 
-    const data = { email, username, password_hash: hashPassword };
+    const data = {
+      email,
+      username,
+      firstName,
+      lastName,
+      password_hash: hashPassword,
+    };
+
     const query = {
       select: {
         id: true,
         email: true,
         username: true,
         userType: true,
+        firstName: true,
+        lastName: true,
+        active: true,
       },
     };
     const user = (await this.userRepository.create({

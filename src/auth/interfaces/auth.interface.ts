@@ -7,6 +7,8 @@ export interface SignInParams {
 
 export interface SignUpParams extends SignInParams {
   username: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface TokenPayload {
