@@ -12,6 +12,7 @@ import { TaskPermissionService } from '../helpers/task-permission.helper.service
 import { CollaboratorRepository } from './collaborator.repository';
 import { TaskRepository } from '../tasks/tasks.repository';
 import { UserRepository } from '../users/user.repository';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class CollaboratorService {
@@ -39,7 +40,7 @@ export class CollaboratorService {
       members: taskCollaboratorInfo.members.map((data) => data.member),
     };
 
-    return new TaskCollaborators(taskWithCollaborators);
+    return plainToInstance(TaskCollaborators, taskWithCollaborators);
   }
 
   async assignMember(

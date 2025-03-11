@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateDesignationDto } from './dto/createDesignation.dto';
 import { DesignationRepository } from './designations.repository';
 import { DesignationDto } from './dto/designation.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class DesignationService {
@@ -31,6 +32,6 @@ export class DesignationService {
       data,
       query,
     });
-    return new DesignationDto(designation);
+    return plainToInstance(DesignationDto, designation);
   }
 }

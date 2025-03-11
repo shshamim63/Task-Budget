@@ -3,6 +3,7 @@ import { Prisma, TaskStatus } from '@prisma/client';
 import { TaskResponseDto } from '../dto/task.dto';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { REDIS_KEYS_FOR_TASK } from '../../utils/redis-keys';
+import { plainToInstance } from 'class-transformer';
 
 export const generateTaskDto = (): CreateTaskDto => {
   return {
@@ -27,7 +28,7 @@ export const generateTask = (
       taskDto.budget ?? faker.number.float({ min: 100, max: 10000 }),
     ),
   };
-  return new TaskResponseDto(task);
+  return plainToInstance(TaskResponseDto, task);
 };
 
 export const generateTasks = (numOfTasks: number = 1): TaskResponseDto[] => {

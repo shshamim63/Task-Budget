@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
 import * as bcrypt from 'bcrypt';
 
@@ -91,7 +92,7 @@ export class AuthService {
 
     await this.tokenService.saveRefreshToken(user.id, refreshToken);
 
-    return new UserResponseDto({
+    return plainToInstance(UserResponseDto, {
       ...user,
       accessToken,
       refreshToken,
@@ -107,6 +108,9 @@ export class AuthService {
         username: true,
         password_hash: true,
         userType: true,
+        firstName: true,
+        lastName: true,
+        active: true,
       },
     };
 
@@ -123,6 +127,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
 
     const payload = this.tokenService.createAuthTokenPayload({ ...user });
+
     const accessToken = this.tokenService.generateToken(
       payload,
       TokenType.AccessToken,
@@ -134,7 +139,7 @@ export class AuthService {
 
     await this.tokenService.saveRefreshToken(user.id, refreshToken);
 
-    return new UserResponseDto({
+    return plainToInstance(UserResponseDto, {
       ...user,
       accessToken,
       refreshToken,
@@ -176,6 +181,9 @@ export class AuthService {
         email: true,
         username: true,
         userType: true,
+        firstName: true,
+        lastName: true,
+        active: true,
       },
     };
 
@@ -198,6 +206,6 @@ export class AuthService {
       refreshToken: currentRefreshToken,
     };
 
-    return new UserResponseDto(authData);
+    return plainToInstance(UserResponseDto, authData);
   }
 }

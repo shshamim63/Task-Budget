@@ -16,6 +16,7 @@ import { ExpenseRepository } from './expense.repository';
 import { RESPONSE_MESSAGE } from '../utils/constants';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
 import { Prisma } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ExpenseService {
@@ -74,7 +75,7 @@ export class ExpenseService {
     };
     const expense = await this.expenseRepository.create(createArgument);
 
-    return new ExpenseResponseDto(expense);
+    return plainToInstance(ExpenseResponseDto, expense);
   }
 
   async getExpense(
@@ -108,7 +109,7 @@ export class ExpenseService {
     };
     const expense = await this.expenseRepository.findUnique(query);
 
-    return new ExpenseResponseDto(expense);
+    return plainToInstance(ExpenseResponseDto, expense);
   }
 
   async getExpenses(
@@ -192,7 +193,7 @@ export class ExpenseService {
     const payload = { ...query, data: updateExpenseDto };
     const updatedExpense = await this.expenseRepository.update(payload);
 
-    return new ExpenseResponseDto(updatedExpense);
+    return plainToInstance(ExpenseResponseDto, updatedExpense);
   }
 
   private async totalExpense(taskId: number) {

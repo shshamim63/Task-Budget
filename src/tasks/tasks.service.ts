@@ -12,6 +12,7 @@ import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
 import { AssociateService } from '../associates/associates.service';
 import { REDIS_KEYS_FOR_TASK } from '../utils/redis-keys';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class TaskService {
@@ -46,7 +47,7 @@ export class TaskService {
     if (!task)
       throw new NotFoundException(`Task with id: ${id} does not exist`);
 
-    return new TaskResponseDto(task);
+    return plainToInstance(TaskResponseDto, task);
   }
 
   async createTask(
@@ -66,7 +67,7 @@ export class TaskService {
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create({ data });
 
-    return new TaskResponseDto(task);
+    return plainToInstance(TaskResponseDto, task);
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
@@ -103,7 +104,7 @@ export class TaskService {
       payload,
     });
 
-    return new TaskResponseDto(updatedTask);
+    return plainToInstance(TaskResponseDto, updatedTask);
   }
 
   async updateTaskStatus(
@@ -131,7 +132,7 @@ export class TaskService {
       payload,
     });
 
-    return new TaskResponseDto(updatedTask);
+    return plainToInstance(TaskResponseDto, updatedTask);
   }
 
   private buildGetTasksWhere<T>(
