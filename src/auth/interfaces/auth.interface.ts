@@ -16,6 +16,7 @@ export interface TokenPayload {
   id: number;
   username: string;
   userType: UserType;
+  active: boolean;
 }
 
 export interface JWTPayload extends TokenPayload {
@@ -31,12 +32,26 @@ export type AuthUser = Omit<
       username: true;
       userType: true;
       password_hash: true;
+      active: true;
     };
   }>,
   'password_hash'
 > & {
   password_hash?: string;
 };
+
+export type AuthUserInfo = Prisma.UserGetPayload<{
+  select: {
+    id: true;
+    email: true;
+    username: true;
+    userType: true;
+    password_hash: true;
+    active: true;
+    firstName: true;
+    lastName: true;
+  };
+}> & { accessToken: string; refreshToken: string };
 
 export enum TokenType {
   AccessToken = 'accessTokenSecret',

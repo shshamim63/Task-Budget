@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BadRequestException,
@@ -24,6 +26,7 @@ import { UserRepositoryMock } from '../users/__mock__/user.repository.mock';
 import { TokenType } from './interfaces/auth.interface';
 import { RedisService } from '../redis/redis.service';
 import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
+import { RequestMock } from './__mock__/auth.service.mock';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -192,4 +195,36 @@ describe('AuthService', () => {
       );
     });
   });
+
+  describe('logout', () => {
+    it('should not call getTokenFromHeader when cookie has refreshToken', async () => {
+      TokenServiceMock.getTokenFromHeader.mockResolvedValueOnce(true);
+      TokenServiceMock.verifyToken.mockResolvedValueOnce(true);
+      TokenServiceMock.removeToken.mockResolvedValueOnce(true);
+      await service.logout(RequestMock as Request);
+      expect(tokenService.getTokenFromHeader).toHaveBeenCalledTimes(0);
+      expect(tokenService.verifyToken).toHaveBeenCalled();
+      expect(tokenService.removeToken).toHaveBeenCalled();
+    });
+    it('should call getTokenFromHeader, verifyToken, removeToken when cookies is absent', async () => {
+      const request = { ...RequestMock };
+      delete request.cookies;
+      TokenServiceMock.getTokenFromHeader.mockResolvedValueOnce(true);
+      TokenServiceMock.verifyToken.mockResolvedValueOnce(true);
+      TokenServiceMock.removeToken.mockResolvedValueOnce(true);
+      await service.logout(request as Request);
+      expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
+      expect(tokenService.verifyToken).toHaveBeenCalled();
+      expect(tokenService.removeToken).toHaveBeenCalled();
+    });
+  });
+
+  // describe('tokenRefresh', () => {
+  //   it('should return a authUserInfo data', async () => {
+  //     TokenServiceMock.verifyToken.mockResolvedValueOnce(true);
+  //     TokenServiceMock.getRefreshToken.mockResolvedValueOnce(true);
+  //     UserRepositoryMock.findUnique.mockResolvedValueOnce(true);
+  //     const result = await service.tokenRefresh(RequestMock as Request);
+  //   });
+  // });
 });

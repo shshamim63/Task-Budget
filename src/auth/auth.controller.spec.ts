@@ -85,6 +85,25 @@ describe('AuthController', () => {
     });
   });
 
+  describe('logout', () => {
+    it('should invalidate the cookie and send a successfull response', async () => {
+      AuthServiceMock.logout.mockResolvedValue(true);
+
+      await authController.logout(
+        RequestMock as Request,
+        ResponseMock as Response,
+      );
+
+      expect(ResponseMock.clearCookie).toHaveBeenCalledWith(
+        'refreshToken',
+        expect.objectContaining({ path: '/auth/refresh' }),
+      );
+      expect(ResponseMock.status).toHaveBeenCalledWith(200);
+      expect(ResponseMock.json).toHaveBeenCalledWith({
+        message: 'Logout successful',
+      });
+    });
+  });
   describe('tokenRefresh', () => {
     it('should create a refreshtoken info instance with e a new access token', async () => {
       const signinCredential: SignInDto = mockSignInRequestBody();

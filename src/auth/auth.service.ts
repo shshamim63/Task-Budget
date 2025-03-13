@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
 
 import * as bcrypt from 'bcrypt';
 
@@ -12,10 +11,9 @@ import { Request } from 'express';
 
 import { TokenService } from '../token/token.service';
 
-import { UserResponseDto } from './dto/user.dto';
-
 import {
   AuthUser,
+  AuthUserInfo,
   SignInParams,
   SignUpParams,
   TokenType,
@@ -33,7 +31,7 @@ export class AuthService {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async signup(signUpCredentials: SignUpParams): Promise<UserResponseDto> {
+  async signup(signUpCredentials: SignUpParams): Promise<AuthUserInfo> {
     const { email, password, username, lastName, firstName } =
       signUpCredentials;
 
@@ -64,15 +62,7 @@ export class AuthService {
     };
 
     const query = {
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        userType: true,
-        firstName: true,
-        lastName: true,
-        active: true,
-      },
+      select: this.userQuerySelect(),
     };
     const user = (await this.userRepository.create({
       data,
@@ -92,25 +82,19 @@ export class AuthService {
 
     await this.tokenService.saveRefreshToken(user.id, refreshToken);
 
-    return plainToInstance(UserResponseDto, {
+    return {
       ...user,
       accessToken,
       refreshToken,
-    });
+    } as AuthUserInfo;
   }
 
-  async signin({ email, password }: SignInParams): Promise<UserResponseDto> {
+  async signin({ email, password }: SignInParams): Promise<AuthUserInfo> {
     const findQuery = {
       where: { email },
       select: {
-        id: true,
-        email: true,
-        username: true,
+        ...this.userQuerySelect(),
         password_hash: true,
-        userType: true,
-        firstName: true,
-        lastName: true,
-        active: true,
       },
     };
 
@@ -139,14 +123,28 @@ export class AuthService {
 
     await this.tokenService.saveRefreshToken(user.id, refreshToken);
 
-    return plainToInstance(UserResponseDto, {
+    return {
       ...user,
       accessToken,
       refreshToken,
-    });
+    } as AuthUserInfo;
   }
 
-  async tokenRefresh(request: Request): Promise<UserResponseDto> {
+  async logout(request: Request): Promise<void> {
+    let currentRefreshToken = request?.cookies?.refreshToken;
+
+    if (!currentRefreshToken)
+      currentRefreshToken = this.tokenService.getTokenFromHeader(request);
+
+    const { id: userId } = this.tokenService.verifyToken(
+      currentRefreshToken,
+      TokenType.RefreshToken,
+    );
+
+    await this.tokenService.removeToken(userId, currentRefreshToken);
+  }
+
+  async tokenRefresh(request: Request): Promise<AuthUserInfo> {
     let currentRefreshToken = request.cookies.refreshToken;
 
     if (!currentRefreshToken)
@@ -168,7 +166,7 @@ export class AuthService {
       currentRefreshToken,
     );
 
-    if (!currentSystemToken && currentSystemToken !== currentRefreshToken)
+    if (!currentSystemToken)
       throw new UnauthorizedException(
         RESPONSE_MESSAGE.INVALID_TOKEN,
         ERROR_NAME.INVALID_TOKEN,
@@ -176,15 +174,7 @@ export class AuthService {
 
     const findQuery = {
       where: { email },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        userType: true,
-        firstName: true,
-        lastName: true,
-        active: true,
-      },
+      select: this.userQuerySelect(),
     };
 
     const user = (await this.userRepository.findUnique(
@@ -206,6 +196,18 @@ export class AuthService {
       refreshToken: currentRefreshToken,
     };
 
-    return plainToInstance(UserResponseDto, authData);
+    return authData as AuthUserInfo;
+  }
+
+  private userQuerySelect() {
+    return {
+      id: true,
+      email: true,
+      username: true,
+      userType: true,
+      firstName: true,
+      lastName: true,
+      active: true,
+    };
   }
 }
