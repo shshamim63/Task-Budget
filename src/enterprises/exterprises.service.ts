@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { Enterprise } from '@prisma/client';
+
 import { EnterpriseRepository } from './enterprise.repository';
+
 import { CreateEnterpriseDto } from './dto/create-enterprise.dto';
-import { EnterpriseDto } from './dto/enterprise.dto';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class EnterpriseService {
   constructor(private readonly enterpriseRepository: EnterpriseRepository) {}
 
-  async createEnterprise(data: CreateEnterpriseDto) {
+  async createEnterprise(data: CreateEnterpriseDto): Promise<Enterprise> {
     const enterprise = await this.enterpriseRepository.create(data);
-    return plainToInstance(EnterpriseDto, enterprise);
+    return enterprise;
   }
 }
