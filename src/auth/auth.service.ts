@@ -161,7 +161,7 @@ export class AuthService {
       TokenType.RefreshToken,
     );
 
-    const currentSystemToken = this.tokenService.getRefreshToken(
+    const currentSystemToken = await this.tokenService.getRefreshToken(
       userId,
       currentRefreshToken,
     );
