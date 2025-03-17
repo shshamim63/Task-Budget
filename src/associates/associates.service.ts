@@ -1,60 +1,66 @@
 import { Injectable } from '@nestjs/common';
 
+import { Associate } from '@prisma/client';
+
 import { AssociateRepository } from './associate.repository';
 
 import { CreateAssociateDto } from './dto/create-associate.dto';
-import { AssociateDto } from './dto/associate.dto';
-import { AssociateTo } from './dto/associate-to.dto';
+
 import { REDIS_KEYS_FOR_ASSOCIATE } from '../utils/redis-keys';
-import { plainToInstance } from 'class-transformer';
+import { CreateAssociateResult } from './Interfaces/associate.interface';
 
 @Injectable()
 export class AssociateService {
   constructor(private readonly associateRepository: AssociateRepository) {}
 
-  async createAssociate(body: CreateAssociateDto): Promise<AssociateDto> {
+  async createAssociate(
+    body: CreateAssociateDto,
+  ): Promise<CreateAssociateResult> {
     const { departmentId, designationId, enterpriseId, affiliateId } = body;
 
-    const query = {
-      id: true,
-      department: {
-        select: {
-          id: true,
-          name: true,
-        },
+    const createAssociatePayload = {
+      data: {
+        department: { connect: { id: departmentId } },
+        designation: { connect: { id: designationId } },
+        enterprise: { connect: { id: enterpriseId } },
+        affiliate: { connect: { id: affiliateId } },
       },
-      designation: {
-        select: {
-          id: true,
-          name: true,
+      select: {
+        id: true,
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
-      },
-      enterprise: {
-        select: {
-          id: true,
-          name: true,
+        designation: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
-      },
-      affiliate: {
-        select: {
-          id: true,
-          email: true,
+        enterprise: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        affiliate: {
+          select: {
+            id: true,
+            email: true,
+          },
         },
       },
     };
 
-    const data = {
-      department: { connect: { id: departmentId } },
-      designation: { connect: { id: designationId } },
-      enterprise: { connect: { id: enterpriseId } },
-      affiliate: { connect: { id: affiliateId } },
-    };
-
-    const associate = await this.associateRepository.create({ data, query });
-    return plainToInstance(AssociateDto, associate);
+    const associate = await this.associateRepository.create({
+      ...createAssociatePayload,
+    });
+    return associate;
   }
 
-  async userAssociatesTo(userId: number): Promise<AssociateTo[]> {
+  async userAssociatesTo(userId: number): Promise<Associate[]> {
     const userAssociateToQuery = { affiliateId: userId };
     const { PREFIX, SUFFIX } = REDIS_KEYS_FOR_ASSOCIATE.AFFILIATE_TO;
     const redisKey = `${PREFIX}-${userId}-${SUFFIX}`;
@@ -64,8 +70,6 @@ export class AssociateService {
       query: userAssociateToQuery,
     });
 
-    return associatesTo.map((associate) =>
-      plainToInstance(AssociateTo, associate),
-    );
+    return associatesTo;
   }
 }

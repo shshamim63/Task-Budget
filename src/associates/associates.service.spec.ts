@@ -55,7 +55,7 @@ describe('AssociateService', () => {
 
       expect(result).toEqual(associate);
 
-      const query = {
+      const select = {
         id: true,
         department: {
           select: {
@@ -88,7 +88,10 @@ describe('AssociateService', () => {
         enterprise: { connect: { id: enterpriseId } },
         affiliate: { connect: { id: affiliateId } },
       };
-      expect(associateRespository.create).toHaveBeenCalledWith({ data, query });
+      expect(associateRespository.create).toHaveBeenCalledWith({
+        data,
+        select,
+      });
     });
   });
 

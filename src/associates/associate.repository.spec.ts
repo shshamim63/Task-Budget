@@ -62,7 +62,7 @@ describe('AssociateRepository', () => {
       affiliate: { id: affiliateId },
     } = associate;
 
-    const query = {
+    const select = {
       id: true,
       department: {
         select: {
@@ -99,11 +99,13 @@ describe('AssociateRepository', () => {
 
     it('should call prismaService.associate.create with correct parameters', async () => {
       PrismaServiceMock.associate.create.mockResolvedValueOnce(associate);
-      const result = await repository.create({ data, query });
+
+      const result = await repository.create({ data, select });
+
       expect(result).toEqual(associate);
       expect(prismaService.associate.create).toHaveBeenCalledWith({
         data,
-        ...{ select: query },
+        select,
       });
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
     });
@@ -116,6 +118,7 @@ describe('AssociateRepository', () => {
       expect(result).toEqual(associate);
       expect(prismaService.associate.create).toHaveBeenCalledWith({
         data,
+        select: {},
       });
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
     });

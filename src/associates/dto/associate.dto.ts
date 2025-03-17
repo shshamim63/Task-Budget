@@ -18,7 +18,7 @@ export class AssociateDto {
 
   affiliate: {
     id: number;
-    name: string;
+    email: string;
   };
 
   constructor(partial: Partial<AssociateDto>) {
