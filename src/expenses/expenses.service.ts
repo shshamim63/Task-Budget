@@ -5,18 +5,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { Expense, Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
+
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
 import { CreateExpenseDto } from './dto/create-expense.dto';
-import { ExpenseResponseDto } from './dto/expense.dto';
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { Decimal } from '@prisma/client/runtime/library';
+
 import { ExpenseRepository } from './expense.repository';
+
 import { RESPONSE_MESSAGE } from '../utils/constants';
+
 import { ExpenseAuthorizationService } from './expense-authorization.service';
-import { Prisma } from '@prisma/client';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ExpenseService {
@@ -29,7 +31,7 @@ export class ExpenseService {
     user: JWTPayload,
     task: TaskResponseDto,
     createExpenseDto: CreateExpenseDto,
-  ): Promise<ExpenseResponseDto> {
+  ): Promise<Expense> {
     const { id: userId } = user;
     const { id: taskId, budget } = task;
     const { amount: newExpenseAmount } = createExpenseDto;
@@ -75,14 +77,14 @@ export class ExpenseService {
     };
     const expense = await this.expenseRepository.create(createArgument);
 
-    return plainToInstance(ExpenseResponseDto, expense);
+    return expense;
   }
 
   async getExpense(
     user: JWTPayload,
     task: TaskResponseDto,
     expenseId: number,
-  ): Promise<ExpenseResponseDto> {
+  ): Promise<Expense> {
     const isAuthorized = await this.expenseAuthorizationService.canViewExpense(
       user,
       task,
@@ -109,13 +111,13 @@ export class ExpenseService {
     };
     const expense = await this.expenseRepository.findUnique(query);
 
-    return plainToInstance(ExpenseResponseDto, expense);
+    return expense;
   }
 
   async getExpenses(
     user: JWTPayload,
     task: TaskResponseDto,
-  ): Promise<ExpenseResponseDto[]> {
+  ): Promise<Expense[]> {
     const isAuthorized = await this.expenseAuthorizationService.canViewExpense(
       user,
       task,
@@ -143,7 +145,7 @@ export class ExpenseService {
 
     const expenses = await this.expenseRepository.findMany(query);
 
-    return expenses.map((expense) => new ExpenseResponseDto(expense));
+    return expenses;
   }
 
   async updateExpense(
@@ -151,7 +153,7 @@ export class ExpenseService {
     task: TaskResponseDto,
     updateExpenseDto: UpdateExpenseDto,
     expenseId: number,
-  ): Promise<ExpenseResponseDto> {
+  ): Promise<Expense> {
     const { id: taskId, budget } = task;
     const query = {
       where: { id: expenseId },
@@ -193,7 +195,7 @@ export class ExpenseService {
     const payload = { ...query, data: updateExpenseDto };
     const updatedExpense = await this.expenseRepository.update(payload);
 
-    return plainToInstance(ExpenseResponseDto, updatedExpense);
+    return updatedExpense;
   }
 
   private async totalExpense(taskId: number) {
