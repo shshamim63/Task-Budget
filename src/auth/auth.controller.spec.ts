@@ -17,6 +17,7 @@ import {
   RequestMock,
   ResponseMock,
 } from './__mock__/auth.service.mock';
+import { UserResponseDto } from './dto/user.dto';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -126,7 +127,9 @@ describe('AuthController', () => {
         }),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(200);
-      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
+      expect(ResponseMock.json).toHaveBeenCalledWith(
+        new UserResponseDto(userResponse),
+      );
     });
   });
 });
