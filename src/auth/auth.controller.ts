@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './dto/auth-credentials.dto';
 
 import { Request, Response } from 'express';
+import { UserResponseDto } from './dto/user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,7 +20,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(201).json(singupInfo);
+    res.status(201).json(new UserResponseDto(singupInfo));
   }
 
   @Post('/login')
@@ -34,7 +35,14 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json(loginInfo);
+    res.status(200).json(new UserResponseDto(loginInfo));
+  }
+
+  @Post('/logout')
+  async logout(@Req() request: Request, @Res() res: Response) {
+    await this.authService.logout(request);
+    res.clearCookie('refreshToken', { path: '/auth/refresh' });
+    res.status(200).json({ message: 'Logout successful' });
   }
 
   @Post('/refresh')
@@ -47,6 +55,6 @@ export class AuthController {
       path: '/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    res.status(200).json(refresTokenInfo);
+    res.status(200).json(new UserResponseDto(refresTokenInfo));
   }
 }

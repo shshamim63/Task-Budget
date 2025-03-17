@@ -44,9 +44,11 @@ describe('ExpenseAuthorizationService', () => {
         const currentUser = mockUser();
         const tokenPayload = mockTokenPayload(currentUser);
         const task = generateTask();
+
         CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(true);
 
         const result = await service.canCreateExpense(tokenPayload, task);
+
         expect(result).toBeTruthy();
         expect(collaboratorRepository.findUnique).toHaveBeenCalled();
       });
@@ -54,6 +56,7 @@ describe('ExpenseAuthorizationService', () => {
         const currentUser = mockUser();
         const tokenPayload = mockTokenPayload(currentUser);
         const task = generateTask();
+
         CollaboratorRepositoryMock.findUnique.mockResolvedValueOnce(null);
 
         const result = await service.canCreateExpense(tokenPayload, task);

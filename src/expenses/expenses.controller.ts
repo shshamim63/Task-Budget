@@ -34,43 +34,51 @@ export class ExpenseController {
   constructor(private readonly expenseService: ExpenseService) {}
 
   @Post()
-  createExpense(
+  async createExpense(
     @Body() createExpenseDto: CreateExpenseDto,
     @User() user,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
-    return this.expenseService.createExpense(user, task, createExpenseDto);
+    const newExpense = await this.expenseService.createExpense(
+      user,
+      task,
+      createExpenseDto,
+    );
+    return new ExpenseResponseDto(newExpense);
   }
 
   @Get('/:expenseId')
-  getExpense(
+  async getExpense(
     @Param('expenseId', ParseIntPipe) expenseId: number,
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
-    return this.expenseService.getExpense(user, task, expenseId);
+    const expense = await this.expenseService.getExpense(user, task, expenseId);
+    return new ExpenseResponseDto(expense);
   }
 
   @Get()
-  getExpenses(
+  async getExpenses(
     @User() user: JWTPayload,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto[]> {
-    return this.expenseService.getExpenses(user, task);
+    const expenses = await this.expenseService.getExpenses(user, task);
+    return expenses.map((expense) => new ExpenseResponseDto(expense));
   }
 
   @Patch('/:expenseId')
-  updateExpense(
+  async updateExpense(
     @Param('expenseId', ParseIntPipe) expenseId: number,
     @Body() updateExpenseDto: UpdateExpenseDto,
     @User() user,
     @Task() task: TaskResponseDto,
   ): Promise<ExpenseResponseDto> {
-    return this.expenseService.updateExpense(
+    const updatedExpense = await this.expenseService.updateExpense(
       user,
       task,
       updateExpenseDto,
       expenseId,
     );
+    return new ExpenseResponseDto(updatedExpense);
   }
 }

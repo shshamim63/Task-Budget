@@ -11,6 +11,7 @@ import {
   AuthUser,
   JWTPayload,
   TokenPayload,
+  TokenType,
 } from '../auth/interfaces/auth.interface';
 import {
   AUTHORIZATION_TYPE,
@@ -75,9 +76,11 @@ export class TokenService {
     return undefined;
   }
 
-  async saveRefreshToken(id: number, token: string): Promise<void> {
-    const data = { userId: id, token };
+  async saveRefreshToken(userId: number, token: string): Promise<void> {
+    const { ttl } = TOKENS[TokenType.RefreshToken];
+    const data = { userId, token };
     await this.tokenRepository.create({ data });
+    await this.redisService.set(`token-user-${userId}`, token, ttl);
   }
 
   async getRefreshToken(userId: number, token: string) {
@@ -87,30 +90,51 @@ export class TokenService {
 
     if (redisRefreshToken) return redisRefreshToken;
 
-    const oneHourAgo = new Date(Date.now() - TOKENS.refresTokenSecret.duration);
+    const oneHourAgo = new Date(
+      Date.now() - TOKENS.refresTokenSecret.ttl * 1000,
+    );
 
     const query = {
       where: {
-        id: userId,
+        userId,
         token,
         createdAt: {
           gte: oneHourAgo,
         },
       },
+      select: {
+        token: true,
+      },
     } as Prisma.RefreshTokenFindFirstArgs;
 
-    const savedRefreshToken = this.tokenRepository.findFirst(query);
+    const savedRefreshToken = await this.tokenRepository.findFirst(query);
 
-    return savedRefreshToken;
+    return savedRefreshToken?.token;
+  }
+
+  async removeToken(userId: number, token: string) {
+    await this.redisService.del(`token-user-${userId}`);
+
+    const query = {
+      where: {
+        userId_token: {
+          userId,
+          token,
+        },
+      },
+    };
+
+    await this.tokenRepository.delete(query);
   }
 
   createAuthTokenPayload(data: AuthUser): TokenPayload {
-    const { id, email, username, userType } = data;
+    const { id, email, username, userType, active } = data;
     return {
       id,
       email,
       username,
       userType,
+      active: active ?? false,
     };
   }
 }

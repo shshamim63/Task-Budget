@@ -5,14 +5,13 @@ import { CreateCollaborator } from './interface/collaborator.interface';
 
 import { TaskResponseDto } from '../tasks/dto/task.dto';
 import { CreateCollaboratorsDto } from './dto/create-collaborators.dto';
-import { TaskCollaborators } from './dto/task-collaborators.dto';
 
 import { TaskPermissionService } from '../helpers/task-permission.helper.service';
 
 import { CollaboratorRepository } from './collaborator.repository';
 import { TaskRepository } from '../tasks/tasks.repository';
 import { UserRepository } from '../users/user.repository';
-import { plainToInstance } from 'class-transformer';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CollaboratorService {
@@ -29,9 +28,10 @@ export class CollaboratorService {
     const baseCondition = {
       where: { id: task.id },
     };
+
     const selector = this.generateGetCollaboratorSelector();
 
-    const query = { ...baseCondition, ...selector };
+    const query = { ...baseCondition, ...{ select: selector } };
 
     const taskCollaboratorInfo = await this.taskRepository.findUnique(query);
 
@@ -40,7 +40,7 @@ export class CollaboratorService {
       members: taskCollaboratorInfo.members.map((data) => data.member),
     };
 
-    return plainToInstance(TaskCollaborators, taskWithCollaborators);
+    return taskWithCollaborators;
   }
 
   async assignMember(
@@ -98,7 +98,10 @@ export class CollaboratorService {
     return `Removed member with id: ${contributorId} from task with id: ${task.id}`;
   }
 
-  private validAssignableContributors(existingCollaborators, collaborators) {
+  private validAssignableContributors(
+    existingCollaborators,
+    collaborators,
+  ): boolean | never {
     const existingCollaboratorsIds = existingCollaborators.map(
       (contributor) => contributor.id,
     );
@@ -112,34 +115,34 @@ export class CollaboratorService {
         `Contributor(s) with ID(s) ${missingContributors.join(', ')} not found`,
       );
     }
+
+    return true;
   }
 
-  private generateGetCollaboratorSelector() {
+  private generateGetCollaboratorSelector(): Prisma.TaskSelect {
     return {
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        status: true,
-        budget: true,
-        createdAt: true,
-        updatedAt: true,
-        creator: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            userType: true,
-          },
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      budget: true,
+      createdAt: true,
+      updatedAt: true,
+      creator: {
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          userType: true,
         },
-        members: {
-          select: {
-            member: {
-              select: {
-                id: true,
-                username: true,
-                email: true,
-              },
+      },
+      members: {
+        select: {
+          member: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
             },
           },
         },

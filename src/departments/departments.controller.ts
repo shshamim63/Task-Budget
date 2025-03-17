@@ -6,6 +6,7 @@ import { UserType } from '@prisma/client';
 
 import { DepartmentService } from './departments.service';
 import { CreateDepartmentDto } from './dto/createDepartment.dto';
+import { DepartmentDto } from './dto/department.dto';
 
 @Controller('departments')
 @UseGuards(AuthGuard, RolesGuard)
@@ -14,7 +15,9 @@ export class DepartmentController {
 
   @Post()
   @Roles(UserType.SUPER)
-  createDepartment(@Body() createDepartmentDto: CreateDepartmentDto) {
-    return this.designationService.createDepartment(createDepartmentDto);
+  async createDepartment(@Body() createDepartmentDto: CreateDepartmentDto) {
+    const newDepartment =
+      await this.designationService.createDepartment(createDepartmentDto);
+    return new DepartmentDto(newDepartment);
   }
 }

@@ -8,4 +8,6 @@ export const TokenServiceMock = {
   createAuthTokenPayload: jest
     .fn()
     .mockImplementation((data) => mockTokenPayload(data)),
+  removeToken: jest.fn(),
+  getRefreshToken: jest.fn(),
 };

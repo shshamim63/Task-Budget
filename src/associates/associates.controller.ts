@@ -28,15 +28,20 @@ export class AssociateController {
 
   @Post()
   @Roles(UserType.SUPER, UserType.ADMIN)
-  createAssociate(@Body() body: CreateAssociateDto): Promise<AssociateDto> {
-    return this.associateService.createAssociate(body);
+  async createAssociate(
+    @Body() body: CreateAssociateDto,
+  ): Promise<AssociateDto> {
+    const associate = await this.associateService.createAssociate(body);
+    return new AssociateDto(associate);
   }
 
   @Get('/:userId')
   @Roles(UserType.SUPER)
-  getUserAssociatedTo(
+  async getUserAssociatedTo(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<AssociateTo[]> {
-    return this.associateService.userAssociatesTo(userId);
+    const associatesTo = await this.associateService.userAssociatesTo(userId);
+
+    return associatesTo.map((associate) => new AssociateTo(associate));
   }
 }

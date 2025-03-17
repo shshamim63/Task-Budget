@@ -22,4 +22,10 @@ export class TokenRepository {
       this.prismaService.refreshToken.create(createArg),
     );
   }
+
+  async delete(deleteArg: Prisma.RefreshTokenDeleteArgs) {
+    await this.asyncErrorHandlerService.execute(() =>
+      this.prismaService.refreshToken.delete(deleteArg),
+    );
+  }
 }

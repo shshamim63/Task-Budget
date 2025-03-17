@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BadRequestException,
@@ -6,14 +8,21 @@ import {
 } from '@nestjs/common';
 
 import * as bcrypt from 'bcrypt';
+
 import { faker } from '@faker-js/faker/.';
 
 import { AuthService } from './auth.service';
 import { TokenService } from '../token/token.service';
+
 import { UserRepository } from '../users/user.repository';
 
-import { TokenServiceMock } from '../token/__mock__/token.service.mock';
+import { TokenType } from './interfaces/auth.interface';
 
+import { ERROR_NAME, RESPONSE_MESSAGE } from '../utils/constants';
+
+import { RedisService } from '../redis/redis.service';
+
+import { TokenServiceMock } from '../token/__mock__/token.service.mock';
 import {
   generateMockEncryptedString,
   mockSignInRequestBody,
@@ -21,9 +30,9 @@ import {
   mockUser,
 } from './__mock__/auth-data.mock';
 import { UserRepositoryMock } from '../users/__mock__/user.repository.mock';
-import { TokenType } from './interfaces/auth.interface';
-import { RedisService } from '../redis/redis.service';
+
 import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
+import { RequestMock } from './__mock__/auth.service.mock';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -189,6 +198,75 @@ describe('AuthService', () => {
 
       await expect(service.signin(singinCredentials)).rejects.toThrow(
         new UnauthorizedException('Invalid credentials'),
+      );
+    });
+  });
+
+  describe('logout', () => {
+    it('should not call getTokenFromHeader when cookie has refreshToken', async () => {
+      TokenServiceMock.getTokenFromHeader.mockImplementationOnce(() => true);
+      TokenServiceMock.verifyToken.mockImplementationOnce(() => true);
+      TokenServiceMock.removeToken.mockImplementationOnce(() => true);
+      await service.logout(RequestMock as Request);
+      expect(tokenService.getTokenFromHeader).toHaveBeenCalledTimes(0);
+      expect(tokenService.verifyToken).toHaveBeenCalled();
+      expect(tokenService.removeToken).toHaveBeenCalled();
+    });
+    it('should call getTokenFromHeader, verifyToken, removeToken when cookies is absent', async () => {
+      const request = { ...RequestMock };
+      delete request.cookies;
+      TokenServiceMock.verifyToken.mockImplementationOnce(() => true);
+      TokenServiceMock.removeToken.mockImplementationOnce(() => true);
+      await service.logout(request as Request);
+      expect(tokenService.getTokenFromHeader).toHaveBeenCalled();
+      expect(tokenService.verifyToken).toHaveBeenCalled();
+      expect(tokenService.removeToken).toHaveBeenCalled();
+    });
+  });
+
+  describe('tokenRefresh', () => {
+    it('should return a authUserInfo data', async () => {
+      const newUser = mockUser();
+      TokenServiceMock.verifyToken.mockReturnValueOnce(true);
+      TokenServiceMock.getRefreshToken.mockReturnValueOnce(true);
+      UserRepositoryMock.findUnique.mockResolvedValueOnce(newUser);
+      const result = await service.tokenRefresh(RequestMock as Request);
+      expect(result).toMatchObject({
+        refreshToken: RequestMock.cookies.refreshToken,
+      });
+    });
+    it('should raise an unauthorized exception when refreshToken is missing', async () => {
+      const unauthorizedRequest = {
+        ...RequestMock,
+        headers: {
+          authorization: undefined,
+        },
+        cookies: {
+          refreshToken: undefined,
+        },
+      };
+
+      TokenServiceMock.getTokenFromHeader.mockImplementationOnce(() => false);
+
+      await expect(
+        service.tokenRefresh(unauthorizedRequest as Request),
+      ).rejects.toThrow(
+        new UnauthorizedException(
+          RESPONSE_MESSAGE.INVALID_TOKEN,
+          ERROR_NAME.INVALID_TOKEN,
+        ),
+      );
+    });
+    it('should raise an unauthorized exception when current system token is missing', async () => {
+      TokenServiceMock.verifyToken.mockReturnValue(true);
+      TokenServiceMock.getRefreshToken.mockReturnValueOnce(false);
+      await expect(
+        service.tokenRefresh(RequestMock as Request),
+      ).rejects.toThrow(
+        new UnauthorizedException(
+          RESPONSE_MESSAGE.INVALID_TOKEN,
+          ERROR_NAME.INVALID_TOKEN,
+        ),
       );
     });
   });

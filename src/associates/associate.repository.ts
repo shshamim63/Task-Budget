@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { RedisService } from '../redis/redis.service';
 import { REDIS_TTL_IN_MILISECONDS } from '../utils/redis-keys';
+import { CreateAssociateResult } from './Interfaces/associate.interface';
 
 @Injectable()
 export class AssociateRepository {
@@ -18,16 +19,17 @@ export class AssociateRepository {
 
   async create({
     data,
-    query = {},
+    select = {},
   }: {
     data: Prisma.AssociateCreateInput;
-    query?: Prisma.AssociateSelect;
-  }): Promise<Associate> {
-    return await this.asyncErrorHandlerService.execute(() =>
-      this.prismaService.associate.create({
-        data,
-        ...(!!Object.keys(query).length && { select: query }),
-      }),
+    select?: Prisma.AssociateSelect;
+  }): Promise<CreateAssociateResult> {
+    return await this.asyncErrorHandlerService.execute<CreateAssociateResult>(
+      () =>
+        this.prismaService.associate.create({
+          data,
+          select,
+        }),
     );
   }
 
@@ -37,7 +39,7 @@ export class AssociateRepository {
   }: {
     redisKey?: string;
     query: Prisma.AssociateWhereInput;
-  }) {
+  }): Promise<Associate[]> {
     const redisAssociate = redisKey
       ? await this.redisService.get(redisKey)
       : null;

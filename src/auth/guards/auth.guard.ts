@@ -39,13 +39,6 @@ export class AuthGuard implements CanActivate {
 
     const payload = this.tokenService.verifyToken(token, TokenType.AccessToken);
 
-    if (!payload) {
-      throw new UnauthorizedException(
-        RESPONSE_MESSAGE.INVALID_TOKEN,
-        ERROR_NAME.INVALID_TOKEN,
-      );
-    }
-
     const user = await this.getUser(payload.id);
 
     if (!user) {

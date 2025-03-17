@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Designation, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+import { DesignationWithSeletedPayload } from './interface/designation.interface';
 
 @Injectable()
 export class DesignationRepository {
@@ -12,15 +13,15 @@ export class DesignationRepository {
 
   async create({
     data,
-    query = {},
+    select = {},
   }: {
     data: Prisma.DesignationCreateInput;
-    query?: Prisma.DesignationSelect;
-  }): Promise<Designation> {
+    select?: Prisma.DesignationSelect;
+  }): Promise<DesignationWithSeletedPayload> {
     return await this.asyncErrorHandlerService.execute(() =>
       this.prismaService.designation.create({
         data,
-        ...(query && { select: query }),
+        ...(select && { select }),
       }),
     );
   }
