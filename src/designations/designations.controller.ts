@@ -5,6 +5,7 @@ import { Roles } from '../decorators/roles.decorator';
 import { UserType } from '@prisma/client';
 import { CreateDesignationDto } from './dto/createDesignation.dto';
 import { DesignationService } from './designations.service';
+import { DesignationDto } from './dto/designation.dto';
 
 @Controller('designations')
 @UseGuards(AuthGuard, RolesGuard)
@@ -13,7 +14,9 @@ export class DesignationController {
 
   @Post()
   @Roles(UserType.SUPER)
-  createDesignation(@Body() createDesignationDto: CreateDesignationDto) {
-    return this.designationService.createDesignation(createDesignationDto);
+  async createDesignation(@Body() createDesignationDto: CreateDesignationDto) {
+    const newDesignation =
+      await this.designationService.createDesignation(createDesignationDto);
+    return new DesignationDto(newDesignation);
   }
 }

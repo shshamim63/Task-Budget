@@ -45,26 +45,26 @@ describe('DesignationService', () => {
       expect(result.department.id).toEqual(departmentId);
 
       const repositorypayload = {
-        name,
-        description,
-        department: { connect: { id: departmentId } },
-      };
-
-      const query = {
-        id: true,
-        name: true,
-        description: true,
-        department: {
-          select: {
-            id: true,
-            name: true,
+        data: {
+          name,
+          description,
+          department: { connect: { id: departmentId } },
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          department: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
       };
 
       expect(designationRepository.create).toHaveBeenCalledWith({
-        data: repositorypayload,
-        query,
+        ...repositorypayload,
       });
     });
   });

@@ -7,7 +7,6 @@ export class DesignationDto {
   department: {
     id: number;
     name: string;
-    description: string;
   };
 
   constructor(partial: Partial<DesignationDto>) {
