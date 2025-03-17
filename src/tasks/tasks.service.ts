@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { TaskResponseDto } from './dto/task.dto';
+
 import { Prisma, Task, UserType } from '@prisma/client';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 
@@ -12,7 +12,6 @@ import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
 import { AssociateService } from '../associates/associates.service';
 import { REDIS_KEYS_FOR_TASK } from '../utils/redis-keys';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class TaskService {
@@ -25,7 +24,7 @@ export class TaskService {
   async getTasks(
     user: JWTPayload,
     filterDto?: GetTasksFilterDto,
-  ): Promise<TaskResponseDto[]> {
+  ): Promise<Task[]> {
     const query = this.buildGetTasksWhere<Prisma.TaskFindManyArgs>(
       user,
       filterDto,
@@ -33,10 +32,10 @@ export class TaskService {
 
     const tasks = await this.taskRepository.findMany(query);
 
-    return tasks ? tasks.map((task) => new TaskResponseDto(task)) : [];
+    return tasks ?? [];
   }
 
-  async getTaskById(id: number, user: JWTPayload): Promise<TaskResponseDto> {
+  async getTaskById(id: number, user: JWTPayload): Promise<Task> {
     const query = this.buildGetTaskByIdQuery<Prisma.TaskFindFirstArgs>(
       id,
       user,
@@ -47,13 +46,13 @@ export class TaskService {
     if (!task)
       throw new NotFoundException(`Task with id: ${id} does not exist`);
 
-    return plainToInstance(TaskResponseDto, task);
+    return task;
   }
 
   async createTask(
     createTaskDTO: CreateTaskDto,
     user: JWTPayload,
-  ): Promise<TaskResponseDto> {
+  ): Promise<Task> {
     const { id: userId } = user;
     const { enterpriseId } = createTaskDTO;
     const userAffiliatedTo =
@@ -64,10 +63,11 @@ export class TaskService {
       enterpriseId,
       userAffiliatedTo,
     );
+
     const data = this.prepareTaskCreateData(createTaskDTO, userId);
     const task = await this.taskRepository.create({ data });
 
-    return plainToInstance(TaskResponseDto, task);
+    return task;
   }
 
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
@@ -88,7 +88,7 @@ export class TaskService {
     id: number,
     updateTaskDto: CreateTaskDto,
     user: JWTPayload,
-  ): Promise<TaskResponseDto> {
+  ): Promise<Task> {
     const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
 
     const redisKey = this.generateRedisKey(id);
@@ -104,14 +104,14 @@ export class TaskService {
       payload,
     });
 
-    return plainToInstance(TaskResponseDto, updatedTask);
+    return updatedTask;
   }
 
   async updateTaskStatus(
     id: number,
     status: TaskStatus,
     user: JWTPayload,
-  ): Promise<TaskResponseDto> {
+  ): Promise<Task> {
     const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
     const redisKey = this.generateRedisKey(id);
 
@@ -132,7 +132,7 @@ export class TaskService {
       payload,
     });
 
-    return plainToInstance(TaskResponseDto, updatedTask);
+    return updatedTask;
   }
 
   private buildGetTasksWhere<T>(

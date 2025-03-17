@@ -40,28 +40,31 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  getTasks(
+  async getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
     @User() user: JWTPayload,
   ): Promise<TaskResponseDto[]> {
-    return this.taskService.getTasks(user, filterDto);
+    const tasks = await this.taskService.getTasks(user, filterDto);
+    return tasks.map((task) => new TaskResponseDto(task));
   }
 
   @Get('/:id')
-  getTaskById(
+  async getTaskById(
     @Param('id', ParseIntPipe) id: number,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.taskService.getTaskById(id, user);
+    const task = await this.taskService.getTaskById(id, user);
+    return new TaskResponseDto(task);
   }
 
   @Post()
   @Roles(UserType.ADMIN, UserType.SUPER)
-  createTask(
+  async createTask(
     @Body() createTaskDTO: CreateTaskDto,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.taskService.createTask(createTaskDTO, user.id);
+    const newTask = await this.taskService.createTask(createTaskDTO, user.id);
+    return new TaskResponseDto(newTask);
   }
 
   @Delete('/:id')
@@ -75,21 +78,32 @@ export class TaskController {
 
   @Patch('/:id')
   @Roles(UserType.SUPER, UserType.ADMIN)
-  updateTask(
+  async updateTask(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTaskDto: CreateTaskDto,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.taskService.updateTask(id, updateTaskDto, user);
+    const updatedTask = await this.taskService.updateTask(
+      id,
+      updateTaskDto,
+      user,
+    );
+
+    return new TaskResponseDto(updatedTask);
   }
 
   @Patch('/:id/status')
   @Roles(UserType.SUPER, UserType.ADMIN)
-  updateTaskStatus(
+  async updateTaskStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status', TaskStatusValidationPipe) status: TaskStatus,
     @User() user,
   ): Promise<TaskResponseDto> {
-    return this.taskService.updateTaskStatus(id, status, user);
+    const updatedTask = await this.taskService.updateTaskStatus(
+      id,
+      status,
+      user,
+    );
+    return new TaskResponseDto(updatedTask);
   }
 }
