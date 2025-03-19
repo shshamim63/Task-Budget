@@ -132,7 +132,6 @@ export class AuthService {
 
   async logout(request: Request): Promise<void> {
     let currentRefreshToken = request?.cookies?.refreshToken;
-
     if (!currentRefreshToken)
       currentRefreshToken = this.tokenService.getTokenFromHeader(request);
 
@@ -145,7 +144,7 @@ export class AuthService {
   }
 
   async tokenRefresh(request: Request): Promise<AuthUserInfo> {
-    let currentRefreshToken = request.cookies.refreshToken;
+    let currentRefreshToken = request?.cookies?.refreshToken;
 
     if (!currentRefreshToken)
       currentRefreshToken = this.tokenService.getTokenFromHeader(request);

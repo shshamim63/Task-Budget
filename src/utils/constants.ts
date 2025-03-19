@@ -44,3 +44,11 @@ export const TASK_RESPONSE_MESSAGE = {
 };
 
 export const origins = ['http://localhost:5173'];
+
+export const REFRESH_TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/auth',
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
