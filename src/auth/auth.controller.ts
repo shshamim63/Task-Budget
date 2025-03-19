@@ -4,6 +4,7 @@ import { SignInDto, SignUpDto } from './dto/auth-credentials.dto';
 
 import { Request, Response } from 'express';
 import { UserResponseDto } from './dto/user.dto';
+import { REFRESH_TOKEN_COOKIE_OPTIONS } from '../utils/constants';
 
 @Controller('auth')
 export class AuthController {
@@ -12,13 +13,11 @@ export class AuthController {
   @Post('/signup')
   async signup(@Body() singUpcredentials: SignUpDto, @Res() res: Response) {
     const singupInfo = await this.authService.signup(singUpcredentials);
-    res.cookie('refreshToken', singupInfo.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/auth/refresh',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(
+      'refreshToken',
+      singupInfo.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
 
     res.status(201).json(new UserResponseDto(singupInfo));
   }
@@ -27,13 +26,11 @@ export class AuthController {
   async signin(@Body() signInCredentials: SignInDto, @Res() res: Response) {
     const loginInfo = await this.authService.signin(signInCredentials);
 
-    res.cookie('refreshToken', loginInfo.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/auth/refresh',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(
+      'refreshToken',
+      loginInfo.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
 
     res.status(200).json(new UserResponseDto(loginInfo));
   }
@@ -41,20 +38,20 @@ export class AuthController {
   @Post('/logout')
   async logout(@Req() request: Request, @Res() res: Response) {
     await this.authService.logout(request);
-    res.clearCookie('refreshToken', { path: '/auth/refresh' });
+    res.clearCookie('refreshToken', {
+      path: REFRESH_TOKEN_COOKIE_OPTIONS.path,
+    });
     res.status(200).json({ message: 'Logout successful' });
   }
 
   @Post('/refresh')
   async refreshToken(@Req() request: Request, @Res() res: Response) {
     const refresTokenInfo = await this.authService.tokenRefresh(request);
-    res.cookie('refreshToken', refresTokenInfo.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/auth/refresh',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(
+      'refreshToken',
+      refresTokenInfo.refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS,
+    );
     res.status(200).json(new UserResponseDto(refresTokenInfo));
   }
 }
