@@ -18,6 +18,7 @@ import {
   ResponseMock,
 } from './__mock__/auth.service.mock';
 import { UserResponseDto } from './dto/user.dto';
+import { REFRESH_TOKEN_COOKIE_OPTIONS } from '../utils/constants';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -51,12 +52,7 @@ describe('AuthController', () => {
       expect(ResponseMock.cookie).toHaveBeenCalledWith(
         'refreshToken',
         userResponse.refreshToken,
-        expect.objectContaining({
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        }),
+        expect.objectContaining(REFRESH_TOKEN_COOKIE_OPTIONS),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(201);
       expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
@@ -74,12 +70,7 @@ describe('AuthController', () => {
       expect(ResponseMock.cookie).toHaveBeenCalledWith(
         'refreshToken',
         userResponse.refreshToken,
-        expect.objectContaining({
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        }),
+        expect.objectContaining(REFRESH_TOKEN_COOKIE_OPTIONS),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(200);
       expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
@@ -97,7 +88,7 @@ describe('AuthController', () => {
 
       expect(ResponseMock.clearCookie).toHaveBeenCalledWith(
         'refreshToken',
-        expect.objectContaining({ path: '/auth/refresh' }),
+        expect.objectContaining({ path: '/auth' }),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(200);
       expect(ResponseMock.json).toHaveBeenCalledWith({
@@ -119,12 +110,7 @@ describe('AuthController', () => {
       expect(ResponseMock.cookie).toHaveBeenCalledWith(
         'refreshToken',
         userResponse.refreshToken,
-        expect.objectContaining({
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-        }),
+        expect.objectContaining(REFRESH_TOKEN_COOKIE_OPTIONS),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(200);
       expect(ResponseMock.json).toHaveBeenCalledWith(
