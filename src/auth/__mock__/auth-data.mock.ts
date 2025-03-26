@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker/.';
 
-import { UserType } from '@prisma/client';
+import { Prisma, UserType } from '@prisma/client';
 
 import { SignInDto, SignUpDto } from '../dto/auth-credentials.dto';
 
