@@ -3,12 +3,12 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { PrismaService } from '../prisma/prisma.service';
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { UserRepository } from './user.repository';
+import { UserMockQuery } from '../auth/__mock__/auth-data.mock';
+import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
 import {
   CreateUserPayloadMock,
   UpdateUserPayloadMock,
-  UserMockQuery,
-} from '../auth/__mock__/auth-data.mock';
-import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
+} from './__mock__/user-data.mock';
 
 describe('UserRepository', () => {
   let repository: UserRepository;
