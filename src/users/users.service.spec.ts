@@ -5,6 +5,7 @@ import { UserRepositoryMock } from './__mock__/user.repository.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { UsersService } from './users.service';
+import { UpdateUserPayloadMock } from './__mock__/user-data.mock';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -33,6 +34,22 @@ describe('UsersService', () => {
 
       const query = { where: { id: currentPayload.id } };
       expect(userRepository.findUnique).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('updateUserProfile', () => {
+    it('should call userRespository.update method with the given payload ', async () => {
+      const currentUser = mockUser();
+      const currentPayload = mockTokenPayload(currentUser);
+      const { data: updateUserPayload } = UpdateUserPayloadMock();
+
+      UserRepositoryMock.update.mockResolvedValue(currentUser);
+
+      await service.updateUserProfile(updateUserPayload, currentPayload);
+      expect(userRepository.update).toHaveBeenCalledWith({
+        where: { id: currentUser.id },
+        data: updateUserPayload,
+      });
     });
   });
 });

@@ -5,6 +5,8 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { UsersController } from './users.controller';
+import { UpdateUserPayloadMock } from './__mock__/user-data.mock';
+import { UserResponseDto } from '../auth/dto/user.dto';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -37,6 +39,22 @@ describe('UsersController', () => {
       const response = await controller.getProfile(currentPayload);
       expect(response).toMatchObject(currentUser);
       expect(usersService.getProfile).toHaveBeenCalledWith(currentPayload);
+    });
+  });
+
+  describe('updateUserProfile', () => {
+    it('should return the updateUserProfile service method and return the response', async () => {
+      const currentUser = mockUser();
+      const currentUserJWTPayload = mockTokenPayload(currentUser);
+      const { data: updateUserPayload } = UpdateUserPayloadMock();
+
+      UsersServiceMock.updateUserProfile.mockResolvedValue(currentUser);
+      const response = await controller.updateUserProfile(
+        currentUserJWTPayload,
+        updateUserPayload,
+      );
+
+      expect(response).toMatchObject(new UserResponseDto(currentUser));
     });
   });
 });
