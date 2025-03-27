@@ -6,6 +6,9 @@ import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { UsersService } from './users.service';
 import { UpdateUserPayloadMock } from './__mock__/user-data.mock';
+import { faker } from '@faker-js/faker/.';
+import { RESPONSE_MESSAGE } from '../utils/constants';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -45,11 +48,31 @@ describe('UsersService', () => {
 
       UserRepositoryMock.update.mockResolvedValue(currentUser);
 
-      await service.updateUserProfile(updateUserPayload, currentPayload);
+      await service.updateUserProfile(
+        updateUserPayload,
+        currentPayload,
+        currentPayload.id,
+      );
       expect(userRepository.update).toHaveBeenCalledWith({
         where: { id: currentUser.id },
         data: updateUserPayload,
       });
+    });
+    it('should thorw error when id and current user id is not the same', async () => {
+      const invalidUserId = faker.number.int();
+      const currentUser = mockUser();
+      const currentPayload = mockTokenPayload(currentUser);
+      const { data: updateUserPayload } = UpdateUserPayloadMock();
+
+      await expect(
+        service.updateUserProfile(
+          updateUserPayload,
+          currentPayload,
+          invalidUserId,
+        ),
+      ).rejects.toThrow(
+        new ForbiddenException(RESPONSE_MESSAGE.PERMISSION_DENIED),
+      );
     });
   });
 });
