@@ -23,3 +23,13 @@ export const CreateUserPayloadMock = () => {
     },
   } as Prisma.UserCreateArgs;
 };
+
+export const UpdateUserPasswordPayloadMock = () => {
+  const newPassword = faker.internet.password();
+
+  return {
+    currentPassword: faker.internet.password(),
+    newPassword: newPassword,
+    confirmNewPassword: newPassword,
+  };
+};
