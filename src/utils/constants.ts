@@ -43,6 +43,10 @@ export const TASK_RESPONSE_MESSAGE = {
   DELETE_TASK: 'Detete task success',
 };
 
+export const USER_RESPONSE_MESSAGE = {
+  UPDATE_PASSWORD: 'Password update successful',
+};
+
 export const origins = ['http://localhost:5173'];
 
 export const REFRESH_TOKEN_COOKIE_OPTIONS = {
