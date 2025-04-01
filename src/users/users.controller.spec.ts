@@ -5,8 +5,12 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { UsersController } from './users.controller';
-import { UpdateUserPayloadMock } from './__mock__/user-data.mock';
+import {
+  UpdateUserPasswordPayloadMock,
+  UpdateUserPayloadMock,
+} from './__mock__/user-data.mock';
 import { UserResponseDto } from '../auth/dto/user.dto';
+import { USER_RESPONSE_MESSAGE } from '../utils/constants';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -43,7 +47,7 @@ describe('UsersController', () => {
   });
 
   describe('updateUserProfile', () => {
-    it('should return the updateUserProfile service method and return the response', async () => {
+    it('should call userService.updateUserProfile and return the response as the UserResponse', async () => {
       const currentUser = mockUser();
       const currentUserJWTPayload = mockTokenPayload(currentUser);
       const { data: updateUserPayload } = UpdateUserPayloadMock();
@@ -52,9 +56,29 @@ describe('UsersController', () => {
       const response = await controller.updateUserProfile(
         currentUserJWTPayload,
         updateUserPayload,
+        currentUser.id,
       );
 
       expect(response).toMatchObject(new UserResponseDto(currentUser));
+    });
+  });
+
+  describe('updateUserPassword', () => {
+    it('should call userService.updateUserPassword and return success message', async () => {
+      const currentUser = mockUser();
+      const currentUserJWTPayload = mockTokenPayload(currentUser);
+      const updateUserpasswordPayload = UpdateUserPasswordPayloadMock();
+
+      UsersServiceMock.updateUserPassword.mockResolvedValue(
+        USER_RESPONSE_MESSAGE.UPDATE_PASSWORD,
+      );
+      const response = await controller.updateUserPassword(
+        currentUser.id,
+        updateUserpasswordPayload,
+        currentUserJWTPayload,
+      );
+
+      expect(response).toEqual(USER_RESPONSE_MESSAGE.UPDATE_PASSWORD);
     });
   });
 });

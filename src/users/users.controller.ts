@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { User } from '../decorators/user.decorator';
 import { JWTPayload } from '../auth/interfaces/auth.interface';
 import { UsersService } from './users.service';
 import { UserResponseDto } from '../auth/dto/user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  UpdatePasswordRequestBody,
+  UpdateUserDto,
+} from './dto/update-user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -17,15 +28,30 @@ export class UsersController {
     return new UserResponseDto(currentUser);
   }
 
-  @Post('/:id/profile')
+  @Patch('/:id/profile')
   async updateUserProfile(
     @User() user: JWTPayload,
     @Body() updatePayload: UpdateUserDto,
+    @Param('id', ParseIntPipe) id: number,
   ) {
     const updatedUser = await this.usersService.updateUserProfile(
       updatePayload,
       user,
+      id,
     );
     return new UserResponseDto(updatedUser);
+  }
+
+  @Patch('/:id/password')
+  async updateUserPassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePasswordRequestBody: UpdatePasswordRequestBody,
+    @User() user: JWTPayload,
+  ): Promise<string> {
+    return await this.usersService.updateUserPassword(
+      id,
+      user,
+      updatePasswordRequestBody,
+    );
   }
 }
