@@ -1,26 +1,23 @@
+import { Prisma, TaskStatus } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TaskRepository } from './tasks.repository';
-import { RedisService } from '../redis/redis.service';
-import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
-import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
+import { faker } from '@faker-js/faker/.';
+
 import { PrismaService } from '../prisma/prisma.service';
+import { TaskRepository } from './tasks.repository';
+import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
+
 import { PrismaServiceMock } from '../prisma/__mock__/prisma.service.mock';
 import { AsyncErrorHandlerServiceMock } from '../helpers/__mock__/execute-with-error.helper.service.mock';
-import { faker } from '@faker-js/faker/.';
-import { Prisma, TaskStatus } from '@prisma/client';
-import { generateTask } from './__mock__/task-data.mock';
 
 describe('TaskRepository', () => {
   let repository: TaskRepository;
   let prismaService: PrismaService;
-  let redisService: RedisService;
   let asyncErrorHandlerService: AsyncErrorHandlerService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TaskRepository,
-        { provide: RedisService, useValue: RedisServiceMock },
         { provide: PrismaService, useValue: PrismaServiceMock },
         {
           provide: AsyncErrorHandlerService,
@@ -30,7 +27,6 @@ describe('TaskRepository', () => {
     }).compile();
     repository = module.get<TaskRepository>(TaskRepository);
     prismaService = module.get<PrismaService>(PrismaService);
-    redisService = module.get<RedisService>(RedisService);
     asyncErrorHandlerService = module.get<AsyncErrorHandlerService>(
       AsyncErrorHandlerService,
     );
@@ -65,27 +61,13 @@ describe('TaskRepository', () => {
   });
 
   describe('findUniqueOrThrow', () => {
-    it('should call redisService.get method should not call asyncErrorHandlerService.execute and prismaService.task.findUniqueOrThrow method', async () => {
-      const query = {
-        where: { id: faker.number.int() },
-      } as Prisma.TaskFindUniqueOrThrowArgs;
-      const redisKey = faker.word.adverb();
-      const task = JSON.stringify(generateTask());
-      RedisServiceMock.get.mockResolvedValue(task);
-
-      await repository.findUniqueOrThrow({ redisKey, query });
-
-      expect(redisService.get).toHaveBeenCalledWith(redisKey);
-      expect(asyncErrorHandlerService.execute).toHaveBeenCalledTimes(0);
-      expect(prismaService.task.findUniqueOrThrow).toHaveBeenCalledTimes(0);
-    });
     it('should call asyncErrorHandlerService.execute and prismaService.task.findUniqueOrThrow method', async () => {
       const query = {
         where: { id: faker.number.int() },
       } as Prisma.TaskFindUniqueOrThrowArgs;
 
       PrismaServiceMock.task.findUniqueOrThrow.mockResolvedValue(true);
-      await repository.findUniqueOrThrow({ query });
+      await repository.findUniqueOrThrow(query);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.findUniqueOrThrow).toHaveBeenCalledWith(query);
     });
@@ -126,20 +108,19 @@ describe('TaskRepository', () => {
 
   describe('delete', () => {
     it('should call asyncErrorHandlerService.execute and prismaService.task.delete method', async () => {
-      const redisKey = faker.word.adverb();
       const query = { where: { id: faker.number.int() } };
 
       PrismaServiceMock.task.delete.mockResolvedValue(true);
-      await repository.delete({ redisKey, query });
+
+      await repository.delete(query);
+
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.delete).toHaveBeenCalledWith(query);
-      expect(redisService.del).toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
-    it('should call asyncErrorHandlerService.execute, prismaService.task.delete and residService.set method', async () => {
-      const redisKey = faker.word.adverb();
+    it('should call asyncErrorHandlerService.execute, prismaService.task.update', async () => {
       const query = { where: { id: faker.number.int() } };
       const data = { status: TaskStatus.IN_PROGRESS };
       const payload = {
@@ -149,26 +130,9 @@ describe('TaskRepository', () => {
 
       PrismaServiceMock.task.update.mockResolvedValue(true);
 
-      await repository.update({ redisKey, payload });
+      await repository.update(payload);
       expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
       expect(prismaService.task.update).toHaveBeenCalledWith(payload);
-      expect(redisService.set).toHaveBeenCalled();
-    });
-
-    it('should call asyncErrorHandlerService.execute, prismaService.task.delete but not residService.set method', async () => {
-      const query = { where: { id: faker.number.int() } };
-      const data = { status: TaskStatus.IN_PROGRESS };
-      const payload = {
-        ...query,
-        data,
-      };
-
-      PrismaServiceMock.task.update.mockResolvedValue(true);
-
-      await repository.update({ payload });
-      expect(asyncErrorHandlerService.execute).toHaveBeenCalled();
-      expect(prismaService.task.update).toHaveBeenCalledWith(payload);
-      expect(redisService.set).toHaveBeenCalledTimes(0);
     });
   });
 });
