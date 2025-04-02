@@ -11,6 +11,7 @@ import { ExpenseRepository } from './expense.repository';
 import { ExpenseAuthorizationService } from './expense-authorization.service';
 import { RedisService } from '../redis/redis.service';
 import { UsersModule } from '../users/users.module';
+import { TaskCacheService } from '../tasks/tasks.cache.service';
 
 @Module({
   imports: [UsersModule],
@@ -19,6 +20,7 @@ import { UsersModule } from '../users/users.module';
     ExpenseService,
     ExpenseRepository,
     TaskRepository,
+    TaskCacheService,
     CollaboratorRepository,
     ErrorHandlerService,
     AsyncErrorHandlerService,

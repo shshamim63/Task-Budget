@@ -9,6 +9,7 @@ import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.s
 import { UserRepository } from '../users/user.repository';
 import { RedisService } from '../redis/redis.service';
 import { AssociateModule } from '../associates/associates.module';
+import { TaskCacheService } from './tasks.cache.service';
 
 @Module({
   imports: [AssociateModule],
@@ -17,6 +18,7 @@ import { AssociateModule } from '../associates/associates.module';
     TaskService,
     TaskPermissionService,
     TaskRepository,
+    TaskCacheService,
     UserRepository,
     AsyncErrorHandlerService,
     ErrorHandlerService,

@@ -10,6 +10,7 @@ import { ErrorHandlerService } from '../helpers/error.helper.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 
 import { RedisService } from '../redis/redis.service';
+import { TaskCacheService } from '../tasks/tasks.cache.service';
 
 @Module({
   controllers: [CollaboratorController],
@@ -18,6 +19,7 @@ import { RedisService } from '../redis/redis.service';
     TaskPermissionService,
     CollaboratorRepository,
     TaskRepository,
+    TaskCacheService,
     UserRepository,
     ErrorHandlerService,
     AsyncErrorHandlerService,
