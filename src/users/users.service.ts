@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
@@ -27,6 +28,18 @@ export class UsersService {
   async getProfile(user: JWTPayload): Promise<User> {
     const query = { where: { id: user.id } };
     return await this.userRepository.findUnique(query);
+  }
+
+  async accountActivation(id: number) {
+    const query = { where: { id } };
+    const activateUser = await this.userRepository.findUnique(query);
+    console.log(activateUser && !activateUser.active);
+    if (activateUser && !activateUser.active) {
+      const payload = { where: { id }, data: { active: true } };
+      await this.userRepository.update(payload);
+    } else {
+      throw new BadRequestException('User already has an active account');
+    }
   }
 
   async updateUserProfile(

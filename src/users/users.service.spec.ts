@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { faker } from '@faker-js/faker/.';
 import * as bcrypt from 'bcrypt';
 
@@ -44,6 +48,34 @@ describe('UsersService', () => {
 
       const query = { where: { id: currentPayload.id } };
       expect(userRepository.findUnique).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('accountActivation', () => {
+    it('should call userRepository.update when user exists and user is not active', async () => {
+      const user = mockUser();
+      UserRepositoryMock.findUnique.mockResolvedValue({
+        ...user,
+        active: false,
+      });
+      UserRepositoryMock.update.mockResolvedValue({
+        ...user,
+        active: true,
+      });
+      await service.accountActivation(user.id);
+      expect(userRepository.update).toHaveBeenCalled();
+      expect(userRepository.findUnique).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when user is already active', async () => {
+      const user = mockUser();
+      UserRepositoryMock.findUnique.mockResolvedValue({
+        ...user,
+        active: true,
+      });
+      await expect(service.accountActivation(user.id)).rejects.toThrow(
+        new BadRequestException('User already has an active account'),
+      );
     });
   });
 
