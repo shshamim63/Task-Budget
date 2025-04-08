@@ -11,6 +11,7 @@ import {
 } from './__mock__/user-data.mock';
 import { UserResponseDto } from '../auth/dto/user.dto';
 import { USER_RESPONSE_MESSAGE } from '../utils/constants';
+import { faker } from '@faker-js/faker/.';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -46,6 +47,15 @@ describe('UsersController', () => {
     });
   });
 
+  describe('activateUserAccount', () => {
+    it('should call the usersService.accountActivation function successfully', async () => {
+      const id = faker.number.int();
+
+      UsersServiceMock.accountActivation.mockResolvedValue(true);
+      await controller.activateUserAccount(id);
+      expect(usersService.accountActivation).toHaveBeenCalled();
+    });
+  });
   describe('updateUserProfile', () => {
     it('should call userService.updateUserProfile and return the response as the UserResponse', async () => {
       const currentUser = mockUser();
