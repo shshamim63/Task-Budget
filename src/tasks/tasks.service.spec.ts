@@ -24,18 +24,20 @@ import { mockTokenPayload } from '../token/__mock__/token-data.mock';
 import { TaskRepositoryMock } from './__mock__/task.repository.mock';
 import { AssociateServiceMock } from '../associates/__mock__/associates.service.mock';
 import {
-  generateRedisMockKey,
   generateTask,
   generateTaskDto,
   generateTasks,
 } from './__mock__/task-data.mock';
 import { mockUser } from '../auth/__mock__/auth-data.mock';
 import { generateUserAffiliatedTo } from '../associates/__mock__/associate-data.mock';
+import { TaskCacheService } from './tasks.cache.service';
+import { TaskCacheServiceMock } from './__mock__/tasks.cache.service.mock';
 
 describe('TaskService', () => {
   let service: TaskService;
   let associateService: AssociateService;
   let taskRepository: TaskRepository;
+  let taskCacheService: TaskCacheService;
 
   const currentUser = mockUser();
   const currentAdminUser = { ...currentUser, userType: UserType.ADMIN };
@@ -50,6 +52,7 @@ describe('TaskService', () => {
       providers: [
         TaskService,
         { provide: AssociateService, useValue: AssociateServiceMock },
+        { provide: TaskCacheService, useValue: TaskCacheServiceMock },
         { provide: TaskRepository, useValue: TaskRepositoryMock },
         TaskPermissionService,
         ErrorHandlerService,
@@ -58,6 +61,7 @@ describe('TaskService', () => {
 
     service = module.get<TaskService>(TaskService);
     associateService = module.get<AssociateService>(AssociateService);
+    taskCacheService = module.get<TaskCacheService>(TaskCacheService);
     taskRepository = module.get<TaskRepository>(TaskRepository);
   });
 
@@ -210,7 +214,9 @@ describe('TaskService', () => {
         mockTaskData.id,
         adminUserTokenPayload,
       );
-
+      expect(taskCacheService.deleteTaskFromCache).toHaveBeenCalledWith(
+        mockTaskData.id,
+      );
       expect(result).toEqual(TASK_RESPONSE_MESSAGE.DELETE_TASK);
     });
 
@@ -249,7 +255,6 @@ describe('TaskService', () => {
     it('should update task successfully', async () => {
       const { id: validTaskId } = mockTaskData;
       const query = { where: { id: validTaskId } };
-      const redisKey = generateRedisMockKey(validTaskId);
       TaskRepositoryMock.findUniqueOrThrow.mockResolvedValue(mockTaskData);
       const updatedTask = { ...mockTaskData, ...updateTaskDto };
       TaskRepositoryMock.update.mockResolvedValue(updatedTask);
@@ -259,8 +264,8 @@ describe('TaskService', () => {
         superUserTokenPayload,
       );
       expect(taskRepository.update).toHaveBeenCalledWith({
-        redisKey,
-        payload: { ...query, data: updateTaskDto },
+        ...query,
+        data: updateTaskDto,
       });
       expect(result).toEqual(updatedTask);
     });

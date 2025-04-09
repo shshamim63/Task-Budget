@@ -16,9 +16,12 @@ import {
   UpdatePasswordRequestBody,
   UpdateUserDto,
 } from './dto/update-user.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { UserType } from '@prisma/client';
 
 @Controller('users')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -26,6 +29,12 @@ export class UsersController {
   async getProfile(@User() user: JWTPayload): Promise<UserResponseDto> {
     const currentUser = await this.usersService.getProfile(user);
     return new UserResponseDto(currentUser);
+  }
+
+  @Patch('/:id/profile/active')
+  @Roles(UserType.SUPER)
+  async activateUserAccount(@Param('id', ParseIntPipe) id: number) {
+    return await this.usersService.accountActivation(id);
   }
 
   @Patch('/:id/profile')

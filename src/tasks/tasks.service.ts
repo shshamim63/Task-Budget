@@ -11,7 +11,7 @@ import { TaskPermissionService } from '../helpers/task-permission.helper.service
 import { TASK_RESPONSE_MESSAGE } from '../utils/constants';
 import { TaskRepository } from './tasks.repository';
 import { AssociateService } from '../associates/associates.service';
-import { REDIS_KEYS_FOR_TASK } from '../utils/redis-keys';
+import { TaskCacheService } from './tasks.cache.service';
 
 @Injectable()
 export class TaskService {
@@ -19,6 +19,7 @@ export class TaskService {
     private readonly taskPermissionService: TaskPermissionService,
     private readonly associateService: AssociateService,
     private readonly taskRepository: TaskRepository,
+    private readonly taskCacheService: TaskCacheService,
   ) {}
 
   async getTasks(
@@ -73,13 +74,12 @@ export class TaskService {
   async deleteTask(id: number, user: JWTPayload): Promise<string> | never {
     const query = { where: { id } } as Prisma.TaskFindUniqueOrThrowArgs;
 
-    const currentTask = await this.taskRepository.findUniqueOrThrow({ query });
+    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
     this.checkPermission(user, currentTask);
 
-    const redisKey = this.generateRedisKey(id);
-
-    await this.taskRepository.delete({ redisKey, query });
+    await this.taskRepository.delete(query);
+    await this.taskCacheService.deleteTaskFromCache(id);
 
     return TASK_RESPONSE_MESSAGE.DELETE_TASK;
   }
@@ -91,18 +91,13 @@ export class TaskService {
   ): Promise<Task> {
     const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
 
-    const redisKey = this.generateRedisKey(id);
-    const currentTask = await this.taskRepository.findUniqueOrThrow({
-      redisKey,
-      query,
-    });
+    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
     this.checkPermission(user, currentTask);
+
     const payload = { ...query, data: updateTaskDto };
-    const updatedTask = await this.taskRepository.update({
-      redisKey,
-      payload,
-    });
+    const updatedTask = await this.taskRepository.update(payload);
+    await this.taskCacheService.setTaskInCache(updatedTask);
 
     return updatedTask;
   }
@@ -113,12 +108,8 @@ export class TaskService {
     user: JWTPayload,
   ): Promise<Task> {
     const query: Prisma.TaskFindUniqueOrThrowArgs = { where: { id } };
-    const redisKey = this.generateRedisKey(id);
 
-    const currentTask = await this.taskRepository.findUniqueOrThrow({
-      redisKey,
-      query,
-    });
+    const currentTask = await this.taskRepository.findUniqueOrThrow(query);
 
     this.checkPermission(user, currentTask);
 
@@ -127,10 +118,9 @@ export class TaskService {
       ...query,
       data,
     };
-    const updatedTask = await this.taskRepository.update({
-      redisKey,
-      payload,
-    });
+
+    const updatedTask = await this.taskRepository.update(payload);
+    await this.taskCacheService.setTaskInCache(updatedTask);
 
     return updatedTask;
   }
@@ -207,9 +197,5 @@ export class TaskService {
 
   private checkPermission(user: JWTPayload, task: Task) {
     this.taskPermissionService.hasOperationPermission(user, task);
-  }
-
-  private generateRedisKey(id: number): string {
-    return `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${id}`;
   }
 }

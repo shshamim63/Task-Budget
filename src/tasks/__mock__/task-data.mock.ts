@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker/.';
 import { Prisma, TaskStatus } from '@prisma/client';
 import { TaskResponseDto } from '../dto/task.dto';
 import { CreateTaskDto } from '../dto/create-task.dto';
-import { REDIS_KEYS_FOR_TASK } from '../../utils/redis-keys';
 
 export const generateTaskDto = (): CreateTaskDto => {
   return {
@@ -10,6 +9,18 @@ export const generateTaskDto = (): CreateTaskDto => {
     title: faker.lorem.words(),
     budget: faker.number.float({ min: 100, max: 400 }),
     enterpriseId: faker.number.int({ min: 1 }),
+  };
+};
+
+export const PrismaTaskMock = () => {
+  return {
+    id: faker.number.int(),
+    title: faker.lorem.words(),
+    description: faker.lorem.sentence(),
+    creatorId: faker.number.int(),
+    status: TaskStatus.OPEN,
+    enterpriseId: faker.number.int({ min: 1 }),
+    budget: new Prisma.Decimal(faker.number.float({ min: 100, max: 10000 })),
   };
 };
 
@@ -32,8 +43,4 @@ export const generateTask = (
 
 export const generateTasks = (numOfTasks: number = 1): TaskResponseDto[] => {
   return Array.from({ length: numOfTasks }, generateTask);
-};
-
-export const generateRedisMockKey = (id: number): string => {
-  return `${REDIS_KEYS_FOR_TASK.TASK_WITH_ID}-${id}`;
 };

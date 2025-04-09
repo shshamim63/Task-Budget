@@ -61,9 +61,9 @@ export class TaskController {
   @Roles(UserType.ADMIN, UserType.SUPER)
   async createTask(
     @Body() createTaskDTO: CreateTaskDto,
-    @User() user,
+    @User() user: JWTPayload,
   ): Promise<TaskResponseDto> {
-    const newTask = await this.taskService.createTask(createTaskDTO, user.id);
+    const newTask = await this.taskService.createTask(createTaskDTO, user);
     return new TaskResponseDto(newTask);
   }
 
