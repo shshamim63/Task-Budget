@@ -9,7 +9,7 @@ import { TaskCacheService } from './tasks.cache.service';
 import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
 import { PrismaTaskMock } from './__mock__/task-data.mock';
 
-describe('', () => {
+describe('TaskCacheService', () => {
   let taskCacheService: TaskCacheService;
   let redisService: RedisService;
 
