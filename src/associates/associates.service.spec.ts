@@ -1,31 +1,37 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { faker } from '@faker-js/faker/.';
+
 import { AssociateService } from './associates.service';
-
 import { AssociateRepository } from './associate.repository';
-import { AssociateRepositoryMock } from './__mock__/associate.repository.mock';
+import { AssociateCacheService } from './associates.cache.service';
 
+import { AssociateRepositoryMock } from './__mock__/associate.repository.mock';
 import {
   AssociateMock,
   generateUserAffiliatedTo,
 } from './__mock__/associate-data.mock';
-import { faker } from '@faker-js/faker/.';
-import { REDIS_KEYS_FOR_ASSOCIATE } from '../utils/redis-keys';
+import { AssociateCacheServiceMock } from './__mock__/associates.cache.service.mock';
 
 describe('AssociateService', () => {
   let service: AssociateService;
   let associateRespository: AssociateRepository;
+  let associateCacheService: AssociateCacheService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AssociateService,
         { provide: AssociateRepository, useValue: AssociateRepositoryMock },
+        { provide: AssociateCacheService, useValue: AssociateCacheServiceMock },
       ],
     }).compile();
 
     service = module.get<AssociateService>(AssociateService);
     associateRespository = module.get<AssociateRepository>(AssociateRepository);
+    associateCacheService = module.get<AssociateCacheService>(
+      AssociateCacheService,
+    );
   });
 
   afterEach(() => {
@@ -96,23 +102,50 @@ describe('AssociateService', () => {
   });
 
   describe('userAssociatesTo', () => {
-    it('should return an array', async () => {
+    it('should not call repository and cache set method when currently data is available in redis', async () => {
       const userId = faker.number.int();
       const numOfRecords = faker.number.int({ min: 1, max: 5 });
-      const query = { affiliateId: userId };
-      const { PREFIX, SUFFIX } = REDIS_KEYS_FOR_ASSOCIATE.AFFILIATE_TO;
-      const redisKey = `${PREFIX}-${userId}-${SUFFIX}`;
+
       const userAffiliateTo = generateUserAffiliatedTo({
         userId,
         numOfRecords,
       });
 
-      AssociateRepositoryMock.findMany.mockResolvedValueOnce(userAffiliateTo);
+      AssociateCacheServiceMock.getAssociatesToFromCache.mockResolvedValueOnce(
+        userAffiliateTo,
+      );
+
       await service.userAssociatesTo(userId);
-      expect(associateRespository.findMany).toHaveBeenCalledWith({
-        redisKey,
-        query,
+
+      expect(associateRespository.findMany).toHaveBeenCalledTimes(0);
+      expect(
+        associateCacheService.setAssociatesToFromCache,
+      ).toHaveBeenCalledTimes(0);
+      expect(
+        associateCacheService.getAssociatesToFromCache,
+      ).toHaveBeenCalledWith(userId);
+    });
+    it('should call repository and cache set method when currently data is unavailable in redis', async () => {
+      const userId = faker.number.int();
+      const numOfRecords = faker.number.int({ min: 1, max: 5 });
+
+      const userAffiliateTo = generateUserAffiliatedTo({
+        userId,
+        numOfRecords,
       });
+
+      AssociateCacheServiceMock.getAssociatesToFromCache.mockResolvedValueOnce(
+        null,
+      );
+      AssociateRepositoryMock.findMany.mockResolvedValueOnce(userAffiliateTo);
+      AssociateCacheServiceMock.setAssociatesToFromCache.mockResolvedValueOnce(
+        true,
+      );
+      await service.userAssociatesTo(userId);
+
+      expect(associateRespository.findMany).toHaveBeenCalled();
+      expect(associateCacheService.setAssociatesToFromCache).toHaveBeenCalled();
+      expect(associateCacheService.getAssociatesToFromCache).toHaveBeenCalled();
     });
   });
 });
