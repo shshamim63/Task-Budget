@@ -33,7 +33,7 @@ export class UsersService {
   async accountActivation(id: number) {
     const query = { where: { id } };
     const activateUser = await this.userRepository.findUnique(query);
-    console.log(activateUser && !activateUser.active);
+
     if (activateUser && !activateUser.active) {
       const payload = { where: { id }, data: { active: true } };
       await this.userRepository.update(payload);
