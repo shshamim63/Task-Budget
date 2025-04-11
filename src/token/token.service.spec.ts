@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpException, UnauthorizedException } from '@nestjs/common';
+import { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { TokenService } from '../../src/token/token.service';
+import { faker } from '@faker-js/faker/.';
 
 import {
   ERROR_NAME,
@@ -9,33 +10,40 @@ import {
   STATUS_CODE,
   TOKENS,
 } from '../../src/utils/constants';
+
 import {
   mockRequest,
   mockToken,
   mockTokenPayload,
 } from './__mock__/token-data.mock';
-import { Request } from 'express';
-import { TokenType } from '../auth/interfaces/auth.interface';
 import { TokenRepositoryMock } from './__mock__/token.repository.mock';
+import { TokenCacheServiceMock } from './__mock__/token.cache.service.mock';
+
+import { TokenService } from '../../src/token/token.service';
+import { TokenType } from '../auth/interfaces/auth.interface';
 import { TokenRepository } from './token.repository';
-import { RedisService } from '../redis/redis.service';
-import { RedisServiceMock } from '../redis/__mock__/redis.service.mock';
+import { TokenCacheService } from './token.cache.service';
+import { mockUser } from '../auth/__mock__/auth-data.mock';
 
 describe('TokenService', () => {
   let tokenService: TokenService;
   let jwtSignSpy: jest.SpyInstance;
   let jwtVerifySpy: jest.SpyInstance;
+  let tokenCacheService: TokenCacheService;
+  let tokenRepository: TokenRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TokenService,
         { provide: TokenRepository, useValue: TokenRepositoryMock },
-        { provide: RedisService, useValue: RedisServiceMock },
+        { provide: TokenCacheService, useValue: TokenCacheServiceMock },
       ],
     }).compile();
 
     tokenService = module.get<TokenService>(TokenService);
+    tokenCacheService = module.get<TokenCacheService>(TokenCacheService);
+    tokenRepository = module.get<TokenRepository>(TokenRepository);
 
     jwtSignSpy = jest.spyOn(jwt, 'sign').mockImplementation(() => 'mock-token');
     jwtVerifySpy = jest.spyOn(jwt, 'verify');
@@ -173,6 +181,70 @@ describe('TokenService', () => {
       const token = tokenService.getTokenFromHeader(request);
 
       expect(token).toBeUndefined();
+    });
+  });
+
+  describe('saveRefreshToken', () => {
+    it('should call tokenRepository.create and tokenCacheService.setRefreshToken', async () => {
+      const userId = faker.number.int();
+      const token = faker.internet.jwt({ header: { alg: 'HS256' } });
+      TokenRepositoryMock.create.mockResolvedValue(true);
+      TokenCacheServiceMock.setRefreshToken.mockResolvedValue(true);
+      await tokenService.saveRefreshToken(userId, token);
+      expect(tokenRepository.create).toHaveBeenCalled();
+      expect(tokenCacheService.setRefreshToken).toHaveBeenCalled();
+    });
+  });
+
+  describe('getRefreshToken', () => {
+    it('should not call tokenRepository.findFirst when tokenCacheService.getRefreshToken is called', async () => {
+      const userId = faker.number.int();
+      const token = faker.internet.jwt({ header: { alg: 'HS256' } });
+
+      TokenCacheServiceMock.getRefreshToken.mockResolvedValue(token);
+
+      await tokenService.getRefreshToken(userId, token);
+
+      expect(tokenCacheService.getRefreshToken).toHaveBeenCalled();
+      expect(tokenRepository.findFirst).toHaveBeenCalledTimes(0);
+    });
+
+    it('should call tokenRepository.findFirst when tokenCacheService.getRefreshToken returning null', async () => {
+      const userId = faker.number.int();
+      const token = faker.internet.jwt({ header: { alg: 'HS256' } });
+
+      TokenCacheServiceMock.getRefreshToken.mockResolvedValue(null);
+      TokenRepositoryMock.findFirst.mockResolvedValue({ token });
+
+      await tokenService.getRefreshToken(userId, token);
+
+      expect(tokenRepository.findFirst).toHaveBeenCalled();
+    });
+  });
+
+  describe('removeToken', () => {
+    it('should call tokenCacheService.deleteRefreshToken and tokenRepository.delete', async () => {
+      const userId = faker.number.int();
+      const token = faker.internet.jwt({ header: { alg: 'HS256' } });
+      TokenCacheServiceMock.deleteRefreshToken.mockResolvedValue('OK');
+      TokenRepositoryMock.delete.mockResolvedValue(true);
+      await tokenService.removeToken(userId, token);
+      expect(tokenCacheService.deleteRefreshToken).toHaveBeenCalled();
+      expect(tokenRepository.delete).toHaveBeenCalled();
+    });
+  });
+
+  describe('createAuthTokenPayload', () => {
+    it('should return active false when active is not given', () => {
+      const currentUser = mockUser();
+      delete currentUser.active;
+      const tokenPayload = tokenService.createAuthTokenPayload(currentUser);
+      expect(tokenPayload.active).toBeFalsy();
+    });
+    it('should return active false when active is not given', () => {
+      const currentUser = mockUser();
+      const tokenPayload = tokenService.createAuthTokenPayload(currentUser);
+      expect(tokenPayload.active).toEqual(currentUser.active);
     });
   });
 });

@@ -6,12 +6,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import {
   AuthUser,
   JWTPayload,
   TokenPayload,
-  TokenType,
 } from '../auth/interfaces/auth.interface';
 import {
   AUTHORIZATION_TYPE,
@@ -20,15 +20,15 @@ import {
   STATUS_CODE,
   TOKENS,
 } from '../utils/constants';
+
 import { TokenRepository } from './token.repository';
-import { RedisService } from '../redis/redis.service';
-import { Prisma } from '@prisma/client';
+import { TokenCacheService } from './token.cache.service';
 
 @Injectable()
 export class TokenService {
   constructor(
     private readonly tokenRepository: TokenRepository,
-    private readonly redisService: RedisService,
+    private readonly tokenCacheService: TokenCacheService,
   ) {}
 
   generateToken(payload: TokenPayload, secretType: string): string {
@@ -77,19 +77,16 @@ export class TokenService {
   }
 
   async saveRefreshToken(userId: number, token: string): Promise<void> {
-    const { ttl } = TOKENS[TokenType.RefreshToken];
     const data = { userId, token };
     await this.tokenRepository.create({ data });
-    await this.redisService.set(`token-user-${userId}`, token, ttl);
+    await this.tokenCacheService.setRefreshToken(userId, token);
   }
 
   async getRefreshToken(userId: number, token: string) {
-    const redisRefreshToken = await this.redisService.get(
-      `token-user-${userId}`,
-    );
+    const redisRefreshToken =
+      await this.tokenCacheService.getRefreshToken(userId);
 
     if (redisRefreshToken) return redisRefreshToken;
-
     const oneHourAgo = new Date(
       Date.now() - TOKENS.refresTokenSecret.ttl * 1000,
     );
@@ -113,7 +110,7 @@ export class TokenService {
   }
 
   async removeToken(userId: number, token: string) {
-    await this.redisService.del(`token-user-${userId}`);
+    await this.tokenCacheService.deleteRefreshToken(userId);
 
     const query = {
       where: {
