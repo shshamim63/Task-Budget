@@ -6,12 +6,15 @@ import { AssociateRepository } from './associate.repository';
 
 import { CreateAssociateDto } from './dto/create-associate.dto';
 
-import { REDIS_KEYS_FOR_ASSOCIATE } from '../utils/redis-keys';
 import { CreateAssociateResult } from './Interfaces/associate.interface';
+import { AssociateCacheService } from './associates.cache.service';
 
 @Injectable()
 export class AssociateService {
-  constructor(private readonly associateRepository: AssociateRepository) {}
+  constructor(
+    private readonly associateRepository: AssociateRepository,
+    private readonly associateCacheService: AssociateCacheService,
+  ) {}
 
   async createAssociate(
     body: CreateAssociateDto,
@@ -61,14 +64,19 @@ export class AssociateService {
   }
 
   async userAssociatesTo(userId: number): Promise<Associate[]> {
-    const userAssociateToQuery = { affiliateId: userId };
-    const { PREFIX, SUFFIX } = REDIS_KEYS_FOR_ASSOCIATE.AFFILIATE_TO;
-    const redisKey = `${PREFIX}-${userId}-${SUFFIX}`;
+    const query = { affiliateId: userId };
+    let associatesTo: Associate[];
 
-    const associatesTo = await this.associateRepository.findMany({
-      redisKey,
-      query: userAssociateToQuery,
-    });
+    associatesTo =
+      await this.associateCacheService.getAssociatesToFromCache(userId);
+
+    if (!associatesTo) {
+      associatesTo = await this.associateRepository.findMany(query);
+      await this.associateCacheService.setAssociatesToFromCache(
+        userId,
+        associatesTo,
+      );
+    }
 
     return associatesTo;
   }

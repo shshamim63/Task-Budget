@@ -5,6 +5,7 @@ import { TokenRepository } from './token.repository';
 import { RedisService } from '../redis/redis.service';
 import { AsyncErrorHandlerService } from '../helpers/execute-with-error.helper.service';
 import { ErrorHandlerService } from '../helpers/error.helper.service';
+import { TokenCacheService } from './token.cache.service';
 
 @Global()
 @Module({
@@ -12,6 +13,7 @@ import { ErrorHandlerService } from '../helpers/error.helper.service';
     RedisService,
     TokenService,
     TokenRepository,
+    TokenCacheService,
     AsyncErrorHandlerService,
     ErrorHandlerService,
   ],

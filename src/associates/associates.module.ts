@@ -11,6 +11,7 @@ import { AssociateRepository } from './associate.repository';
 
 import { RedisService } from '../redis/redis.service';
 import { UsersModule } from '../users/users.module';
+import { AssociateCacheService } from './associates.cache.service';
 
 @Module({
   imports: [UsersModule],
@@ -22,6 +23,7 @@ import { UsersModule } from '../users/users.module';
     AsyncErrorHandlerService,
     ErrorHandlerService,
     RedisService,
+    AssociateCacheService,
   ],
   exports: [AssociateService],
 })
