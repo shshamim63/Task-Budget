@@ -4,13 +4,13 @@ export const AUTHORIZATION_TYPE = 'Bearer';
 export const TOKENS = {
   accessTokenSecret: {
     secret: process.env.ACCESS_TOKEN_SECRET,
-    duration: '15m',
+    duration: '5m',
     ttl: 60 * 25,
   },
   refresTokenSecret: {
     secret: process.env.REFRESH_TOKEN_SECRET,
-    duration: '1hr',
-    ttl: 60 * 60 * 1,
+    duration: '10m',
+    ttl: 60 * 10 * 1,
   },
 };
 

@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Post,
+  Req,
+  Res,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './dto/auth-credentials.dto';
 
@@ -11,6 +19,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/signup')
+  @UseInterceptors(ClassSerializerInterceptor)
   async signup(@Body() singUpcredentials: SignUpDto, @Res() res: Response) {
     const singupInfo = await this.authService.signup(singUpcredentials);
     res.cookie(
@@ -23,6 +32,7 @@ export class AuthController {
   }
 
   @Post('/login')
+  @UseInterceptors(ClassSerializerInterceptor)
   async signin(@Body() signInCredentials: SignInDto, @Res() res: Response) {
     const loginInfo = await this.authService.signin(signInCredentials);
 
@@ -45,6 +55,7 @@ export class AuthController {
   }
 
   @Post('/refresh')
+  @UseInterceptors(ClassSerializerInterceptor)
   async refreshToken(@Req() request: Request, @Res() res: Response) {
     const refresTokenInfo = await this.authService.tokenRefresh(request);
     res.cookie(
