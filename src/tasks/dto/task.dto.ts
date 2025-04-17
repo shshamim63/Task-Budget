@@ -6,6 +6,7 @@ export class TaskResponseDto {
   description: string;
   creatorId: number;
   status: string;
+
   budget: number;
   enterpriseId: number;
 
