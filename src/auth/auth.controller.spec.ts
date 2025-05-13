@@ -19,6 +19,7 @@ import {
 } from './__mock__/auth.service.mock';
 import { UserResponseDto } from './dto/user.dto';
 import { REFRESH_TOKEN_COOKIE_OPTIONS } from '../utils/constants';
+import { instanceToPlain } from 'class-transformer';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -55,11 +56,13 @@ describe('AuthController', () => {
         expect.objectContaining(REFRESH_TOKEN_COOKIE_OPTIONS),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(201);
-      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
+      expect(ResponseMock.json).toHaveBeenCalledWith(
+        instanceToPlain(new UserResponseDto(userResponse)),
+      );
     });
   });
 
-  describe('signin', () => {
+  describe('login', () => {
     it('should successfully login the user', async () => {
       const signinCredential: SignInDto = mockSignInRequestBody();
       const userResponse = mockAuthenticatedUser(signinCredential);
@@ -73,7 +76,9 @@ describe('AuthController', () => {
         expect.objectContaining(REFRESH_TOKEN_COOKIE_OPTIONS),
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(200);
-      expect(ResponseMock.json).toHaveBeenCalledWith(userResponse);
+      expect(ResponseMock.json).toHaveBeenCalledWith(
+        instanceToPlain(new UserResponseDto(userResponse)),
+      );
     });
   });
 
@@ -114,7 +119,7 @@ describe('AuthController', () => {
       );
       expect(ResponseMock.status).toHaveBeenCalledWith(200);
       expect(ResponseMock.json).toHaveBeenCalledWith(
-        new UserResponseDto(userResponse),
+        instanceToPlain(new UserResponseDto(userResponse)),
       );
     });
   });

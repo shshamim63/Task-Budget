@@ -52,7 +52,7 @@ export class AuthController {
       REFRESH_TOKEN_COOKIE_OPTIONS,
     );
 
-    res.status(201).json(plainUserLoginInfo);
+    res.status(200).json(plainUserLoginInfo);
   }
 
   @Post('/logout')
